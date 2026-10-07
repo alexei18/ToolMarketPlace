@@ -28,6 +28,8 @@ interface CallOptions {
 export async function apiCall<T>(path: string, opts: CallOptions = {}): Promise<ApiResult<T>> {
   const { apiUrl, siteUrl } = siteConfig();
   const headers = new Headers({ accept: "application/json", origin: siteUrl });
+  // Marks the call as coming from the site worker (exempt from the API's per-IP rate limit).
+  if (env.INTERNAL_SECRET) headers.set("x-internal-key", env.INTERNAL_SECRET);
   if (opts.request) {
     const cookie = opts.request.headers.get("cookie");
     if (cookie) headers.set("cookie", cookie);

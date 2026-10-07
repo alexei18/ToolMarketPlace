@@ -1,1 +1,1 @@
-PURGE_SECRET=dev-purge-secret
+INTERNAL_SECRET=dev-internal-secret

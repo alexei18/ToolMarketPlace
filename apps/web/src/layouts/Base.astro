@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import { siteConfig } from "../lib/config";
+import { inlineJson } from "../lib/safe";
 
 interface Props {
   title?: string;
@@ -65,7 +66,7 @@ const ogImage = image ?? `${siteUrl}/og.png`;
         if (location.pathname === "/" && !location.search.includes("home=1")) location.replace("/feed");
       }
     </script>
-    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {jsonLd && <script type="application/ld+json" set:html={inlineJson(jsonLd)} />}
     <slot name="head" />
   </head>
   <body>

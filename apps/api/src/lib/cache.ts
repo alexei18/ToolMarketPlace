@@ -18,15 +18,15 @@ export function tagsForPaths(paths: string[]): string[] {
 
 /**
  * Purges cached web pages after an edit. The site worker owns its Workers Cache, so we ask it to
- * purge by tag (service binding WEB in production, WEB_ORIGIN otherwise). Without PURGE_SECRET,
+ * purge by tag (service binding WEB in production, WEB_ORIGIN otherwise). Without INTERNAL_SECRET,
  * pages simply expire with their short TTL (60 s – 5 min).
  */
 export async function purgeWebPaths(env: Env, paths: string[]): Promise<void> {
   const unique = [...new Set(paths)];
-  if (unique.length === 0 || !env.PURGE_SECRET) return;
+  if (unique.length === 0 || !env.INTERNAL_SECRET) return;
   const req = new Request(`${env.WEB_ORIGIN.replace(/\/$/, "")}/internal/purge`, {
     method: "POST",
-    headers: { "content-type": "application/json", "x-purge-secret": env.PURGE_SECRET },
+    headers: { "content-type": "application/json", "x-internal-key": env.INTERNAL_SECRET },
     body: JSON.stringify({ tags: tagsForPaths(unique), paths: unique }),
   });
   try {

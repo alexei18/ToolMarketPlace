@@ -90,3 +90,18 @@ describe("password hashing", () => {
     expect(await verifyPassword({ hash: "garbage", password: "x" })).toBe(false);
   });
 });
+
+describe("rate limits", () => {
+  test("visitors are limited per IP; the site's server-side calls are exempt", async () => {
+    const seen: string[] = [];
+    const limiter = { limit: async ({ key }: { key: string }) => (seen.push(key), { success: false }) } as unknown as RateLimit;
+    const t = setup({ ANON_LIMITER: limiter, INTERNAL_SECRET: "s3cret" } as never);
+    const visitor = await new Client(t).get("/categories");
+    expect(visitor.status).toBe(429);
+    expect(seen).toEqual(["ip:203.0.113.7"]);
+    const site = await new Client(t).get("/categories", { "x-internal-key": "s3cret" });
+    expect(site.status).toBe(200);
+    const forged = await new Client(t).get("/categories", { "x-internal-key": "guess" });
+    expect(forged.status).toBe(429);
+  });
+});

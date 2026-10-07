@@ -4,11 +4,12 @@ import Onboarding from "../islands/Onboarding";
 import Base from "../layouts/Base.astro";
 import { apiCall } from "../lib/api";
 import { requireMe } from "../lib/session";
+import { safePath } from "../lib/safe";
 
 const me = await requireMe(Astro);
 if (me instanceof Response) return me;
 const cats = await apiCall<{ items: CategoryDTO[] }>("/categories");
-const next = Astro.url.searchParams.get("next") ?? undefined;
+const next = safePath(Astro.url.searchParams.get("next")) ?? undefined;
 ---
 
 <Base title="Welcome" noindex>

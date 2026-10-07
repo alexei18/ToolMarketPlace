@@ -42,7 +42,7 @@
     "crons": ["0 8 * * *", "20 8 * * *", "40 8 * * *", "0 3 * * *"]
   }
   // Secrets (wrangler secret put / .dev.vars): BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
-  // TURNSTILE_SECRET_KEY, RESEND_API_KEY, VAPID_PRIVATE_KEY, PURGE_SECRET, CF_ACCOUNT_ID, CF_API_TOKEN
+  // TURNSTILE_SECRET_KEY, RESEND_API_KEY, VAPID_PRIVATE_KEY, INTERNAL_SECRET, CF_ACCOUNT_ID, CF_API_TOKEN
   //
   // Production: add a service binding to the site worker so cache purges skip the public internet:
   // "services": [{ "binding": "WEB", "service": "toolmarket-web" }]

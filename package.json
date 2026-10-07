@@ -11,11 +11,13 @@
     "dev:api": "bun run --cwd apps/api dev",
     "dev:web": "bun run --cwd apps/web dev",
     "build": "bun run --cwd apps/web build",
-    "typecheck": "bun run --filter '*' typecheck",
     "test": "bun test",
+    "typecheck": "bun run --filter '*' typecheck",
     "db:generate": "bun run --cwd packages/db generate",
     "db:migrate:local": "bun run --cwd apps/api db:migrate:local",
     "db:migrate:remote": "bun run --cwd apps/api db:migrate:remote",
+    "seed": "bun run apps/api/scripts/seed-dev.ts",
+    "vapid": "bun run apps/api/scripts/vapid.ts",
     "deploy": "bun run --cwd apps/api deploy && bun run --cwd apps/web deploy"
   },
   "devDependencies": {

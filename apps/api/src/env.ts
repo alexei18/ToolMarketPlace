@@ -29,8 +29,11 @@ export interface Env {
   VAPID_PRIVATE_KEY?: string;
   CF_ACCOUNT_ID?: string;
   CF_API_TOKEN?: string;
-  /** Shared with the site worker; authorizes /internal/purge. */
-  PURGE_SECRET?: string;
+  /**
+   * Shared with the site worker. It authorizes cache purges (/internal/purge on the site) and marks
+   * the site's server-side API calls, which are exempt from the per-IP rate limit.
+   */
+  INTERNAL_SECRET?: string;
 
   /** Optional overrides for any key of DEFAULT_LIMITS, e.g. VISITOR_CATEGORY_LIMIT=12 */
   [limitOverride: string]: unknown;

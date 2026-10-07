@@ -7,5 +7,5 @@
     "verbatimModuleSyntax": true
   },
   "include": [".astro/types.d.ts", "src", "astro.config.mjs"],
-  "exclude": ["dist"]
+  "exclude": ["dist", "src/**/*.test.ts"]
 }

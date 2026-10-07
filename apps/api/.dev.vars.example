@@ -9,8 +9,8 @@ RESEND_API_KEY=
 # Web push (generate with: bun run apps/api/scripts/vapid.ts)
 VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
-# Shared with apps/web/.dev.vars; lets the API purge cached pages after edits
-PURGE_SECRET=dev-purge-secret
+# Shared with apps/web/.dev.vars: authorizes cache purges and the site's server-side API calls
+INTERNAL_SECRET=dev-internal-secret
 # Comma-separated emails that become admins once verified
 ADMIN_EMAILS=admin@example.com
 # Optional Cloudflare API access: screenshots (Browser Rendering) and usage alerts

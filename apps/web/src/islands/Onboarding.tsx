@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { CategoryDTO, DigestFrequency } from "@tm/shared";
 import { patch, put, toast } from "../lib/client";
 import { enablePush, pushState, type PushState } from "../lib/push";
+import { safePath } from "../lib/safe";
 import { Check } from "./icons";
 import { Button, Notice, useAction } from "./ui";
 
@@ -23,7 +24,7 @@ export default function Onboarding({ categories, initial, digest: initialDigest,
   const [picked, setPicked] = useState<string[]>(initial);
   const [digest, setDigest] = useState<DigestFrequency>(initialDigest);
   const [push, setPush] = useState<PushState | null>(null);
-  const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/feed";
+  const target = safePath(next) ?? "/feed";
 
   useEffect(() => {
     pushState().then(setPush).catch(() => setPush("unsupported"));

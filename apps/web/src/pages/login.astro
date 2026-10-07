@@ -3,15 +3,21 @@ import AuthForm from "../islands/AuthForm";
 import AuthLayout from "../layouts/AuthLayout.astro";
 import { hasSessionHint } from "../lib/api";
 import { siteConfig } from "../lib/config";
+import { safePath } from "../lib/safe";
 
-const next = Astro.url.searchParams.get("next") ?? undefined;
-if (hasSessionHint(Astro.request) && !Astro.url.searchParams.has("reason")) return Astro.redirect(next?.startsWith("/") ? next : "/feed");
+const next = safePath(Astro.url.searchParams.get("next")) ?? undefined;
+if (hasSessionHint(Astro.request) && !Astro.url.searchParams.has("reason")) return Astro.redirect(next ?? "/feed");
 const { googleEnabled } = siteConfig();
-const googleError = Astro.url.searchParams.get("error") === "google";
+// Better Auth appends ?error=<code> to the error callback URL.
+const oauthError = Astro.url.searchParams.get("oauth") === "failed" ? (Astro.url.searchParams.get("error") ?? "unknown") : null;
+const oauthMessage =
+  oauthError === "account_not_linked"
+    ? "An account with this email already exists. Log in with your password and confirm your email; after that, Google sign-in works too."
+    : "Google sign-in didn't finish. Try again or use email.";
 ---
 
 <AuthLayout title="Log in" heading="Welcome back" sub="Log in to see your feed, saved products and perks.">
-  {googleError && <div class="notice notice-danger" style="margin-bottom: 20px">Google sign-in didn't finish. Try again or use email.</div>}
+  {oauthError && <div class="notice notice-danger" style="margin-bottom: 20px">{oauthMessage}</div>}
   <AuthForm client:load mode="login" next={next} googleEnabled={googleEnabled} reason={Astro.url.searchParams.get("reason") ?? undefined} />
   <Fragment slot="foot">New here? <a class="link" href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Create a free account</a></Fragment>
 </AuthLayout>

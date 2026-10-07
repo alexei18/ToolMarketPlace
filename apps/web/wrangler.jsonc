@@ -18,5 +18,6 @@
   },
   // Server-side calls to the API go through a service binding (no public round trip, no extra request).
   "services": [{ "binding": "API", "service": "toolmarket-api" }]
-  // Secret: PURGE_SECRET (shared with the API worker) protects /_internal/purge.
+  // Secret: INTERNAL_SECRET (same value as the API worker) protects /internal/purge and marks
+  // server-side API calls.
 }

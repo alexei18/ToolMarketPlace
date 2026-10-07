@@ -50,8 +50,19 @@ export function clientIp(c: Context): string | null {
   return c.req.header("cf-connecting-ip") ?? c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
 }
 
-/** 60 requests/minute per IP for visitors, 300/minute per account (Cloudflare Rate Limiting binding). */
+/** True for server-side calls from the site worker (they carry the shared internal key). */
+export function isInternalCall(c: Context<AppEnv>): boolean {
+  const key = c.req.header("x-internal-key");
+  return !!c.env.INTERNAL_SECRET && !!key && key === c.env.INTERNAL_SECRET;
+}
+
+/**
+ * 60 requests/minute per IP for visitors, 300/minute per account (Cloudflare Rate Limiting binding).
+ * Server-side renders of the site are exempt: they are bounded by the site's own traffic, and
+ * cached public pages would otherwise all share one bucket.
+ */
 export const rateLimit: MiddlewareHandler<AppEnv> = async (c, next) => {
+  if (isInternalCall(c)) return next();
   const user = c.get("user");
   const limiter = user ? c.env.USER_LIMITER : c.env.ANON_LIMITER;
   if (limiter) {

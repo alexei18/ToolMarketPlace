@@ -3,9 +3,10 @@ import AuthForm from "../islands/AuthForm";
 import AuthLayout from "../layouts/AuthLayout.astro";
 import { hasSessionHint } from "../lib/api";
 import { siteConfig } from "../lib/config";
+import { safePath } from "../lib/safe";
 
 if (hasSessionHint(Astro.request)) return Astro.redirect("/feed");
-const next = Astro.url.searchParams.get("next") ?? undefined;
+const next = safePath(Astro.url.searchParams.get("next")) ?? undefined;
 const { googleEnabled } = siteConfig();
 ---
 

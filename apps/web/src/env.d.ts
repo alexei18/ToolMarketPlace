@@ -14,7 +14,8 @@ interface WebBindings {
   PUBLIC_API_URL: string;
   TURNSTILE_SITE_KEY?: string;
   GOOGLE_ENABLED?: string;
-  PURGE_SECRET?: string;
+  /** Shared with the API worker: authorizes /internal/purge and marks server-side API calls. */
+  INTERNAL_SECRET?: string;
 }
 
 declare namespace Cloudflare {

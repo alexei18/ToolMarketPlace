@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { call, ClientError, post } from "../lib/client";
+import { safePath } from "../lib/safe";
 import { Button, Field, Notice, useAction, useTurnstile } from "./ui";
 
 type Mode = "login" | "signup" | "forgot" | "reset";
@@ -20,10 +21,6 @@ const REASONS: Record<string, string> = {
   report: "Log in to report a product.",
 };
 
-function safeNext(next?: string): string | null {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
-}
-
 function GoogleMark() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
@@ -41,7 +38,7 @@ export default function AuthForm({ mode, next, googleEnabled, token, reason }: P
   const [password, setPassword] = useState("");
   const [done, setDone] = useState(false);
   const turnstile = useTurnstile();
-  const target = safeNext(next);
+  const target = safePath(next);
   const origin = typeof location !== "undefined" ? location.origin : "";
 
   const submit = useAction(
@@ -69,7 +66,7 @@ export default function AuthForm({ mode, next, googleEnabled, token, reason }: P
       provider: "google",
       callbackURL: `${origin}${target ?? "/feed"}`,
       newUserCallbackURL: `${origin}/onboarding${target ? `?next=${encodeURIComponent(target)}` : ""}`,
-      errorCallbackURL: `${origin}/login?error=google`,
+      errorCallbackURL: `${origin}/login?oauth=failed`,
     });
     if (res.url) location.href = res.url;
   });
