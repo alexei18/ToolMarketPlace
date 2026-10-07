@@ -1,0 +1,47 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "toolmarket-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "observability": { "enabled": true },
+  // Production: route the API to the api. subdomain, e.g.
+  // "routes": [{ "pattern": "api.example.com", "custom_domain": true }],
+  "vars": {
+    "SITE_NAME": "ToolMarket",
+    "WEB_ORIGIN": "http://localhost:4321",
+    "API_ORIGIN": "http://localhost:8787",
+    // Public base URL for product images. In production point a custom domain (img.) at the R2 bucket.
+    // Empty = served by this worker under /img/*.
+    "IMAGES_BASE_URL": "",
+    // Parent domain for the session cookie in production (e.g. "example.com"), empty for localhost.
+    "COOKIE_DOMAIN": "",
+    "ADMIN_EMAILS": "",
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    "VAPID_SUBJECT": "mailto:hello@example.com",
+    "VAPID_PUBLIC_KEY": "",
+    "EMAIL_FROM": "ToolMarket <hello@example.com>"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "toolmarket",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../../packages/db/migrations"
+    }
+  ],
+  "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "toolmarket-images" }],
+  // Cloudflare Images binding: resizes and re-encodes product images to WebP.
+  "images": { "binding": "IMAGES" },
+  "ratelimits": [
+    { "name": "ANON_LIMITER", "namespace_id": "1001", "simple": { "limit": 60, "period": 60 } },
+    { "name": "USER_LIMITER", "namespace_id": "1002", "simple": { "limit": 300, "period": 60 } }
+  ],
+  "triggers": {
+    // 08:00 UTC digest (daily users every day, weekly users on Mondays), 08:20 and 08:40 continue
+    // large batches; 03:00 UTC maintenance (cleanup + usage alerts).
+    "crons": ["0 8 * * *", "20 8 * * *", "40 8 * * *", "0 3 * * *"]
+  }
+  // Secrets (wrangler secret put / .dev.vars): BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+  // TURNSTILE_SECRET_KEY, RESEND_API_KEY, VAPID_PRIVATE_KEY, CF_ACCOUNT_ID, CF_API_TOKEN, CF_ZONE_ID
+}

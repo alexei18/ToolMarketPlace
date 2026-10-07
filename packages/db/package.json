@@ -1,0 +1,22 @@
+{
+  "name": "@tm/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tm/shared": "workspace:*",
+    "drizzle-orm": "^0.45.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.11",
+    "@cloudflare/workers-types": "^5.20261007.1"
+  }
+}

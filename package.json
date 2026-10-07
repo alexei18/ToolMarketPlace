@@ -1,0 +1,25 @@
+{
+  "name": "toolmarketplace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --filter '@tm/api' --filter '@tm/web' dev",
+    "dev:api": "bun run --cwd apps/api dev",
+    "dev:web": "bun run --cwd apps/web dev",
+    "build": "bun run --cwd apps/web build",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun test",
+    "db:generate": "bun run --cwd packages/db generate",
+    "db:migrate:local": "bun run --cwd apps/api db:migrate:local",
+    "db:migrate:remote": "bun run --cwd apps/api db:migrate:remote",
+    "deploy": "bun run --cwd apps/api deploy && bun run --cwd apps/web deploy"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "5.9.3"
+  }
+}
