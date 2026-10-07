@@ -1,0 +1,119 @@
+---
+import type { CategoryDTO, Page, ProductCardDTO } from "@tm/shared";
+import { encodeCursor } from "@tm/shared";
+import EmptyState from "../../components/EmptyState.astro";
+import ErrorState from "../../components/ErrorState.astro";
+import ProductList from "../../components/ProductList.astro";
+import SignupGate from "../../components/SignupGate.astro";
+import Base from "../../layouts/Base.astro";
+import { apiCall } from "../../lib/api";
+import { plural } from "../../lib/format";
+
+const slug = Astro.params.slug!;
+const [catRes, listRes, allRes] = await Promise.all([
+  apiCall<CategoryDTO>(`/categories/${encodeURIComponent(slug)}`),
+  // Rendered as a visitor so the cached page is the same for everyone; members load the rest client-side.
+  apiCall<Page<ProductCardDTO>>(`/categories/${encodeURIComponent(slug)}/products`),
+  apiCall<{ items: CategoryDTO[] }>("/categories"),
+]);
+
+if (!catRes.ok && catRes.status === 404) {
+  return Astro.rewrite("/404");
+}
+const failed = !catRes.ok || !listRes.ok;
+if (failed) Astro.response.status = 503;
+else Astro.cache.set({ maxAge: 60, swr: 60, tags: ["products", `c:${slug}`] });
+
+const category = catRes.ok ? catRes.data : null;
+const page = listRes.ok ? listRes.data : { items: [], nextCursor: null, limited: false };
+const all = allRes.ok ? allRes.data.items : [];
+const count = all.find((c) => c.slug === slug)?.productCount ?? page.items.length;
+const last = page.items[page.items.length - 1];
+const memberCursor = page.limited && last ? encodeCursor(last.publishedAt, last.id) : null;
+const title = category ? `New ${category.name} products` : "Category";
+---
+
+<Base title={title} description={category?.description ? `${category.description} New ${category.name.toLowerCase()} products, updated daily.` : undefined}>
+  <div class="container page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span>/</span><a href="/#categories">Categories</a></nav>
+    {failed && <div style="margin-top: 24px"><ErrorState /></div>}
+    {
+      category && (
+        <>
+          <header class="cat-head">
+            <h1 class="t-48">{category.name}</h1>
+            {category.description && <p class="t-17 muted">{category.description}</p>}
+            <p class="t-13 muted">{plural(count, "product")}</p>
+          </header>
+
+          <div class="cat-strip" role="navigation" aria-label="Other categories">
+            {all.map((c) => (
+              <a class="chip" href={`/c/${c.slug}`} aria-current={c.slug === slug ? "page" : undefined}>
+                {c.name}
+              </a>
+            ))}
+          </div>
+
+          <section class="section-tight">
+            <div class="section-head">
+              <h2>Newest first</h2>
+            </div>
+            {page.items.length === 0 ? (
+              <div style="margin-top: 20px">
+                <EmptyState title={`No ${category.name} products yet`} text="New launches show up here the moment makers publish them.">
+                  <a class="btn btn-secondary" href="/dashboard/new">Submit a product</a>
+                </EmptyState>
+              </div>
+            ) : (
+              <ProductList id="cat-list" products={page.items} />
+            )}
+
+            {memberCursor && (
+              <>
+                <div class="load-more member-only-block">
+                  <button type="button" class="btn btn-secondary" data-load-more data-target="cat-list" data-source={`/fragments/products?source=category&slug=${encodeURIComponent(slug)}`} data-cursor={memberCursor} data-requires-auth="true">
+                    Load more
+                  </button>
+                </div>
+                <div class="visitor-only-block">
+                  <SignupGate title={`See all ${plural(count, "product")} in ${category.name}`} text="Visitors see the newest few. A free account unlocks the full list, your own feed and member perks." />
+                </div>
+              </>
+            )}
+          </section>
+        </>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .cat-head {
+    margin-top: 16px;
+    display: grid;
+    gap: 10px;
+    max-width: 720px;
+  }
+  .cat-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 28px 0 4px;
+    scrollbar-width: none;
+    mask-image: linear-gradient(90deg, #000 92%, transparent);
+  }
+  .cat-strip a[aria-current="page"] {
+    background: var(--text);
+    color: #fff;
+    border-color: var(--text);
+  }
+  .member-only-block {
+    display: none;
+  }
+  :global(html[data-auth="1"]) .member-only-block {
+    display: flex;
+  }
+  :global(html[data-auth="1"]) .visitor-only-block {
+    display: none;
+  }
+</style>

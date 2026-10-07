@@ -1,0 +1,54 @@
+---
+import type { CategoryDTO } from "@tm/shared";
+import Settings from "../islands/Settings";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { requireMe } from "../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+const [cats, accounts] = await Promise.all([
+  apiCall<{ items: CategoryDTO[] }>("/categories"),
+  apiCall<{ providerId: string }[]>("/auth/list-accounts", { request: Astro.request }),
+]);
+const hasPassword = accounts.ok ? accounts.data.some((a) => a.providerId === "credential") : true;
+---
+
+<Base title="Settings" noindex>
+  <div class="container container-narrow page">
+    <h1 class="t-32">Settings</h1>
+    <div class="section-tight">
+      <Settings client:load me={me} categories={cats.ok ? cats.data.items : []} hasPassword={hasPassword} />
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  .settings-section {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 32px;
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+    scroll-margin-top: calc(var(--header-h) + 16px);
+  }
+  .settings-section:first-child {
+    border-top: 1px solid var(--text);
+  }
+  @media (max-width: 720px) {
+    .settings-section {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+  .pw-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+  }
+  @media (max-width: 640px) {
+    .pw-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

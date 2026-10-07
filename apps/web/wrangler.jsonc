@@ -1,0 +1,22 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "toolmarket-web",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "binding": "ASSETS", "directory": "./dist" },
+  "observability": { "enabled": true },
+  // Production: "routes": [{ "pattern": "example.com", "custom_domain": true }],
+  "vars": {
+    "SITE_NAME": "ToolMarket",
+    "SITE_URL": "http://localhost:4321",
+    // Public API origin used by the browser (api. subdomain in production).
+    "PUBLIC_API_URL": "http://localhost:8787",
+    // Public base URL for product images (img. subdomain in production).
+    "TURNSTILE_SITE_KEY": "",
+    "GOOGLE_ENABLED": "false"
+  },
+  // Server-side calls to the API go through a service binding (no public round trip, no extra request).
+  "services": [{ "binding": "API", "service": "toolmarket-api" }]
+  // Secret: PURGE_SECRET (shared with the API worker) protects /_internal/purge.
+}

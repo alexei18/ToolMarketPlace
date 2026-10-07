@@ -54,8 +54,8 @@ export function createApp() {
   app.get("/health", (c) => c.json({ ok: true }));
 
   /** Product images from R2 (fallback when no img. custom domain is configured). */
-  app.get("/img/:key{.+}", async (c) => {
-    const key = c.req.param("key");
+  app.get("/img/:file", async (c) => {
+    const key = `img/${c.req.param("file")}`;
     if (!IMAGE_KEY_RE.test(key)) throw new ApiError("NOT_FOUND", "Not found");
     const obj = await c.env.IMAGES_BUCKET.get(key, { onlyIf: c.req.raw.headers });
     if (!obj) throw new ApiError("NOT_FOUND", "Not found");
@@ -72,10 +72,6 @@ export function createApp() {
   app.use("*", originCheck);
 
   app.on(["GET", "POST"], "/auth/*", async (c) => withAuthHint(await c.get("auth").handler(c.req.raw), c.env));
-
-  app.get("/config", (c) =>
-    c.json({ siteName: c.env.SITE_NAME, turnstileSiteKey: c.env.TURNSTILE_SECRET_KEY ? (c.env.TURNSTILE_SITE_KEY ?? null) : null, vapidPublicKey: c.env.VAPID_PUBLIC_KEY || null, google: !!c.env.GOOGLE_CLIENT_ID }),
-  );
 
   app.route("/", publicRoutes);
   app.route("/", me);

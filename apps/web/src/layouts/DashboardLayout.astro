@@ -1,0 +1,91 @@
+---
+import Base from "./Base.astro";
+
+interface Props {
+  title: string;
+  active: "products" | "new" | "domains" | "edit";
+  wide?: boolean;
+}
+const { title, active } = Astro.props;
+---
+
+<Base title={title} noindex>
+  <div class="container page dash">
+    <aside class="dash-nav">
+      <div class="eyebrow" style="padding: 0 10px 8px">Maker</div>
+      <nav class="side-nav" aria-label="Dashboard">
+        <a href="/dashboard" aria-current={active === "products" || active === "edit" ? "page" : undefined}>Your products</a>
+        <a href="/dashboard/new" aria-current={active === "new" ? "page" : undefined}>Publish a product</a>
+        <a href="/dashboard/domains" aria-current={active === "domains" ? "page" : undefined}>Domains</a>
+      </nav>
+    </aside>
+    <div class="dash-main">
+      <slot />
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  .dash {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+  .dash-nav {
+    position: sticky;
+    top: calc(var(--header-h) + 32px);
+  }
+  @media (max-width: 860px) {
+    .dash {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .dash-nav {
+      position: static;
+    }
+    .dash-nav .side-nav {
+      display: flex;
+      overflow-x: auto;
+    }
+    .dash-nav .eyebrow {
+      display: none;
+    }
+  }
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .form-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  @media (max-width: 720px) {
+    .form-grid-2,
+    .form-grid-3 {
+      grid-template-columns: 1fr;
+    }
+  }
+  .publish-foot {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg);
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+    z-index: 5;
+  }
+  .queue-item {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .report-list {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    display: grid;
+    gap: 8px;
+  }
+</style>

@@ -1,0 +1,153 @@
+---
+import type { MakerProductDTO } from "@tm/shared";
+import EmptyState from "../../components/EmptyState.astro";
+import ErrorState from "../../components/ErrorState.astro";
+import Icon from "../../components/Icon.astro";
+import ProductImage from "../../components/ProductImage.astro";
+import DashboardLayout from "../../layouts/DashboardLayout.astro";
+import { apiCall } from "../../lib/api";
+import { compact, shortDate } from "../../lib/format";
+import { requireMe } from "../../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+const res = me.isMaker ? await apiCall<{ items: MakerProductDTO[] }>("/maker/products", { request: Astro.request }) : null;
+const items = res?.ok ? res.data.items : [];
+const STATUS = { live: "Live", hidden: "Under review", removed: "Removed" } as const;
+---
+
+<DashboardLayout title="Your products" active="products">
+  <div class="spread" style="margin-bottom: 24px">
+    <h1 class="t-32">Your products</h1>
+    {me.isMaker && <a class="btn btn-primary" href="/dashboard/new"><Icon name="plus" /> Publish</a>}
+  </div>
+
+  {
+    !me.isMaker && (
+      <div class="stack-24">
+        <p class="t-17 muted" style="max-width: 600px">
+          Anyone can publish. First prove you own the domain your product lives on; it takes a DNS record or a meta tag, once per domain.
+        </p>
+        <ol class="list-plain how">
+          <li>
+            <span class="n">1</span>
+            <div>
+              <div class="w-600">Verify your domain</div>
+              <p class="muted">Keeps fake listings out and makes your listing trustworthy.</p>
+            </div>
+          </li>
+          <li>
+            <span class="n">2</span>
+            <div>
+              <div class="w-600">Paste your link</div>
+              <p class="muted">We fill in the name, description and preview image from your page.</p>
+            </div>
+          </li>
+          <li>
+            <span class="n">3</span>
+            <div>
+              <div class="w-600">Go live</div>
+              <p class="muted">Your product appears in the feeds of people who follow its categories.</p>
+            </div>
+          </li>
+        </ol>
+        <a class="btn btn-dark btn-lg" href="/dashboard/domains">Verify a domain</a>
+      </div>
+    )
+  }
+
+  {me.isMaker && res && !res.ok && <ErrorState />}
+  {
+    me.isMaker && res?.ok && items.length === 0 && (
+      <EmptyState title="Nothing published yet" text="Paste the link to your product and you're live in a few minutes.">
+        <a class="btn btn-primary" href="/dashboard/new">Publish your first product</a>
+      </EmptyState>
+    )
+  }
+  {
+    items.length > 0 && (
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Status</th>
+              <th class="num">Views</th>
+              <th class="num">Clicks</th>
+              <th class="num">Saves</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((p) => (
+              <tr>
+                <td>
+                  <div class="row-12">
+                    <div class="mini-thumb">
+                      <ProductImage image={p.image} title={p.title} sizes="64px" />
+                    </div>
+                    <div>
+                      <a class="w-600" href={`/dashboard/p/${p.id}`}>{p.title}</a>
+                      <div class="t-13 muted">Published {shortDate(p.publishedAt)}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="status" data-status={p.status}>{STATUS[p.status]}</span>
+                </td>
+                <td class="num">{compact(p.viewCount)}</td>
+                <td class="num">{compact(p.clickCount)}</td>
+                <td class="num">{compact(p.saveCount)}</td>
+                <td class="num">
+                  <div class="row" style="justify-content: flex-end">
+                    <a class="btn btn-ghost btn-sm" href={`/p/${p.slug}`}>View</a>
+                    <a class="btn btn-secondary btn-sm" href={`/dashboard/p/${p.id}`}>Manage</a>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+</DashboardLayout>
+
+<style>
+  .mini-thumb {
+    width: 64px;
+    aspect-ratio: 16 / 10;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    flex: none;
+  }
+  .mini-thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .mini-thumb :global(.img-fallback) {
+    font-size: 13px;
+  }
+  .how {
+    display: grid;
+    gap: 16px;
+    max-width: 560px;
+  }
+  .how li {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 12px;
+  }
+  .how .n {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    display: grid;
+    place-items: center;
+    font-size: var(--fs-13);
+    font-weight: 600;
+  }
+</style>

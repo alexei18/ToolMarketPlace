@@ -1,0 +1,51 @@
+---
+import type { MakerProfileDTO } from "@tm/shared";
+import Avatar from "../../components/Avatar.astro";
+import EmptyState from "../../components/EmptyState.astro";
+import ProductList from "../../components/ProductList.astro";
+import Base from "../../layouts/Base.astro";
+import { apiCall } from "../../lib/api";
+import { longDate, plural } from "../../lib/format";
+
+const username = Astro.params.username!;
+const res = await apiCall<MakerProfileDTO>(`/makers/${encodeURIComponent(username)}`);
+if (!res.ok && res.status === 404) return Astro.rewrite("/404");
+if (res.ok) Astro.cache.set({ maxAge: 300, swr: 60, tags: ["products", `m:${username}`] });
+const data = res.ok ? res.data : null;
+const u = data?.user;
+---
+
+<Base title={u ? `${u.name} (@${u.username})` : "Maker"} description={u ? (u.bio ?? `Products launched by ${u.name}.`) : undefined}>
+  <div class="container container-narrow page">
+    {
+      u && data && (
+        <>
+          <header class="maker-head">
+            <Avatar name={u.name} image={u.image} size="lg" />
+            <div class="stack-4">
+              <h1 class="t-32">{u.name}</h1>
+              <p class="muted">@{u.username} · Joined {longDate(u.createdAt)}</p>
+              {u.bio && <p class="t-17" style="margin-top: 10px">{u.bio}</p>}
+            </div>
+          </header>
+          <section class="section-tight">
+            <div class="section-head">
+              <h2>Products</h2>
+              <span class="t-13 muted">{plural(data.products.length, "product")}</span>
+            </div>
+            {data.products.length ? <ProductList id="maker-list" products={data.products} /> : <div style="margin-top: 20px"><EmptyState title="No public products" text="When this maker launches something, it shows up here." /></div>}
+          </section>
+        </>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .maker-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+</style>

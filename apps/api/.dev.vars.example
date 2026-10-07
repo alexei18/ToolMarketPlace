@@ -7,8 +7,12 @@ TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 # Email: leave empty to print emails to the console
 RESEND_API_KEY=
 # Web push (generate with: bun run apps/api/scripts/vapid.ts)
+VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
-# Optional Cloudflare API access: screenshots (Browser Rendering), cache purge, usage alerts
+# Shared with apps/web/.dev.vars; lets the API purge cached pages after edits
+PURGE_SECRET=dev-purge-secret
+# Comma-separated emails that become admins once verified
+ADMIN_EMAILS=admin@example.com
+# Optional Cloudflare API access: screenshots (Browser Rendering) and usage alerts
 CF_ACCOUNT_ID=
 CF_API_TOKEN=
-CF_ZONE_ID=

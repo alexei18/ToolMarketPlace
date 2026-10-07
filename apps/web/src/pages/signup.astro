@@ -1,0 +1,16 @@
+---
+import AuthForm from "../islands/AuthForm";
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { hasSessionHint } from "../lib/api";
+import { siteConfig } from "../lib/config";
+
+if (hasSessionHint(Astro.request)) return Astro.redirect("/feed");
+const next = Astro.url.searchParams.get("next") ?? undefined;
+const { googleEnabled } = siteConfig();
+---
+
+<AuthLayout title="Sign up" heading="Create your free account" sub="Get a feed of new products in the categories you pick, member-only perks and a say in what makers build next.">
+  <AuthForm client:load mode="signup" next={next} googleEnabled={googleEnabled} />
+  <p class="t-13 muted" style="margin-top: 16px">By signing up you agree to be a decent human. We never sell your data.</p>
+  <Fragment slot="foot">Already have an account? <a class="link" href={`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Log in</a></Fragment>
+</AuthLayout>

@@ -1,0 +1,24 @@
+---
+import type { DomainDTO } from "@tm/shared";
+import Domains from "../../islands/Domains";
+import DashboardLayout from "../../layouts/DashboardLayout.astro";
+import { apiCall } from "../../lib/api";
+import { requireMe } from "../../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+const res = await apiCall<{ items: DomainDTO[] }>("/me/domains", { request: Astro.request });
+const fromNew = Astro.url.searchParams.get("from") === "new";
+---
+
+<DashboardLayout title="Domains" active="domains">
+  <div style="max-width: 760px" class="stack-24">
+    <div class="stack-8">
+      <h1 class="t-32">Domains</h1>
+      <p class="t-17 muted">
+        {fromNew ? "Before publishing, verify the domain your product lives on." : "Verify each domain once. Every product you publish must live on one of your verified domains."}
+      </p>
+    </div>
+    <Domains client:load initial={res.ok ? res.data.items : []} emailVerified={me.emailVerified} />
+  </div>
+</DashboardLayout>

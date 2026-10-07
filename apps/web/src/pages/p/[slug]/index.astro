@@ -1,0 +1,75 @@
+---
+import type { ProductDetailDTO } from "@tm/shared";
+import ErrorState from "../../../components/ErrorState.astro";
+import Icon from "../../../components/Icon.astro";
+import ProductLayout from "../../../layouts/ProductLayout.astro";
+import Base from "../../../layouts/Base.astro";
+import { apiCall } from "../../../lib/api";
+
+const slug = Astro.params.slug!;
+const res = await apiCall<ProductDetailDTO>(`/products/${encodeURIComponent(slug)}`);
+if (!res.ok && res.status === 404) return Astro.rewrite("/404");
+if (res.ok) Astro.cache.set({ maxAge: 300, swr: 60, tags: ["products", `p:${slug}`] });
+else Astro.response.status = 503;
+const p = res.ok ? res.data : null;
+---
+
+{
+  p ? (
+    <ProductLayout product={p} active="overview">
+      <div class="grid-12">
+        <article class="span-8">
+          <h2 class="visually-hidden">About {p.title}</h2>
+          <div class="prose" set:html={p.descriptionHtml} />
+        </article>
+        <aside class="span-4 stack-16">
+          {p.feedbackMode !== "off" && (
+            <a class="box box-tight teaser" href={`/p/${p.slug}/feedback`}>
+              <Icon name="message" size={18} />
+              <span>
+                <span class="w-600">Tell the maker what you think</span>
+                <span class="t-13 muted">{p.feedbackMode === "public" ? "Bugs, ideas and praise are public." : "Feedback goes privately to the maker."}</span>
+              </span>
+            </a>
+          )}
+          {p.roadmapEnabled && (
+            <a class="box box-tight teaser" href={`/p/${p.slug}/roadmap`}>
+              <Icon name="map" size={18} />
+              <span>
+                <span class="w-600">See what's coming</span>
+                <span class="t-13 muted">Vote on the public roadmap.</span>
+              </span>
+            </a>
+          )}
+        </aside>
+      </div>
+    </ProductLayout>
+  ) : (
+    <Base title="Product" noindex>
+      <div class="container page">
+        <ErrorState />
+      </div>
+    </Base>
+  )
+}
+
+<style>
+  .teaser {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 12px;
+    align-items: start;
+    transition: border-color var(--ease);
+  }
+  .teaser:hover {
+    text-decoration: none;
+    border-color: var(--border-strong);
+  }
+  .teaser > span {
+    display: grid;
+    gap: 2px;
+  }
+  .teaser svg {
+    margin-top: 2px;
+  }
+</style>

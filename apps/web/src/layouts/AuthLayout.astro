@@ -1,0 +1,50 @@
+---
+import Base from "./Base.astro";
+
+interface Props {
+  title: string;
+  heading: string;
+  sub?: string;
+}
+const { title, heading, sub } = Astro.props;
+---
+
+<Base title={title} noindex>
+  <div class="container container-form page auth-page">
+    <div class="stack-8 auth-head">
+      <h1 class="t-32">{heading}</h1>
+      {sub && <p class="muted">{sub}</p>}
+    </div>
+    <slot />
+    <div class="auth-foot t-15 muted">
+      <slot name="foot" />
+    </div>
+  </div>
+</Base>
+
+<style>
+  .auth-page {
+    padding-top: 72px;
+  }
+  .auth-head {
+    margin-bottom: 32px;
+  }
+  .auth-foot {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  :global(.or) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-3);
+    font-size: var(--fs-13);
+  }
+  :global(.or::before),
+  :global(.or::after) {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--border);
+  }
+</style>

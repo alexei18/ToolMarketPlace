@@ -1,0 +1,122 @@
+---
+import type { CategoryDTO, Page, ProductCardDTO } from "@tm/shared";
+import EmptyState from "../components/EmptyState.astro";
+import ErrorState from "../components/ErrorState.astro";
+import Icon from "../components/Icon.astro";
+import ProductList from "../components/ProductList.astro";
+import SignupGate from "../components/SignupGate.astro";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { PRICING_LABEL, STAGE_LABEL } from "../lib/format";
+
+const sp = Astro.url.searchParams;
+const q = (sp.get("q") ?? "").slice(0, 100);
+const filters = {
+  stage: sp.get("stage") ?? "",
+  pricing: sp.get("pricing") ?? "",
+  category: sp.get("category") ?? "",
+  perk: sp.get("perk") === "1",
+  feedback: sp.get("feedback") === "1",
+};
+const params = new URLSearchParams();
+if (q) params.set("q", q);
+if (filters.stage) params.set("stage", filters.stage);
+if (filters.pricing) params.set("pricing", filters.pricing);
+if (filters.category) params.set("category", filters.category);
+if (filters.perk) params.set("perk", "1");
+if (filters.feedback) params.set("feedback", "1");
+
+const [res, catRes] = await Promise.all([
+  apiCall<Page<ProductCardDTO>>(`/search?${params}`, { request: Astro.request }),
+  apiCall<{ items: CategoryDTO[] }>("/categories"),
+]);
+Astro.response.headers.set("Cache-Control", "private, no-store");
+const page = res.ok ? res.data : null;
+const categories = catRes.ok ? catRes.data.items : [];
+const active = Object.values(filters).some(Boolean);
+const title = q ? `Search: ${q}` : "Explore new products";
+---
+
+<Base title={title} query={q} noindex={!!q || active} canonical="/search">
+  <div class="container page">
+    <h1 class="t-32">{q ? <>Results for “{q}”</> : "Explore"}</h1>
+    <form class="search-form" method="get" action="/search" role="search">
+      <div class="search-input">
+        <Icon name="search" size={18} />
+        <input class="input input-lg" type="search" name="q" value={q} placeholder="Try “invoice”, “habit tracker” or “screen recorder”" aria-label="Search products" />
+      </div>
+      <div class="filters">
+        <select class="select" name="category" aria-label="Category">
+          <option value="">All categories</option>
+          {categories.map((c) => <option value={c.slug} selected={filters.category === c.slug}>{c.name}</option>)}
+        </select>
+        <select class="select" name="stage" aria-label="Stage">
+          <option value="">Any stage</option>
+          {Object.entries(STAGE_LABEL).map(([v, l]) => <option value={v} selected={filters.stage === v}>{l}</option>)}
+        </select>
+        <select class="select" name="pricing" aria-label="Pricing">
+          <option value="">Any price</option>
+          {Object.entries(PRICING_LABEL).map(([v, l]) => <option value={v} selected={filters.pricing === v}>{l}</option>)}
+        </select>
+        <label class="checkbox"><input type="checkbox" name="perk" value="1" checked={filters.perk} /> Has a perk</label>
+        <label class="checkbox"><input type="checkbox" name="feedback" value="1" checked={filters.feedback} /> Wants feedback</label>
+        <button class="btn btn-dark" type="submit">Search</button>
+        {active && <a class="btn btn-ghost" href={q ? `/search?q=${encodeURIComponent(q)}` : "/search"}>Clear filters</a>}
+      </div>
+    </form>
+
+    <section class="section-tight">
+      {!page && <ErrorState />}
+      {
+        page && page.items.length === 0 && (
+          <EmptyState title="No products match" text={q ? "Try a shorter or different word, or remove some filters." : "Nothing matches these filters yet."}>
+            {active && <a class="btn btn-secondary" href={q ? `/search?q=${encodeURIComponent(q)}` : "/search"}>Clear filters</a>}
+          </EmptyState>
+        )
+      }
+      {
+        page && page.items.length > 0 && (
+          <>
+            <div class="section-head">
+              <h2>{q ? "Best matches" : "Newest first"}</h2>
+            </div>
+            <ProductList id="search-list" products={page.items} source={`/fragments/products?source=search&${params}`} nextCursor={page.nextCursor} />
+            {page.limited && <SignupGate title="There's more" text="Create a free account to see every result and get new products in your categories." />}
+          </>
+        )
+      }
+    </section>
+  </div>
+</Base>
+
+<style>
+  .search-form {
+    margin-top: 20px;
+    display: grid;
+    gap: 14px;
+  }
+  .search-input {
+    position: relative;
+    max-width: 720px;
+  }
+  .search-input svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+  }
+  .search-input .input {
+    padding-left: 42px;
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+  }
+  .filters .select {
+    width: auto;
+    min-width: 150px;
+  }
+</style>

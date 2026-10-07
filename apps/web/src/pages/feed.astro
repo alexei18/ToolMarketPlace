@@ -1,0 +1,72 @@
+---
+import type { Page, ProductCardDTO } from "@tm/shared";
+import EmptyState from "../components/EmptyState.astro";
+import ErrorState from "../components/ErrorState.astro";
+import ProductList from "../components/ProductList.astro";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { requireMe } from "../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+if (!me.onboarded) return Astro.redirect("/onboarding");
+
+const res = await apiCall<Page<ProductCardDTO>>("/feed", { request: Astro.request });
+const cats = await apiCall<{ items: { slug: string; name: string }[] }>("/categories");
+const names = new Map((cats.ok ? cats.data.items : []).map((c) => [c.slug, c.name]));
+const verified = Astro.url.searchParams.get("verified") === "1";
+const firstName = me.name.split(" ")[0];
+---
+
+<Base title="Your feed" noindex>
+  <div class="container page">
+    <div class="grid-12">
+      <div class="span-8">
+        {verified && <div class="notice notice-success" style="margin-bottom: 24px">Your email is confirmed. Perks and publishing are unlocked.</div>}
+        <header class="stack-8">
+          <h1 class="t-32">New for you, {firstName}</h1>
+          <p class="muted">The newest launches in the categories you follow.</p>
+        </header>
+        <section class="section-tight">
+          {!res.ok && <ErrorState />}
+          {
+            res.ok && res.data.items.length === 0 && (
+              <EmptyState title="Quiet in your categories" text="Nothing new yet. Follow a few more categories or explore everything that launched recently.">
+                <a class="btn btn-secondary" href="/settings#interests">Edit categories</a>
+                <a class="btn btn-dark" href="/search">Explore all</a>
+              </EmptyState>
+            )
+          }
+          {
+            res.ok && res.data.items.length > 0 && (
+              <>
+                <div class="section-head">
+                  <h2>Newest first</h2>
+                </div>
+                <ProductList id="feed-list" products={res.data.items} source="/fragments/products?source=feed" nextCursor={res.data.nextCursor} />
+              </>
+            )
+          }
+        </section>
+      </div>
+      <aside class="span-4">
+        <div class="sticky-aside stack-24">
+          <div>
+            <div class="section-head">
+              <h2>You follow</h2>
+              <a class="t-13 muted" href="/settings#interests">Edit</a>
+            </div>
+            <div class="row row-wrap" style="margin-top: 14px">
+              {me.interests.map((slug) => <a class="chip" href={`/c/${slug}`}>{names.get(slug) ?? slug}</a>)}
+            </div>
+          </div>
+          <div class="box-surface stack-8">
+            <h3 class="t-15 w-600">Digest: {me.digestFrequency === "off" ? "off" : me.digestFrequency}</h3>
+            <p class="t-13 muted">{me.digestFrequency === "off" ? "Turn on a daily or weekly summary of new products." : `We'll send a ${me.digestFrequency} summary of new products in your categories.`}</p>
+            <a class="t-13 link" href="/settings#notifications">Change</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,21 @@
+---
+import { siteConfig } from "../lib/config";
+const { siteName } = siteConfig();
+const year = new Date().getUTCFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container cols">
+    <div>
+      <div class="w-600" style="color: var(--text)">{siteName}</div>
+      <p style="margin-top: 4px; max-width: 360px">New digital products, the day they launch. Free for makers and for everyone who likes trying new tools.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="/search">Explore</a>
+      <a href="/#categories">Categories</a>
+      <a href="/dashboard/new">Submit a product</a>
+      <a href="/sitemap.xml">Sitemap</a>
+      <span>© {year}</span>
+    </nav>
+  </div>
+</footer>

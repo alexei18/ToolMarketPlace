@@ -1,0 +1,23 @@
+---
+import Icon from "./Icon.astro";
+
+interface Props {
+  productId: string;
+  count: number;
+  size?: "sm" | "md";
+  withLabel?: boolean;
+}
+const { productId, count, size = "sm", withLabel = false } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={["save-btn", size === "md" && "btn btn-secondary"]}
+  data-save={productId}
+  aria-pressed="false"
+  aria-label="Save"
+>
+  <Icon name="bookmark" />
+  {withLabel && <span data-save-label>Save</span>}
+  <span data-save-count>{count}</span>
+</button>

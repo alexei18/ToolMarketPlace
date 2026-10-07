@@ -1,0 +1,47 @@
+---
+/*
+ * Server-rendered rows for "Load more". Uses the visitor's cookies, so members page through
+ * everything while visitors stay within the visitor limit. Never cached.
+ */
+import type { Page, ProductCardDTO } from "@tm/shared";
+import ProductRow from "../../components/ProductRow.astro";
+import { apiCall } from "../../lib/api";
+
+export const partial = true;
+
+const q = Astro.url.searchParams;
+const source = q.get("source");
+const cursor = q.get("cursor") ?? "";
+const params = new URLSearchParams({ cursor });
+let path: string | null = null;
+switch (source) {
+  case "category":
+    path = `/categories/${encodeURIComponent(q.get("slug") ?? "")}/products?${params}`;
+    break;
+  case "feed":
+    path = `/feed?${params}`;
+    break;
+  case "latest":
+    path = `/products?${params}`;
+    break;
+  case "saved":
+    path = `/me/saves?${params}`;
+    break;
+  case "search": {
+    for (const key of ["q", "stage", "pricing", "perk", "feedback", "category"]) {
+      const v = q.get(key);
+      if (v) params.set(key, v);
+    }
+    path = `/search?${params}`;
+    break;
+  }
+}
+
+Astro.response.headers.set("Cache-Control", "private, no-store");
+const res = path ? await apiCall<Page<ProductCardDTO>>(path, { request: Astro.request }) : null;
+if (!res || !res.ok) Astro.response.status = res?.status ?? 400;
+const page = res?.ok ? res.data : { items: [], nextCursor: null };
+---
+
+{page.items.map((p) => <ProductRow product={p} />)}
+<div data-next-cursor={page.nextCursor ?? ""} hidden></div>

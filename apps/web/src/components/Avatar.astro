@@ -1,0 +1,14 @@
+---
+import { initials } from "../lib/format";
+
+interface Props {
+  name: string;
+  image?: string | null;
+  size?: "sm" | "md" | "lg";
+}
+const { name, image, size = "md" } = Astro.props;
+---
+
+<span class:list={["avatar", size === "lg" && "avatar-lg", size === "sm" && "avatar-sm"]} aria-hidden="true">
+  {image ? <img src={image} alt="" referrerpolicy="no-referrer" loading="lazy" /> : initials(name)}
+</span>

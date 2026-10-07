@@ -1,0 +1,211 @@
+---
+import { markdownToText, type ProductDetailDTO } from "@tm/shared";
+import Avatar from "../components/Avatar.astro";
+import Icon from "../components/Icon.astro";
+import ProductImage from "../components/ProductImage.astro";
+import SaveButton from "../components/SaveButton.astro";
+import { siteConfig } from "../lib/config";
+import { PERK_TYPE_LABEL, PRICING_LABEL, STAGE_LABEL, expiresLabel, longDate } from "../lib/format";
+import Base from "./Base.astro";
+
+interface Props {
+  product: ProductDetailDTO;
+  active: "overview" | "feedback" | "roadmap";
+  title?: string;
+  description?: string;
+}
+const { product: p, active, title, description } = Astro.props;
+const { siteUrl } = siteConfig();
+const showFeedback = p.feedbackMode !== "off";
+const showRoadmap = p.roadmapEnabled;
+const metaDescription = description ?? `${p.tagline}. ${markdownToText(p.description, 120)}`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: p.title,
+  description: p.tagline,
+  url: p.url,
+  image: p.image?.url,
+  applicationCategory: p.categories[0]?.name ?? "Application",
+  operatingSystem: "Web",
+  datePublished: new Date(p.publishedAt * 1000).toISOString(),
+  author: { "@type": "Person", name: p.maker.name, url: p.maker.username ? `${siteUrl}/m/${p.maker.username}` : undefined },
+  offers: { "@type": "Offer", price: p.pricing === "paid" ? undefined : "0", priceCurrency: "USD", category: PRICING_LABEL[p.pricing] },
+};
+---
+
+<Base title={title ?? `${p.title}: ${p.tagline}`} description={metaDescription} image={p.image?.url} jsonLd={active === "overview" ? jsonLd : null} canonical={active === "overview" ? `/p/${p.slug}` : `/p/${p.slug}/${active}`}>
+  <div class="container page" data-product={p.id} data-slug={p.slug}>
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span>/</span>
+      {p.categories[0] && <><a href={`/c/${p.categories[0].slug}`}>{p.categories[0].name}</a><span>/</span></>}
+      <span aria-current="page">{p.title}</span>
+    </nav>
+
+    <div class="grid-12 product-top">
+      <div class="span-7">
+        <div class="hero-image" id="hero-image">
+          <ProductImage image={p.image} title={p.title} eager sizes="(max-width: 960px) 100vw, 700px" />
+        </div>
+        {
+          p.images.length > 1 && (
+            <div class="thumbs" style="margin-top: 12px" role="list" aria-label="Screenshots">
+              {p.images.map((img, i) => (
+                <button type="button" data-thumb={img.url} aria-current={i === 0 ? "true" : "false"} aria-label={`Show image ${i + 1}`}>
+                  <img src={img.url} alt="" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          )
+        }
+      </div>
+
+      <div class="span-5 product-side">
+        <div class="stack-12">
+          <h1 class="t-32">{p.title}</h1>
+          <p class="t-17 muted">{p.tagline}</p>
+        </div>
+
+        <div class="row-12 maker-line">
+          <Avatar name={p.maker.name} image={p.maker.image} size="sm" />
+          <span class="t-15">
+            by {p.maker.username ? <a class="link" href={`/m/${p.maker.username}`}>{p.maker.name}</a> : p.maker.name}
+          </span>
+        </div>
+
+        <dl class="kv">
+          <dt>Launched</dt><dd>{longDate(p.publishedAt)}</dd>
+          <dt>Stage</dt><dd>{STAGE_LABEL[p.stage]}</dd>
+          <dt>Pricing</dt><dd>{PRICING_LABEL[p.pricing]}</dd>
+          <dt>Categories</dt>
+          <dd class="row row-wrap">{p.categories.map((c) => <a class="chip" href={`/c/${c.slug}`}>{c.name}</a>)}</dd>
+        </dl>
+
+        <div class="row row-wrap">
+          <a class="btn btn-primary btn-lg" href={p.url} target="_blank" rel="noopener" data-click={p.id}>
+            Visit {p.hostname} <Icon name="arrow-up-right" />
+          </a>
+          <SaveButton productId={p.id} count={p.saveCount} size="md" withLabel />
+        </div>
+        <a class="btn btn-secondary owner-only" href={`/dashboard/p/${p.id}`} hidden>Edit your listing</a>
+
+        {
+          p.perks.length > 0 && (
+            <section class="box perks" aria-labelledby="perks-title">
+              <div class="spread" style="margin-bottom: 14px">
+                <h2 id="perks-title" class="t-17">Member perks</h2>
+                <span class="t-13 muted">Free account required</span>
+              </div>
+              <ul class="list-plain">
+                {p.perks.map((perk) => (
+                  <li class="perk" data-perk={perk.id}>
+                    <div class="spread" style="align-items: flex-start">
+                      <div>
+                        <div class="w-600">{perk.title}</div>
+                        <div class="t-13 muted">
+                          {PERK_TYPE_LABEL[perk.type]}
+                          {expiresLabel(perk.expiresAt) && <> · {expiresLabel(perk.expiresAt)}</>}
+                          {perk.remaining !== null && perk.available && <> · {perk.remaining} left</>}
+                        </div>
+                      </div>
+                      {perk.available ? (
+                        <button type="button" class="btn btn-dark btn-sm" data-claim={perk.id}>
+                          Claim
+                        </button>
+                      ) : (
+                        <span class="t-13 muted">No longer available</span>
+                      )}
+                    </div>
+                    {perk.details && <p class="t-15 muted" style="margin-top: 8px">{perk.details}</p>}
+                    <div class="perk-result" data-perk-result></div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+      </div>
+    </div>
+
+    <nav class="tabs product-tabs" aria-label="Product sections">
+      <a href={`/p/${p.slug}`} aria-current={active === "overview" ? "page" : undefined}>Overview</a>
+      {showFeedback && <a href={`/p/${p.slug}/feedback`} aria-current={active === "feedback" ? "page" : undefined}>Feedback</a>}
+      {showRoadmap && <a href={`/p/${p.slug}/roadmap`} aria-current={active === "roadmap" ? "page" : undefined}>Roadmap</a>}
+    </nav>
+
+    <div class="product-body">
+      <slot />
+    </div>
+
+    <div class="report-line">
+      <button type="button" class="btn-text t-13 muted" data-report><Icon name="flag" size={14} class="inline-icon" /> Report this product</button>
+    </div>
+
+    <dialog class="modal" id="report-dialog" aria-labelledby="report-title">
+      <form method="dialog" id="report-form">
+        <div class="modal-head">
+          <h2 id="report-title">Report {p.title}</h2>
+          <button type="submit" value="cancel" class="icon-link" aria-label="Close" formnovalidate><Icon name="x" /></button>
+        </div>
+        <div class="modal-body stack-16">
+          <p class="muted">Reports from established accounts are reviewed. Products with several reports are hidden until an admin checks them.</p>
+          <fieldset class="stack-8" style="border: 0; padding: 0; margin: 0">
+            <legend class="label" style="margin-bottom: 8px">What's wrong?</legend>
+            <label class="checkbox"><input type="radio" name="reason" value="spam" required /> Spam or self-promotion</label>
+            <label class="checkbox"><input type="radio" name="reason" value="scam" /> Scam or misleading</label>
+            <label class="checkbox"><input type="radio" name="reason" value="dead_link" /> The link is dead</label>
+            <label class="checkbox"><input type="radio" name="reason" value="prohibited" /> Prohibited content</label>
+            <label class="checkbox"><input type="radio" name="reason" value="other" /> Something else</label>
+          </fieldset>
+          <div class="field">
+            <label for="report-note">Details <span class="muted">(optional)</span></label>
+            <textarea class="textarea" id="report-note" name="note" maxlength="500" rows="3"></textarea>
+          </div>
+          <div data-turnstile></div>
+        </div>
+        <div class="modal-foot">
+          <button type="submit" value="cancel" class="btn btn-ghost" formnovalidate>Cancel</button>
+          <button type="submit" value="send" class="btn btn-dark">Send report</button>
+        </div>
+      </form>
+    </dialog>
+  </div>
+</Base>
+
+<script>
+  import "../scripts/product";
+</script>
+
+<style>
+  .product-top {
+    margin-top: 20px;
+    align-items: start;
+  }
+  .product-side {
+    display: grid;
+    gap: 24px;
+  }
+  .maker-line {
+    margin-top: -8px;
+  }
+  .product-tabs {
+    margin-top: 56px;
+  }
+  .product-body {
+    padding-top: 32px;
+  }
+  .report-line {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .perk-result:empty {
+    display: none;
+  }
+  .perk-result {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+  }
+</style>

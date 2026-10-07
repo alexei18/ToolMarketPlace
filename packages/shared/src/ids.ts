@@ -1,17 +1,36 @@
 const ENCODING = "0123456789abcdefghjkmnpqrstvwxyz";
 
-/** Lowercase ULID: 48-bit timestamp + 80 random bits, sortable by creation time. */
+let lastTime = -1;
+let lastRandom: number[] = [];
+
+/**
+ * Lowercase ULID: 48-bit timestamp + 80 random bits, sortable by creation time. Monotonic within
+ * an isolate: ids made in the same millisecond increment the random part, so they keep their order.
+ */
 export function newId(now: number = Date.now()): string {
+  let random: number[];
+  if (now <= lastTime && lastRandom.length === 16) {
+    now = lastTime;
+    random = [...lastRandom];
+    for (let i = 15; i >= 0; i--) {
+      if (random[i]! < 31) {
+        random[i]!++;
+        break;
+      }
+      random[i] = 0;
+    }
+  } else {
+    random = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b % 32);
+  }
+  lastTime = now;
+  lastRandom = random;
   let time = "";
   let t = now;
   for (let i = 0; i < 10; i++) {
     time = ENCODING[t % 32] + time;
     t = Math.floor(t / 32);
   }
-  const bytes = crypto.getRandomValues(new Uint8Array(16));
-  let rand = "";
-  for (const b of bytes) rand += ENCODING[b % 32];
-  return time + rand;
+  return time + random.map((r) => ENCODING[r]).join("");
 }
 
 /** Random URL-safe token for domain verification and similar secrets. */

@@ -1,0 +1,83 @@
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import { siteConfig } from "../lib/config";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Absolute or root-relative canonical path; defaults to the current path without query. */
+  canonical?: string;
+  image?: string | null;
+  noindex?: boolean;
+  query?: string;
+  jsonLd?: Record<string, unknown> | null;
+  /** Hide header/footer (auth pages). */
+  bare?: boolean;
+}
+
+const { siteName, siteUrl, apiUrl, turnstileSiteKey } = siteConfig();
+const {
+  title,
+  description = `Discover new apps and tools the day they launch on ${siteName}. Follow categories, get member perks and help makers shape their roadmap.`,
+  canonical = Astro.url.pathname,
+  image = null,
+  noindex = false,
+  query,
+  jsonLd = null,
+  bare = false,
+} = Astro.props;
+
+const fullTitle = title ? `${title} · ${siteName}` : `${siteName} · New digital products, every day`;
+const canonicalUrl = canonical.startsWith("http") ? canonical : `${siteUrl}${canonical}`;
+const ogImage = image ?? `${siteUrl}/og.png`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title ?? siteName} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="api-origin" content={apiUrl} />
+    {turnstileSiteKey && <meta name="turnstile-site-key" content={turnstileSiteKey} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preconnect" href={apiUrl} crossorigin="use-credentials" />
+    <script is:inline>
+      // Runs before paint: mark signed-in visitors (hint cookie only, no secrets) so cached pages
+      // can show the right header without a flash, and send them from the landing page to their feed.
+      if (/(?:^|;\s*)tm_auth=1/.test(document.cookie)) {
+        document.documentElement.dataset.auth = "1";
+        if (location.pathname === "/" && !location.search.includes("home=1")) location.replace("/feed");
+      }
+    </script>
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="visually-hidden" href="#main">Skip to content</a>
+    {!bare && <Header query={query} />}
+    <main id="main">
+      <slot />
+    </main>
+    {!bare && <Footer />}
+    <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+    <script>
+      import "../scripts/global";
+    </script>
+  </body>
+</html>

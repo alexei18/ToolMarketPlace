@@ -1,0 +1,29 @@
+---
+import type { ProductCardDTO } from "@tm/shared";
+import ProductRow from "./ProductRow.astro";
+
+interface Props {
+  id: string;
+  products: ProductCardDTO[];
+  /** Fragment URL that renders the next page (cursor is appended). */
+  source?: string;
+  nextCursor?: string | null;
+  ranked?: boolean;
+  /** Load-more only works with an account (visitor limit). */
+  requiresAuth?: boolean;
+}
+const { id, products, source, nextCursor, ranked = false, requiresAuth = false } = Astro.props;
+---
+
+<ul class="product-list" id={id}>
+  {products.map((p, i) => <ProductRow product={p} rank={ranked ? i + 1 : undefined} eager={i < 2} />)}
+</ul>
+{
+  source && nextCursor && (
+    <div class="load-more">
+      <button type="button" class="btn btn-secondary" data-load-more data-target={id} data-source={source} data-cursor={nextCursor} data-requires-auth={String(requiresAuth)}>
+        Load more
+      </button>
+    </div>
+  )
+}

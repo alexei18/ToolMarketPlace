@@ -1,0 +1,194 @@
+---
+import type { HomeDTO } from "@tm/shared";
+import EmptyState from "../components/EmptyState.astro";
+import ErrorState from "../components/ErrorState.astro";
+import Icon from "../components/Icon.astro";
+import ProductList from "../components/ProductList.astro";
+import ProductTile from "../components/ProductTile.astro";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { siteConfig } from "../lib/config";
+import { plural, todayLabel } from "../lib/format";
+
+const { siteName, siteUrl } = siteConfig();
+const res = await apiCall<HomeDTO>("/home");
+if (res.ok) Astro.cache.set({ maxAge: 60, swr: 60, tags: ["home", "products"] });
+else Astro.response.status = 503;
+
+const home = res.ok ? res.data : null;
+const today = home?.today ?? [];
+const recent = home?.recent ?? [];
+const categories = home?.categories ?? [];
+const lead = today.length > 0 ? today : recent.slice(0, 8);
+const rest = today.length > 0 ? recent : recent.slice(8);
+const total = home?.totalProducts ?? 0;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: siteName,
+  url: siteUrl,
+  potentialAction: { "@type": "SearchAction", target: `${siteUrl}/search?q={query}`, "query-input": "required name=query" },
+};
+---
+
+<Base jsonLd={jsonLd}>
+  <section class="container hero">
+    <div class="hero-copy">
+      <h1 class="t-48">New software,<br />the day it ships.</h1>
+      <p class="t-17 muted">
+        Makers list what they just launched. Pick the categories you care about and get a feed of new tools, member-only perks, and a direct line to the people building them.
+      </p>
+      <div class="row row-wrap hero-actions">
+        <a class="btn btn-primary btn-lg" href="/signup">Create a free account</a>
+        <a class="btn btn-ghost btn-lg" href="#today">See today's launches</a>
+      </div>
+    </div>
+    <dl class="hero-facts">
+      <div><dt>Products listed</dt><dd>{total.toLocaleString("en-US")}</dd></div>
+      <div><dt>Categories</dt><dd>{categories.length}</dd></div>
+      <div><dt>Price</dt><dd>Free</dd></div>
+    </dl>
+  </section>
+
+  <section class="container section" id="today">
+    {!home && <ErrorState />}
+    {
+      home && (
+        <div class="grid-12">
+          <div class="span-8">
+            <div class="section-head">
+              <h2>{today.length > 0 ? "Launched today" : "Latest launches"}</h2>
+              <span class="t-13 muted">{todayLabel()}</span>
+            </div>
+            {lead.length > 0 ? (
+              <ProductList id="home-list" products={lead} />
+            ) : (
+              <div style="margin-top: 20px">
+                <EmptyState title="Nothing launched yet" text="Be the first maker to list a product. It takes about three minutes.">
+                  <a class="btn btn-primary" href="/dashboard/new">Submit a product</a>
+                </EmptyState>
+              </div>
+            )}
+          </div>
+          <aside class="span-4">
+            <div class="sticky-aside stack-32">
+              <div>
+                <div class="section-head">
+                  <h2>Popular categories</h2>
+                  <a class="t-13 muted" href="#categories">All</a>
+                </div>
+                <ul class="list-plain cat-list">
+                  {categories.slice(0, 8).map((c) => (
+                    <li>
+                      <a href={`/c/${c.slug}`}>
+                        <span>{c.name}</span>
+                        <span class="chip-count">{c.productCount ?? 0}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div class="box-surface stack-12">
+                <h3 class="t-17">Launching something?</h3>
+                <p class="muted">Verify your domain, paste your link, and you're live. Collect feedback, run a public roadmap and offer perks to early users.</p>
+                <a class="btn btn-dark" href="/dashboard/new">
+                  List your product <Icon name="arrow-right" />
+                </a>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )
+    }
+  </section>
+
+  {
+    categories.length > 0 && (
+      <section class="container section" id="categories">
+        <div class="section-head">
+          <h2>Browse by category</h2>
+          <span class="t-13 muted">{plural(categories.length, "category", "categories")}</span>
+        </div>
+        <ul class="list-plain cat-list cat-grid">
+          {[...categories]
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((c) => (
+              <li>
+                <a href={`/c/${c.slug}`}>
+                  <span>{c.name}</span>
+                  <span class="chip-count">{c.productCount ?? 0}</span>
+                </a>
+              </li>
+            ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    rest.length > 0 && (
+      <section class="container section">
+        <div class="section-head">
+          <h2>Recently launched</h2>
+          <a class="t-13 muted" href="/search">
+            Explore all
+          </a>
+        </div>
+        <ul class="tile-grid" style="margin-top: 24px">
+          {rest.map((p) => (
+            <ProductTile product={p} />
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 48px;
+    padding-top: 72px;
+    padding-bottom: 8px;
+  }
+  .hero-copy {
+    max-width: 680px;
+  }
+  .hero-copy p {
+    margin-top: 20px;
+    max-width: 560px;
+  }
+  .hero-actions {
+    margin-top: 28px;
+  }
+  .hero-facts {
+    display: flex;
+    gap: 40px;
+    margin: 0;
+    padding-bottom: 6px;
+  }
+  .hero-facts dt {
+    font-size: var(--fs-13);
+    color: var(--text-2);
+  }
+  .hero-facts dd {
+    margin: 2px 0 0;
+    font-size: var(--fs-22);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-width: 860px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 32px;
+      padding-top: 40px;
+    }
+    .hero-facts {
+      gap: 28px;
+    }
+  }
+</style>

@@ -1,0 +1,34 @@
+---
+import type { ReviewQueueItemDTO } from "@tm/shared";
+import Admin from "../islands/Admin";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { requireMe } from "../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+if (me.role !== "admin") return Astro.rewrite("/404");
+const res = await apiCall<{ items: ReviewQueueItemDTO[] }>("/admin/review-queue", { request: Astro.request });
+---
+
+<Base title="Admin" noindex>
+  <div class="container page">
+    <h1 class="t-32" style="margin-bottom: 24px">Admin</h1>
+    <Admin client:load queue={res.ok ? res.data.items : []} />
+  </div>
+</Base>
+
+<style is:global>
+  .queue-item {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .report-list {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    display: grid;
+    gap: 8px;
+  }
+</style>

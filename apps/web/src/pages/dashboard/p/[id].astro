@@ -1,0 +1,20 @@
+---
+import type { CategoryDTO, MakerProductDetailDTO } from "@tm/shared";
+import ProductEditor from "../../../islands/ProductEditor";
+import DashboardLayout from "../../../layouts/DashboardLayout.astro";
+import { apiCall } from "../../../lib/api";
+import { requireMe } from "../../../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+const [res, cats] = await Promise.all([
+  apiCall<MakerProductDetailDTO>(`/maker/products/${encodeURIComponent(Astro.params.id!)}`, { request: Astro.request }),
+  apiCall<{ items: CategoryDTO[] }>("/categories"),
+]);
+if (!res.ok) return Astro.rewrite("/404");
+const justPublished = Astro.url.searchParams.get("published") === "1";
+---
+
+<DashboardLayout title={`Manage ${res.data.title}`} active="edit">
+  <ProductEditor client:load product={res.data} categories={cats.ok ? cats.data.items : []} justPublished={justPublished} />
+</DashboardLayout>

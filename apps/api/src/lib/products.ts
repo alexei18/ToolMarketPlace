@@ -22,8 +22,9 @@ import {
 } from "@tm/shared";
 import type { Env } from "../env";
 
+/** Public URL of an R2 image key (`img/<hash>.webp`): the img. domain in production, else this worker. */
 export function imageUrl(env: Env, key: string): string {
-  const base = (env.IMAGES_BASE_URL || `${env.API_ORIGIN}/img`).replace(/\/$/, "");
+  const base = (env.IMAGES_BASE_URL || env.API_ORIGIN).replace(/\/$/, "");
   return `${base}/${key}`;
 }
 

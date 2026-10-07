@@ -1,0 +1,17 @@
+---
+import AuthForm from "../islands/AuthForm";
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { hasSessionHint } from "../lib/api";
+import { siteConfig } from "../lib/config";
+
+const next = Astro.url.searchParams.get("next") ?? undefined;
+if (hasSessionHint(Astro.request) && !Astro.url.searchParams.has("reason")) return Astro.redirect(next?.startsWith("/") ? next : "/feed");
+const { googleEnabled } = siteConfig();
+const googleError = Astro.url.searchParams.get("error") === "google";
+---
+
+<AuthLayout title="Log in" heading="Welcome back" sub="Log in to see your feed, saved products and perks.">
+  {googleError && <div class="notice notice-danger" style="margin-bottom: 20px">Google sign-in didn't finish. Try again or use email.</div>}
+  <AuthForm client:load mode="login" next={next} googleEnabled={googleEnabled} reason={Astro.url.searchParams.get("reason") ?? undefined} />
+  <Fragment slot="foot">New here? <a class="link" href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Create a free account</a></Fragment>
+</AuthLayout>

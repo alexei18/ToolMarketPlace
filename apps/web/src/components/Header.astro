@@ -1,0 +1,136 @@
+---
+import Icon from "./Icon.astro";
+import Logo from "./Logo.astro";
+import { siteConfig } from "../lib/config";
+
+interface Props {
+  query?: string;
+}
+const { query = "" } = Astro.props;
+const { siteName } = siteConfig();
+const path = Astro.url.pathname;
+---
+
+<header class="site-header">
+  <div class="container bar">
+    <a href="/" class="wordmark" aria-label={`${siteName} home`}><Logo /><span>{siteName}</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="/search" aria-current={path === "/search" ? "page" : undefined}>Explore</a>
+      <a href="/#categories">Categories</a>
+      <a href="/dashboard/new" aria-current={path.startsWith("/dashboard") ? "page" : undefined}>Submit a product</a>
+    </nav>
+    <form class="header-search" action="/search" method="get" role="search">
+      <Icon name="search" />
+      <input type="search" name="q" value={query} placeholder="Search new products" aria-label="Search products" autocomplete="off" />
+    </form>
+    <div class="header-actions" id="header-actions">
+      <a class="icon-link show-sm" href="/search" aria-label="Search"><Icon name="search" size={18} /></a>
+      <div class="row visitor-only">
+        <a class="btn btn-ghost btn-sm" href="/login">Log in</a>
+        <a class="btn btn-dark btn-sm" href="/signup">Sign up</a>
+      </div>
+      <div class="row member-only" id="member-actions">
+        <a class="icon-link" href="/notifications" aria-label="Notifications" id="bell"><Icon name="bell" size={18} /></a>
+        <span class="avatar skeleton" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+  <div id="account-notice"></div>
+</header>
+
+<style>
+  .member-only {
+    display: none;
+  }
+  :global(html[data-auth="1"]) .member-only {
+    display: flex;
+  }
+  :global(html[data-auth="1"]) .visitor-only {
+    display: none;
+  }
+  .show-sm {
+    display: none;
+  }
+  @media (max-width: 640px) {
+    .show-sm {
+      display: inline-grid;
+    }
+  }
+  #account-notice:empty {
+    display: none;
+  }
+</style>
+
+<script>
+  import { getMe, hasSession, post, toast, errorMessage } from "../lib/client";
+  import { iconSvg } from "./icons";
+
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
+  function initialsOf(name: string) {
+    const p = name.trim().split(/\s+/);
+    return ((p.length > 1 ? p[0]![0]! + p[p.length - 1]![0]! : name.slice(0, 2)) || "?").toUpperCase();
+  }
+
+  async function init() {
+    if (!hasSession()) return;
+    const me = await getMe();
+    const root = document.getElementById("member-actions");
+    if (!root) return;
+    if (!me) {
+      document.documentElement.removeAttribute("data-auth");
+      return;
+    }
+    const avatar = me.image ? `<img src="${esc(me.image)}" alt="" referrerpolicy="no-referrer">` : esc(initialsOf(me.name));
+    const item = (href: string, icon: Parameters<typeof iconSvg>[0], label: string) => `<a href="${href}">${iconSvg(icon)}${label}</a>`;
+    root.innerHTML = `
+      <a class="icon-link" href="/notifications" aria-label="Notifications${me.unreadNotifications ? ` (${me.unreadNotifications} unread)` : ""}">
+        ${iconSvg("bell", { size: 18 })}${me.unreadNotifications ? '<span class="dot"></span>' : ""}
+      </a>
+      <details class="menu">
+        <summary aria-label="Account menu"><span class="avatar">${avatar}</span></summary>
+        <div class="menu-panel">
+          <div class="menu-head"><div class="w-600 truncate">${esc(me.name)}</div><div class="t-13 muted truncate">${me.username ? "@" + esc(me.username) : esc(me.email)}</div></div>
+          ${item("/feed", "sparkles", "Your feed")}
+          ${item("/saved", "bookmark", "Saved")}
+          ${item("/perks", "gift", "Your perks")}
+          <hr>
+          ${me.isMaker ? item("/dashboard", "dashboard", "Maker dashboard") : item("/dashboard/domains", "globe", "Become a maker")}
+          ${me.username ? item("/m/" + encodeURIComponent(me.username), "user", "Public profile") : ""}
+          ${me.role === "admin" ? item("/admin", "shield", "Admin") : ""}
+          ${item("/settings", "settings", "Settings")}
+          <hr>
+          <button type="button" data-signout>${iconSvg("logout")}Log out</button>
+        </div>
+      </details>`;
+    root.querySelector("[data-signout]")?.addEventListener("click", async () => {
+      try {
+        await post("/auth/sign-out", {});
+        location.href = "/";
+      } catch (err) {
+        toast(errorMessage(err), "error");
+      }
+    });
+    document.addEventListener("click", (e) => {
+      const menu = root.querySelector("details.menu");
+      if (menu?.hasAttribute("open") && !menu.contains(e.target as Node)) menu.removeAttribute("open");
+    });
+
+    const notice = document.getElementById("account-notice");
+    if (notice && (me as { banned?: boolean }).banned) {
+      notice.innerHTML = `<div class="container" style="padding-top:12px;padding-bottom:12px"><div class="notice notice-danger">${iconSvg("alert")}<span>This account has been suspended. Contact support if you think this is a mistake.</span></div></div>`;
+    } else if (notice && !me.emailVerified) {
+      notice.innerHTML = `<div class="container" style="padding-top:12px;padding-bottom:12px"><div class="notice notice-warning">${iconSvg("info")}<span>Confirm your email (<b>${esc(me.email)}</b>) to claim perks and publish products. <button type="button" class="btn-text t-15" data-resend>Resend the email</button></span></div></div>`;
+      notice.querySelector("[data-resend]")?.addEventListener("click", async () => {
+        try {
+          await post("/auth/send-verification-email", { email: me.email, callbackURL: `${location.origin}/feed?verified=1` });
+          toast("Sent. Check your inbox.");
+        } catch (err) {
+          toast(errorMessage(err), "error");
+        }
+      });
+    }
+  }
+
+  init();
+</script>

@@ -7,6 +7,8 @@ export interface Env {
   IMAGES_BUCKET: R2Bucket;
   IMAGES?: ImagesBinding;
   ANON_LIMITER?: RateLimit;
+  /** Service binding to the site worker (cache purges). */
+  WEB?: Fetcher;
   USER_LIMITER?: RateLimit;
 
   SITE_NAME: string;
@@ -15,7 +17,6 @@ export interface Env {
   IMAGES_BASE_URL?: string;
   COOKIE_DOMAIN?: string;
   ADMIN_EMAILS?: string;
-  TURNSTILE_SITE_KEY?: string;
   VAPID_SUBJECT?: string;
   VAPID_PUBLIC_KEY?: string;
   EMAIL_FROM?: string;
@@ -28,7 +29,8 @@ export interface Env {
   VAPID_PRIVATE_KEY?: string;
   CF_ACCOUNT_ID?: string;
   CF_API_TOKEN?: string;
-  CF_ZONE_ID?: string;
+  /** Shared with the site worker; authorizes /internal/purge. */
+  PURGE_SECRET?: string;
 
   /** Optional overrides for any key of DEFAULT_LIMITS, e.g. VISITOR_CATEGORY_LIMIT=12 */
   [limitOverride: string]: unknown;

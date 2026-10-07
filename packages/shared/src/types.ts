@@ -10,7 +10,7 @@ import type {
   ReportReason,
   RoadmapStatus,
   Stage,
-} from "./schemas";
+} from "./enums";
 
 export interface Page<T> {
   items: T[];
@@ -247,6 +247,7 @@ export interface MakerProfileDTO {
 }
 
 export interface HomeDTO {
+  totalProducts: number;
   today: ProductCardDTO[];
   recent: ProductCardDTO[];
   categories: CategoryDTO[];

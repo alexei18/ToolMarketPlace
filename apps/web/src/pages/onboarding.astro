@@ -1,0 +1,58 @@
+---
+import type { CategoryDTO } from "@tm/shared";
+import Onboarding from "../islands/Onboarding";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { requireMe } from "../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+const cats = await apiCall<{ items: CategoryDTO[] }>("/categories");
+const next = Astro.url.searchParams.get("next") ?? undefined;
+---
+
+<Base title="Welcome" noindex>
+  <div class="container container-narrow page">
+    <Onboarding client:load categories={cats.ok ? cats.data.items : []} initial={me.interests} digest={me.digestFrequency} next={next} />
+  </div>
+</Base>
+
+<style is:global>
+  .digest-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  @media (max-width: 640px) {
+    .digest-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .digest-option {
+    display: grid;
+    gap: 2px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color var(--ease);
+  }
+  .digest-option:hover {
+    border-color: var(--border-strong);
+  }
+  .digest-option[data-checked="true"] {
+    border-color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--text);
+  }
+  .digest-option:focus-within {
+    box-shadow: var(--focus-ring);
+  }
+  .onboarding-foot {
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    position: sticky;
+    bottom: 0;
+    background: var(--bg);
+    padding-bottom: 16px;
+  }
+</style>

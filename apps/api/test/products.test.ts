@@ -205,8 +205,8 @@ describe("publishing", () => {
     const created = await publish(m.client, { images: [{ key: png.data.key }] });
     const detail = await new Client(t).get(`/products/${created.data.slug}`);
     expect(detail.data.image.key).toBe(png.data.key);
-    expect(detail.data.image.url).toBe(`http://localhost:8787/img/${png.data.key}`);
-    const img = await new Client(t).get(`/img/${png.data.key}`);
+    expect(detail.data.image.url).toBe(`http://localhost:8787/${png.data.key}`);
+    const img = await new Client(t).get(`/${png.data.key}`);
     expect(img.status).toBe(200);
     expect(img.headers.get("cache-control")).toContain("immutable");
     const bogus = await publish(m.client, { url: "https://myapp.com/b", images: [{ key: "img/00000000000000000000000000000000.png" }] });

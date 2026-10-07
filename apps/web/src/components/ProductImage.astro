@@ -1,0 +1,21 @@
+---
+import type { ImageDTO } from "@tm/shared";
+
+interface Props {
+  image: ImageDTO | null;
+  title: string;
+  /** Rendered width hint for the browser (CSS controls the actual size). */
+  sizes?: string;
+  eager?: boolean;
+}
+const { image, title, sizes = "176px", eager = false } = Astro.props;
+const initials = title.trim().slice(0, 2);
+---
+
+{
+  image ? (
+    <img src={image.url} alt="" width={image.width ?? 1600} height={image.height ?? 1000} loading={eager ? "eager" : "lazy"} decoding="async" sizes={sizes} fetchpriority={eager ? "high" : undefined} />
+  ) : (
+    <div class="img-fallback" aria-hidden="true">{initials}</div>
+  )
+}

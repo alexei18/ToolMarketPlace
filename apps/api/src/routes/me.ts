@@ -167,6 +167,13 @@ app.get("/me/saves", async (c) => {
   } satisfies Page<ProductCardDTO>);
 });
 
+/** Ids of everything the user saved, so cached pages can mark save buttons client-side. */
+app.get("/me/saved-ids", async (c) => {
+  const u = requireUser(c);
+  const rows = await c.get("db").select({ id: saves.productId }).from(saves).where(eq(saves.userId, u.id)).orderBy(desc(saves.createdAt)).limit(2000).all();
+  return c.json({ ids: rows.map((r) => r.id) });
+});
+
 app.put("/me/saves/:productId", async (c) => {
   const u = requireUser(c);
   const db = c.get("db");

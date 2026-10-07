@@ -1,0 +1,19 @@
+---
+interface Props {
+  title: string;
+  text: string;
+}
+const { title, text } = Astro.props;
+const next = Astro.url.pathname;
+---
+
+<div class="gate" data-gate>
+  <div>
+    <h3>{title}</h3>
+    <p>{text}</p>
+  </div>
+  <div class="row">
+    <a class="btn btn-ghost" href={`/login?next=${encodeURIComponent(next)}`}>Log in</a>
+    <a class="btn btn-primary" href={`/signup?next=${encodeURIComponent(next)}`}>Create a free account</a>
+  </div>
+</div>

@@ -1,0 +1,53 @@
+---
+import type { ProductCardDTO } from "@tm/shared";
+import { PRICING_LABEL, STAGE_LABEL, timeAgo } from "../lib/format";
+import Icon from "./Icon.astro";
+import ProductImage from "./ProductImage.astro";
+import SaveButton from "./SaveButton.astro";
+
+interface Props {
+  product: ProductCardDTO;
+  rank?: number;
+  eager?: boolean;
+}
+const { product: p, rank, eager } = Astro.props;
+---
+
+<li class="product-row">
+  <a class="thumb" href={`/p/${p.slug}`} tabindex="-1" aria-hidden="true">
+    <ProductImage image={p.image} title={p.title} eager={eager} />
+  </a>
+  <div>
+    <h3 class="title"><a href={`/p/${p.slug}`}>{p.title}</a></h3>
+    <p class="tagline">{p.tagline}</p>
+    <div class="meta">
+      {
+        p.categories.length > 0 && (
+          <span>
+            {p.categories.map((c, i) => (
+              <>
+                {i > 0 && ", "}
+                <a href={`/c/${c.slug}`}>{c.name}</a>
+              </>
+            ))}
+          </span>
+        )
+      }
+      <span>{STAGE_LABEL[p.stage]}</span>
+      <span>{PRICING_LABEL[p.pricing]}</span>
+      <time datetime={new Date(p.publishedAt * 1000).toISOString()}>{timeAgo(p.publishedAt)}</time>
+      {
+        p.hasPerk && (
+          <span class="perk-badge">
+            <Icon name="gift" />
+            Member perk
+          </span>
+        )
+      }
+    </div>
+  </div>
+  <div class="side">
+    <SaveButton productId={p.id} count={p.saveCount} />
+    {rank !== undefined && <span class="rank">#{rank}</span>}
+  </div>
+</li>

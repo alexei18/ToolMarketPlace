@@ -1,0 +1,24 @@
+---
+import type { NotificationDTO, Page } from "@tm/shared";
+import ErrorState from "../components/ErrorState.astro";
+import Notifications from "../islands/Notifications";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { requireMe } from "../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+const res = await apiCall<Page<NotificationDTO>>("/me/notifications", { request: Astro.request });
+---
+
+<Base title="Notifications" noindex>
+  <div class="container container-narrow page">
+    <div class="spread">
+      <h1 class="t-32">Notifications</h1>
+      <a class="t-13 link" href="/settings#notifications">Digest settings</a>
+    </div>
+    <section class="section-tight">
+      {res.ok ? <Notifications client:load initial={res.data} /> : <ErrorState />}
+    </section>
+  </div>
+</Base>

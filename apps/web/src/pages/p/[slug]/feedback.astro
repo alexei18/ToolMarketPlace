@@ -1,0 +1,128 @@
+---
+import type { FeedbackDTO, Page, ProductDetailDTO } from "@tm/shared";
+import Avatar from "../../../components/Avatar.astro";
+import EmptyState from "../../../components/EmptyState.astro";
+import ProductLayout from "../../../layouts/ProductLayout.astro";
+import { apiCall } from "../../../lib/api";
+import { FEEDBACK_TYPE_LABEL, timeAgo } from "../../../lib/format";
+
+const slug = Astro.params.slug!;
+const pRes = await apiCall<ProductDetailDTO>(`/products/${encodeURIComponent(slug)}`);
+if (!pRes.ok) return Astro.rewrite("/404");
+const p = pRes.data;
+if (p.feedbackMode === "off") return Astro.redirect(`/p/${p.slug}`, 302);
+
+// Not cached: authors see their own private feedback and new posts show up immediately.
+Astro.response.headers.set("Cache-Control", "private, no-cache");
+const fRes = await apiCall<Page<FeedbackDTO> & { mode: string }>(`/products/${p.id}/feedback`, { request: Astro.request });
+const items = fRes.ok ? fRes.data.items : [];
+const isPublic = p.feedbackMode === "public";
+---
+
+<ProductLayout product={p} active="feedback" title={`Feedback on ${p.title}`} description={`Bugs, ideas and praise for ${p.title}, with replies from the maker.`}>
+  <div class="grid-12">
+    <section class="span-7" aria-labelledby="fb-list">
+      <h2 id="fb-list" class="t-22">{isPublic ? "What people are saying" : "Your feedback"}</h2>
+      {
+        !isPublic && (
+          <p class="muted" style="margin-top: 6px">
+            {p.maker.name} collects feedback privately. Only you and the maker see what you send.
+          </p>
+        )
+      }
+      {
+        items.length === 0 ? (
+          <div style="margin-top: 20px">
+            <EmptyState title={isPublic ? "No feedback yet" : "Nothing sent yet"} text={isPublic ? "Be the first to report a bug, suggest an idea or say what you like." : "Use the form to send your first note."} />
+          </div>
+        ) : (
+          <ul class="list-plain" id="feedback-list" style="margin-top: 8px">
+            {items.map((f) => (
+              <li class="feedback-item" id={`f-${f.id}`}>
+                <div class="spread">
+                  <div class="row">
+                    <Avatar name={f.author.name} image={f.author.image} size="sm" />
+                    <span class="w-600 t-15">{f.author.name}</span>
+                    <span class="t-13 muted">{timeAgo(f.createdAt)}</span>
+                  </div>
+                  <div class="row">
+                    {!f.isPublic && <span class="t-13 muted">Private</span>}
+                    {f.resolvedAt && <span class="status" data-status="shipped">Resolved</span>}
+                    <span class="type-label" data-type={f.type}>{FEEDBACK_TYPE_LABEL[f.type]}</span>
+                  </div>
+                </div>
+                <p class="t-15" style="margin-top: 10px; white-space: pre-line">{f.body}</p>
+                {f.roadmapItemId && <p class="t-13" style="margin-top: 8px"><a class="link" href={`/p/${p.slug}/roadmap`}>Added to the roadmap</a></p>}
+                {f.makerReply && (
+                  <div class="reply">
+                    <div class="t-13 w-600">Reply from {p.maker.name}</div>
+                    <p class="t-15" style="margin-top: 4px; white-space: pre-line">{f.makerReply}</p>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+
+    <aside class="span-5">
+      <div class="box sticky-aside">
+        <h2 class="t-17">Leave feedback</h2>
+        <p class="t-13 muted" style="margin-top: 4px">{isPublic ? "Your note is public and shows your name." : "Only the maker sees your note."}</p>
+        <form id="feedback-form" class="stack-16" style="margin-top: 16px" data-product-id={p.id}>
+          <div class="segmented" role="radiogroup" aria-label="Type">
+            {(["bug", "idea", "praise"] as const).map((t, i) => (
+              <label>
+                <input type="radio" name="type" value={t} checked={i === 0} class="visually-hidden" />
+                <span>{FEEDBACK_TYPE_LABEL[t]}</span>
+              </label>
+            ))}
+          </div>
+          <div class="field">
+            <label for="fb-body" class="visually-hidden">Your feedback</label>
+            <textarea id="fb-body" name="body" class="textarea" maxlength="2000" required placeholder="What happened, what would make it better, or what you love…"></textarea>
+          </div>
+          <button class="btn btn-dark btn-block" type="submit">Send feedback</button>
+        </form>
+      </div>
+    </aside>
+  </div>
+</ProductLayout>
+
+<style>
+  .segmented label {
+    padding: 0;
+  }
+  .segmented label span {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+  }
+</style>
+
+<script>
+  import { errorMessage, goToLogin, hasSession, post, toast } from "../../../lib/client";
+
+  const form = document.querySelector<HTMLFormElement>("#feedback-form");
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!hasSession()) return goToLogin("feedback");
+    const data = new FormData(form);
+    const btn = form.querySelector<HTMLButtonElement>("button[type=submit]")!;
+    btn.setAttribute("aria-busy", "true");
+    btn.disabled = true;
+    try {
+      await post(`/products/${form.dataset.productId}/feedback`, { type: data.get("type"), body: String(data.get("body") ?? "") });
+      toast("Thanks! The maker will see it.");
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      toast(errorMessage(err), "error");
+      btn.disabled = false;
+    } finally {
+      btn.removeAttribute("aria-busy");
+    }
+  });
+</script>

@@ -1,0 +1,31 @@
+---
+import type { Page, ProductCardDTO } from "@tm/shared";
+import EmptyState from "../components/EmptyState.astro";
+import ErrorState from "../components/ErrorState.astro";
+import ProductList from "../components/ProductList.astro";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { requireMe } from "../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+const res = await apiCall<Page<ProductCardDTO>>("/me/saves", { request: Astro.request });
+---
+
+<Base title="Saved" noindex>
+  <div class="container container-narrow page">
+    <h1 class="t-32">Saved</h1>
+    <p class="muted" style="margin-top: 8px">Products you bookmarked, newest first.</p>
+    <section class="section-tight">
+      {!res.ok && <ErrorState />}
+      {
+        res.ok && res.data.items.length === 0 && (
+          <EmptyState title="Nothing saved yet" text="Tap the bookmark on any product to keep it here for later.">
+            <a class="btn btn-dark" href="/feed">Go to your feed</a>
+          </EmptyState>
+        )
+      }
+      {res.ok && res.data.items.length > 0 && <ProductList id="saved-list" products={res.data.items} source="/fragments/products?source=saved" nextCursor={res.data.nextCursor} />}
+    </section>
+  </div>
+</Base>

@@ -1,0 +1,21 @@
+---
+import type { CategoryDTO } from "@tm/shared";
+import PublishFlow from "../../islands/PublishFlow";
+import DashboardLayout from "../../layouts/DashboardLayout.astro";
+import { apiCall } from "../../lib/api";
+import { requireMe } from "../../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+if (!me.isMaker) return Astro.redirect("/dashboard/domains?from=new");
+const [cats, status] = await Promise.all([
+  apiCall<{ items: CategoryDTO[] }>("/categories"),
+  apiCall<{ domains: string[] }>("/me/maker-status", { request: Astro.request }),
+]);
+---
+
+<DashboardLayout title="Publish a product" active="new">
+  <div style="max-width: 760px">
+    <PublishFlow client:load categories={cats.ok ? cats.data.items : []} domains={status.ok ? status.data.domains : []} />
+  </div>
+</DashboardLayout>

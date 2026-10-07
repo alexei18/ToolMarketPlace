@@ -118,7 +118,7 @@ app.get("/products", async (c) => {
 app.get("/home", async (c) => {
   const db = c.get("db");
   const since = nowSec() - 86400;
-  const [todayRows, recentRows] = await db.batch([
+  const [todayRows, recentRows, total] = await db.batch([
     db
       .select({ id: products.id })
       .from(products)
@@ -126,12 +126,14 @@ app.get("/home", async (c) => {
       .orderBy(desc(products.publishedAt), desc(products.id))
       .limit(12),
     db.select({ id: products.id }).from(products).where(live).orderBy(desc(products.publishedAt), desc(products.id)).limit(24),
+    db.select({ n: count() }).from(products).where(live),
   ]);
   const todayIds = todayRows.map((r) => r.id);
   const recentIds = recentRows.map((r) => r.id).filter((id) => !todayIds.includes(id)).slice(0, 12);
   const [cards, cats] = await Promise.all([loadCards(db, c.env, [...todayIds, ...recentIds]), categoryList(db)]);
   const byId = new Map(cards.map((p) => [p.id, p]));
   const body: HomeDTO = {
+    totalProducts: total[0]?.n ?? 0,
     today: todayIds.map((id) => byId.get(id)).filter((p): p is ProductCardDTO => !!p),
     recent: recentIds.map((id) => byId.get(id)).filter((p): p is ProductCardDTO => !!p),
     categories: [...cats].sort((a, b) => (b.productCount ?? 0) - (a.productCount ?? 0) || a.sortOrder - b.sortOrder),

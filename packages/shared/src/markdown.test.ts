@@ -48,3 +48,11 @@ describe("ids", () => {
     expect(decodeCursor("bad")).toBeNull();
   });
 });
+
+describe("newId monotonic", () => {
+  test("ids made in the same millisecond keep their order", () => {
+    const ids = Array.from({ length: 200 }, () => newId(5000));
+    expect([...ids].sort()).toEqual(ids);
+    expect(new Set(ids).size).toBe(200);
+  });
+});
