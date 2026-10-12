@@ -77,7 +77,7 @@ export default function Onboarding({ categories, initial, digest: initialDigest,
               Turn on notifications
             </Button>
           )}
-          <a className="btn btn-ghost btn-lg" href={target}>
+          <a className={`btn btn-lg ${push === "needs-install" || push === "denied" ? "btn-dark" : "btn-ghost"}`} href={target}>
             {push === "needs-install" || push === "denied" ? "Continue" : "Not now"}
           </a>
         </div>

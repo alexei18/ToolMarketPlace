@@ -99,12 +99,13 @@ const title = q ? `Search: ${q}` : "Explore new products";
     position: relative;
     max-width: 720px;
   }
-  .search-input svg {
+  .search-input :global(svg) {
     position: absolute;
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-3);
+    pointer-events: none;
   }
   .search-input .input {
     padding-left: 42px;
@@ -118,5 +119,27 @@ const title = q ? `Search: ${q}` : "Explore new products";
   .filters .select {
     width: auto;
     min-width: 150px;
+  }
+  @media (max-width: 640px) {
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .filters .select {
+      width: 100%;
+      min-width: 0;
+    }
+    .filters .select:first-child,
+    .filters .btn {
+      grid-column: 1 / -1;
+    }
+    .filters .checkbox {
+      align-items: center;
+      min-height: 32px;
+    }
+    .filters .checkbox input {
+      margin-top: 0;
+    }
   }
 </style>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { call, ClientError, post } from "../lib/client";
 import { safePath } from "../lib/safe";
-import { Button, Field, Notice, useAction, useTurnstile } from "./ui";
+import { Button, Field, Notice, useAction, useAdoptTyped, useTurnstile } from "./ui";
 
 type Mode = "login" | "signup" | "forgot" | "reset";
 
@@ -19,6 +19,7 @@ const REASONS: Record<string, string> = {
   vote: "Log in to vote on roadmaps.",
   feedback: "Log in to leave feedback.",
   report: "Log in to report a product.",
+  expired: "Your session ended. Log in again to continue.",
 };
 
 function GoogleMark() {
@@ -37,6 +38,7 @@ export default function AuthForm({ mode, next, googleEnabled, token, reason }: P
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [done, setDone] = useState(false);
+  useAdoptTyped({ name: setName, email: setEmail, password: setPassword });
   const turnstile = useTurnstile();
   const target = safePath(next);
   const origin = typeof location !== "undefined" ? location.origin : "";

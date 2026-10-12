@@ -128,10 +128,11 @@ const jsonLd = {
       </div>
     </div>
 
-    <nav class="tabs product-tabs" aria-label="Product sections">
-      <a href={`/p/${p.slug}`} aria-current={active === "overview" ? "page" : undefined}>Overview</a>
-      {showFeedback && <a href={`/p/${p.slug}/feedback`} aria-current={active === "feedback" ? "page" : undefined}>Feedback</a>}
-      {showRoadmap && <a href={`/p/${p.slug}/roadmap`} aria-current={active === "roadmap" ? "page" : undefined}>Roadmap</a>}
+    {/* The #tabs anchor keeps you at the tabs after switching, instead of back at the top of the page. */}
+    <nav class="tabs product-tabs" id="tabs" aria-label="Product sections">
+      <a href={`/p/${p.slug}#tabs`} aria-current={active === "overview" ? "page" : undefined}>Overview</a>
+      {showFeedback && <a href={`/p/${p.slug}/feedback#tabs`} aria-current={active === "feedback" ? "page" : undefined}>Feedback</a>}
+      {showRoadmap && <a href={`/p/${p.slug}/roadmap#tabs`} aria-current={active === "roadmap" ? "page" : undefined}>Roadmap</a>}
     </nav>
 
     <div class="product-body">
@@ -150,7 +151,7 @@ const jsonLd = {
         </div>
         <div class="modal-body stack-16">
           <p class="muted">Reports from established accounts are reviewed. Products with several reports are hidden until an admin checks them.</p>
-          <fieldset class="stack-8" style="border: 0; padding: 0; margin: 0">
+          <fieldset class="stack-8" style="border: 0; padding: 0; margin-inline: 0; margin-bottom: 0; min-width: 0">
             <legend class="label" style="margin-bottom: 8px">What's wrong?</legend>
             <label class="checkbox"><input type="radio" name="reason" value="spam" required /> Spam or self-promotion</label>
             <label class="checkbox"><input type="radio" name="reason" value="scam" /> Scam or misleading</label>
@@ -184,6 +185,7 @@ const jsonLd = {
   }
   .product-side {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
   .maker-line {
@@ -191,6 +193,7 @@ const jsonLd = {
   }
   .product-tabs {
     margin-top: 56px;
+    scroll-margin-top: calc(var(--header-h) + 8px);
   }
   .product-body {
     padding-top: 32px;

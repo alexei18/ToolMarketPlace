@@ -20,6 +20,9 @@ export function createAuth(env: Env, db: Database) {
     basePath: "/auth",
     secret: env.BETTER_AUTH_SECRET,
     trustedOrigins: [webOrigin],
+    // OAuth failures without a usable state (expired, or opened in another browser) would otherwise
+    // end on Better Auth's own error page on the API domain; send them to the site's login page.
+    onAPIError: { errorURL: `${webOrigin}/login?oauth=failed` },
     database: drizzleAdapter(db, { provider: "sqlite", schema }),
     telemetry: { enabled: false },
     emailAndPassword: {

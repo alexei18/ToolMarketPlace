@@ -38,6 +38,7 @@ describe("perks", () => {
     const pub = await new Client(t).get(`/products/${p.slug}`);
     expect(pub.data.hasPerk).toBe(true);
     expect(pub.data.perks).toHaveLength(2);
+    expect(pub.data.perks[0]).toMatchObject({ available: true, remaining: 2 });
     expect(JSON.stringify(pub.data)).not.toContain("AAA-1");
     expect(JSON.stringify(pub.data)).not.toContain("LAUNCH20");
     expect(JSON.stringify(pub.data)).not.toContain("/redeem");
@@ -70,6 +71,16 @@ describe("perks", () => {
 
     const stats = await p.maker.client.get(`/maker/products/${p.id}/stats`);
     expect(stats.data.perkClaims).toBe(3);
+
+    // Every code and the single coupon are taken: nothing left to claim, on the page or in lists.
+    const after = await new Client(t).get(`/products/${p.slug}`);
+    expect(after.data.perks.map((x: { available: boolean }) => x.available)).toEqual([false, false]);
+    expect(after.data.perks[0].remaining).toBe(0);
+    expect(after.data.hasPerk).toBe(false);
+    const withPerk = await new Client(t).get("/search?perk=1");
+    expect(withPerk.data.items.map((x: { id: string }) => x.id)).not.toContain(p.id);
+    const late = await c.client.get(`/products/${p.id}/viewer`);
+    expect(late.data.viewer.perks.every((x: { claimed: boolean; available: boolean }) => x.claimed || !x.available)).toBe(true);
   });
 
   test("expired or inactive perks can't be claimed; unverified users can't claim", async () => {

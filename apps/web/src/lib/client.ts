@@ -61,10 +61,21 @@ export function hasSession(): boolean {
 
 let mePromise: Promise<MeDTO | null> | null = null;
 
+/** Drops the hint cookie once the API says the session is gone, so pages stop treating this browser as signed in. */
+function clearSessionHint(): void {
+  const parts = location.hostname.split(".");
+  document.cookie = "tm_auth=; Max-Age=0; Path=/";
+  // The cookie may live on a parent domain (COOKIE_DOMAIN); a delete only matches with the same Domain.
+  for (let i = 0; i < parts.length - 1; i++) document.cookie = `tm_auth=; Max-Age=0; Path=/; Domain=${parts.slice(i).join(".")}`;
+}
+
 /** The signed-in user, fetched once per page (null for visitors). */
 export function getMe(): Promise<MeDTO | null> {
   if (!hasSession()) return Promise.resolve(null);
-  mePromise ??= get<MeDTO>("/me").catch(() => null);
+  mePromise ??= get<MeDTO>("/me").catch((err) => {
+    if (err instanceof ClientError && err.status === 401) clearSessionHint();
+    return null;
+  });
   return mePromise;
 }
 

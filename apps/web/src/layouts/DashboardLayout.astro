@@ -31,6 +31,7 @@ const { title, active } = Astro.props;
     grid-template-columns: 200px minmax(0, 1fr);
     gap: 48px;
     align-items: start;
+    align-content: start;
   }
   .dash-nav {
     position: sticky;
@@ -38,7 +39,7 @@ const { title, active } = Astro.props;
   }
   @media (max-width: 860px) {
     .dash {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 24px;
     }
     .dash-nav {
@@ -75,6 +76,18 @@ const { title, active } = Astro.props;
     padding: 16px 0;
     border-top: 1px solid var(--border);
     z-index: 5;
+  }
+  @media (max-width: 720px) {
+    .publish-foot {
+      padding: 12px 0;
+    }
+    /* The note would take a third of a phone screen while it sticks; only a blocking hint stays. */
+    .publish-foot .foot-note:not([data-blocking]) {
+      display: none;
+    }
+    .publish-foot .foot-note + .btn {
+      margin-left: auto;
+    }
   }
   .queue-item {
     padding: 20px 0;

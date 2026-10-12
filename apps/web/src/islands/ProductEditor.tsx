@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { PERK_TYPES } from "@tm/shared/enums";
 import type { CategoryDTO, FeedbackDTO, MakerProductDetailDTO, Page, PerkMakerDTO, PerkType, RoadmapItemDTO, RoadmapStatus, StatsDTO } from "@tm/shared";
-import { del, get, patch, post, put, toast } from "../lib/client";
+import { ClientError, del, get, patch, post, put, toast } from "../lib/client";
 import { FEEDBACK_TYPE_LABEL, PERK_TYPE_LABEL, ROADMAP_LABEL, timeAgo } from "../lib/format";
 import { ExternalLink, Plus, Trash2 } from "./icons";
 import ProductForm, { toPayload, type ProductFormValue } from "./ProductForm";
@@ -119,7 +119,7 @@ function Details({ product, categories }: { product: MakerProductDetailDTO; cate
       }}
     >
       <Field label="Link">
-        <div className="row">
+        <div className="row row-wrap">
           <span className="mono t-15">{product.url}</span>
           <span className="t-13 muted">(the link can't be changed; delete and republish to move it)</span>
         </div>
@@ -190,6 +190,12 @@ function Perks({ productId, initial }: { productId: string; initial: PerkMakerDT
       { type: "extended_trial", title: "", details: "", sharedCode: "", redeemUrl: "", maxClaims: "", expiresAt: "", active: true, newCodes: "", claimCount: 0, codesLeft: 0, codesTotal: 0 },
     ]);
   const save = useAction(async () => {
+    const untitled = perks.findIndex((p) => !p.title.trim());
+    if (untitled >= 0) throw new ClientError(0, "VALIDATION", `Give perk ${untitled + 1} a title.`);
+    const noCode = perks.find((p) => p.type === "coupon" && !p.sharedCode.trim());
+    if (noCode) throw new ClientError(0, "VALIDATION", `Add the coupon code for “${noCode.title.trim()}”.`);
+    const noCodes = perks.find((p) => p.type === "unique_codes" && !p.id && !p.newCodes.trim());
+    if (noCodes) throw new ClientError(0, "VALIDATION", `Add at least one code for “${noCodes.title.trim()}”.`);
     const body = {
       perks: perks.map((p) => ({
         id: p.id,
@@ -222,11 +228,11 @@ function Perks({ productId, initial }: { productId: string; initial: PerkMakerDT
         </Empty>
       )}
       {perks.map((p, i) => (
-        <fieldset className="box stack-16" key={p.id ?? `new-${i}`} style={{ margin: 0 }}>
+        <fieldset className="box stack-16" key={p.id ?? `new-${i}`} style={{ marginInline: 0, marginBottom: 0, minWidth: 0 }}>
           <div className="spread">
             <legend className="w-600">{p.title || "New perk"}</legend>
             <div className="row">
-              {p.id && <span className="t-13 muted">{p.claimCount} claimed</span>}
+              {p.id && <span className="t-13 muted nowrap">{p.claimCount} claimed</span>}
               <Button type="button" variant="ghost" size="sm" aria-label="Remove perk" onClick={() => setPerks((ps) => ps.filter((_, j) => j !== i))}>
                 <Trash2 size={14} />
               </Button>
@@ -476,7 +482,7 @@ function RoadmapTab({ product }: { product: MakerProductDetailDTO }) {
       {items && items.length === 0 && <Empty title="No roadmap items" text="Add what you're planning, or turn feedback ideas into items." />}
       {items && items.length > 0 && (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table table-stack">
             <thead>
               <tr>
                 <th>Item</th>
@@ -492,7 +498,9 @@ function RoadmapTab({ product }: { product: MakerProductDetailDTO }) {
                     <div className="w-600">{i.title}</div>
                     {i.description && <div className="t-13 muted">{i.description}</div>}
                   </td>
-                  <td className="num">{i.voteCount}</td>
+                  <td className="num" data-label="Votes">
+                    {i.voteCount}
+                  </td>
                   <td>
                     <select className="select" style={{ width: 150 }} value={i.status} onChange={(e) => setStatus.run(i.id, e.target.value as RoadmapStatus)} aria-label="Status">
                       {(["planned", "in_progress", "shipped"] as const).map((s) => (

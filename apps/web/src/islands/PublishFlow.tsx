@@ -3,7 +3,7 @@ import type { CategoryDTO, ProductPreviewDTO } from "@tm/shared";
 import { post } from "../lib/client";
 import { ArrowLeft } from "./icons";
 import ProductForm, { toPayload, type ProductFormValue } from "./ProductForm";
-import { Button, Field, Notice, useAction, useTurnstile } from "./ui";
+import { Button, Field, Notice, useAction, useAdoptTyped, useTurnstile } from "./ui";
 
 interface Props {
   categories: CategoryDTO[];
@@ -15,6 +15,7 @@ export default function PublishFlow({ categories, domains }: Props) {
   const [preview, setPreview] = useState<ProductPreviewDTO | null>(null);
   const [form, setForm] = useState<ProductFormValue | null>(null);
   const turnstile = useTurnstile();
+  useAdoptTyped({ "pub-url": setUrl });
 
   const fetchPreview = useAction(
     async () => {
@@ -124,7 +125,9 @@ export default function PublishFlow({ categories, domains }: Props) {
       {err && !err.fields && <Notice kind="danger">{err.message}</Notice>}
       {err?.fields && Object.keys(err.fields).length > 0 && <Notice kind="danger">Fix the highlighted fields and try again.</Notice>}
       <div className="spread publish-foot">
-        <span className="t-13 muted">Your product goes live right away and appears in the feeds of people who follow its categories.</span>
+        <span className="t-13 muted foot-note" data-blocking={form.categories.length === 0 || undefined}>
+          {form.categories.length === 0 ? "Pick at least one category to publish." : "Your product goes live right away and appears in the feeds of people who follow its categories."}
+        </span>
         <Button type="submit" variant="primary" size="lg" busy={publish.busy} disabled={form.categories.length === 0}>
           Publish now
         </Button>

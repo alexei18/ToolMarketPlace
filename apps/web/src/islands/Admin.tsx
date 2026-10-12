@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { CategoryDTO, ReviewQueueItemDTO } from "@tm/shared";
-import { del, get, patch, post, toast } from "../lib/client";
+import { call, del, get, patch, post, toast } from "../lib/client";
 import { timeAgo } from "../lib/format";
 import { ExternalLink, Trash2 } from "./icons";
 import { Button, Empty, useAction } from "./ui";
@@ -57,9 +57,9 @@ function Queue({ items, onDone }: { items: ReviewQueueItemDTO[]; onDone: (id: st
     <ul className="list-plain">
       {items.map(({ product: p, reports }) => (
         <li key={p.id} className="queue-item">
-          <div className="spread" style={{ alignItems: "flex-start" }}>
+          <div className="spread row-wrap" style={{ alignItems: "flex-start" }}>
             <div className="stack-4">
-              <div className="row">
+              <div className="row row-wrap">
                 <span className="w-600 t-17">{p.title}</span>
                 <a className="t-13 link" href={p.url} target="_blank" rel="noopener noreferrer">
                   {p.url} <ExternalLink size={12} style={{ display: "inline", verticalAlign: -1 }} />
@@ -128,7 +128,7 @@ function Users() {
       {users && users.length === 0 && <Empty title="No users found" />}
       {users && users.length > 0 && (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table table-stack">
             <thead>
               <tr>
                 <th>User</th>
@@ -147,7 +147,9 @@ function Users() {
                       {u.username && ` · @${u.username}`}
                     </div>
                   </td>
-                  <td className="t-13 muted">{timeAgo(u.createdAt)}</td>
+                  <td className="t-13 muted" data-label="Joined">
+                    {timeAgo(u.createdAt)}
+                  </td>
                   <td>
                     <span className="status" data-status={u.bannedAt ? "banned" : "live"}>
                       {u.bannedAt ? "Banned" : u.role === "admin" ? "Admin" : "Active"}
@@ -174,8 +176,9 @@ function Categories() {
   const [cats, setCats] = useState<CategoryDTO[] | null>(null);
   const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
+  // The public list is cached for a minute; skip the cache so edits show up right away.
   const load = () =>
-    get<{ items: CategoryDTO[] }>("/categories")
+    call<{ items: CategoryDTO[] }>("GET", "/categories", undefined, { cache: "no-store" })
       .then((r) => setCats(r.items))
       .catch(() => setCats([]));
   useEffect(() => {
@@ -215,7 +218,7 @@ function Categories() {
         </Button>
       </form>
       <div className="table-wrap">
-        <table className="table">
+        <table className="table table-stack">
           <thead>
             <tr>
               <th>Name</th>
@@ -229,7 +232,9 @@ function Categories() {
               <tr key={c.id}>
                 <td className="w-600">{c.name}</td>
                 <td className="mono t-13">{c.slug}</td>
-                <td className="num">{c.productCount ?? 0}</td>
+                <td className="num" data-label="Products">
+                  {c.productCount ?? 0}
+                </td>
                 <td className="num">
                   <div className="row" style={{ justifyContent: "flex-end" }}>
                     <Button variant="ghost" size="sm" onClick={() => rename.run(c)}>
@@ -291,7 +296,7 @@ function Blocked() {
         <ul className="list-plain">
           {items.map((b) => (
             <li key={b.hostname} className="spread" style={{ padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
-              <span>
+              <span style={{ overflowWrap: "anywhere" }}>
                 <span className="mono">{b.hostname}</span>
                 {b.reason && <span className="t-13 muted"> · {b.reason}</span>}
               </span>

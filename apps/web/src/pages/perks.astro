@@ -67,7 +67,7 @@ const res = await apiCall<{ items: ClaimedPerkDTO[] }>("/me/perks", { request: A
 <style>
   .perk-card {
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 120px minmax(0, 1fr);
     gap: 20px;
     padding: 20px 0;
     border-bottom: 1px solid var(--border);
@@ -78,7 +78,7 @@ const res = await apiCall<{ items: ClaimedPerkDTO[] }>("/me/perks", { request: A
     overflow: hidden;
     border: 1px solid var(--border);
   }
-  .perk-card .thumb img {
+  .perk-card .thumb :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;

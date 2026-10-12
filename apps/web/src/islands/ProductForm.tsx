@@ -1,9 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CategoryDTO, FeedbackMode, ImageDTO, Pricing, Stage } from "@tm/shared";
 import { DESCRIPTION_MAX, TAGLINE_MAX, TITLE_MAX } from "@tm/shared/limits";
 import { call, errorMessage, toast } from "../lib/client";
 import { ArrowLeft, ArrowRight, Check, ImagePlus, X } from "./icons";
-import { Field, Segmented, Spinner, fieldError } from "./ui";
+import { Field, Segmented, Spinner, fieldError, useAdoptTyped } from "./ui";
 import type { ClientError } from "../lib/client";
 
 export interface ProductFormValue {
@@ -45,6 +45,16 @@ export default function ProductForm({ value: v, onChange, categories, error }: P
   const set = <K extends keyof ProductFormValue>(k: K, val: ProductFormValue[K]) => onChange({ ...v, [k]: val });
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  // In the editor these fields are server-rendered: keep edits made before the page finished loading.
+  const early = useRef<Partial<ProductFormValue>>({});
+  useAdoptTyped({
+    "pf-title": (title) => (early.current.title = title),
+    "pf-tagline": (tagline) => (early.current.tagline = tagline),
+    "pf-desc": (description) => (early.current.description = description),
+  });
+  useEffect(() => {
+    if (Object.keys(early.current).length) onChange({ ...v, ...early.current });
+  }, []);
 
   const toggleCategory = (slug: string) => {
     if (v.categories.includes(slug)) set("categories", v.categories.filter((c) => c !== slug));

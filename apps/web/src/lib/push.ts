@@ -1,4 +1,4 @@
-import { del, get, post } from "./client";
+import { ClientError, del, get, post } from "./client";
 
 export type PushState = "unsupported" | "unavailable" | "needs-install" | "denied" | "on" | "off";
 
@@ -38,7 +38,13 @@ export async function enablePush(): Promise<PushState> {
   if (!publicKey) throw new Error("Push notifications aren't configured on this server yet.");
   const reg = await navigator.serviceWorker.register("/sw.js");
   await navigator.serviceWorker.ready;
-  const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyToBytes(publicKey) }));
+  // Private windows (and some locked-down browsers) have a PushManager that refuses to subscribe.
+  const sub = await reg.pushManager
+    .getSubscription()
+    .then((existing) => existing ?? reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyToBytes(publicKey) }))
+    .catch(() => {
+      throw new ClientError(0, "PUSH_UNAVAILABLE", "This browser couldn't turn on notifications. Private windows don't support them.");
+    });
   const json = sub.toJSON();
   await post("/me/push-subscriptions", { endpoint: json.endpoint, keys: json.keys });
   return "on";

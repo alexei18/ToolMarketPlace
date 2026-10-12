@@ -54,10 +54,6 @@ const ogImage = image ?? `${siteUrl}/og.png`;
     <meta name="theme-color" content="#ffffff" />
     <meta name="api-origin" content={apiUrl} />
     {turnstileSiteKey && <meta name="turnstile-site-key" content={turnstileSiteKey} />}
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="preconnect" href={apiUrl} crossorigin="use-credentials" />
     <script is:inline>
       // Runs before paint: mark signed-in visitors (hint cookie only, no secrets) so cached pages
       // can show the right header without a flash, and send them from the landing page to their feed.
@@ -65,7 +61,26 @@ const ogImage = image ?? `${siteUrl}/og.png`;
         document.documentElement.dataset.auth = "1";
         if (location.pathname === "/" && !location.search.includes("home=1")) location.replace("/feed");
       }
+      // Remembers what is typed into a field before its form's script has loaded (slow connections);
+      // the form adopts it when it starts (useAdoptTyped). Fields React already manages are skipped.
+      window.__typed = {};
+      addEventListener(
+        "input",
+        function (e) {
+          var t = e.target;
+          if (!t || !t.id) return;
+          var managed = Object.keys(t).some(function (k) {
+            return k.indexOf("__reactFiber") === 0;
+          });
+          if (!managed) window.__typed[t.id] = t.value;
+        },
+        true,
+      );
     </script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preconnect" href={apiUrl} crossorigin="use-credentials" />
     {jsonLd && <script type="application/ld+json" set:html={inlineJson(jsonLd)} />}
     <slot name="head" />
   </head>

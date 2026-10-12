@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import type { CategoryDTO, DigestFrequency, MeDTO } from "@tm/shared";
-import { patch, post, put, toast } from "../lib/client";
+import { ClientError, patch, post, put, toast } from "../lib/client";
 import { disablePush, enablePush, pushState, type PushState } from "../lib/push";
 import { Check } from "./icons";
-import { Button, Field, Notice, Segmented, fieldError, useAction } from "./ui";
+import { Button, Field, Notice, Segmented, fieldError, useAction, useAdoptTyped } from "./ui";
 
 interface Props {
   me: MeDTO;
@@ -40,26 +40,51 @@ function Profile({ me }: { me: MeDTO }) {
   const [name, setName] = useState(me.name);
   const [username, setUsername] = useState(me.username ?? "");
   const [bio, setBio] = useState(me.bio ?? "");
-  const save = useAction(async () => {
-    await patch("/me/settings", { name, username, bio });
-    toast("Profile saved.");
-  });
+  useAdoptTyped({ "s-name": setName, "s-username": (v) => setUsername(v.toLowerCase()), "s-bio": setBio });
+  const save = useAction(
+    async () => {
+      await patch("/me/settings", { name, username, bio });
+      toast("Profile saved.");
+    },
+    { silent: true },
+  );
   const submit = (e: { preventDefault(): void }) => {
     e.preventDefault();
     save.run();
   };
+  const nameError = fieldError(save.error, "name");
+  const usernameError = fieldError(save.error, "username") ?? (save.error?.code === "USERNAME_TAKEN" ? save.error.message : null);
+  const bioError = fieldError(save.error, "bio");
   return (
     <Section id="profile" title="Profile" text="Shown on your maker page and next to your feedback.">
       <form className="stack-16" onSubmit={submit}>
-        <Field label="Name" htmlFor="s-name" error={fieldError(save.error, "name")}>
+        <Field label="Name" htmlFor="s-name" error={nameError}>
           <input id="s-name" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required />
         </Field>
-        <Field label="Username" htmlFor="s-username" hint={`Your public page: /m/${username || "username"}`} error={fieldError(save.error, "username") ?? (save.error?.code === "USERNAME_TAKEN" ? save.error.message : null)}>
-          <input id="s-username" className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} maxLength={30} pattern="[a-z0-9_]{3,30}" required />
+        <Field label="Username" htmlFor="s-username" hint={`Your public page: /m/${username || "username"}`} error={usernameError}>
+          <input
+            id="s-username"
+            className="input"
+            value={username}
+            onChange={(e) => {
+              setUsername(e.target.value.toLowerCase());
+              save.setError(null);
+            }}
+            maxLength={30}
+            pattern="[a-z0-9_]{3,30}"
+            title="3 to 30 characters: lowercase letters, numbers and underscores"
+            aria-invalid={usernameError ? true : undefined}
+            required
+          />
         </Field>
-        <Field label="Bio" htmlFor="s-bio" hint={`${bio.length}/160`}>
+        <Field label="Bio" htmlFor="s-bio" hint={`${bio.length}/160`} error={bioError}>
           <textarea id="s-bio" className="textarea" style={{ minHeight: 80 }} value={bio} onChange={(e) => setBio(e.target.value)} maxLength={160} />
         </Field>
+        {save.error && !nameError && !usernameError && !bioError && (
+          <p className="error-text t-15" role="alert">
+            {save.error.message}
+          </p>
+        )}
         <div>
           <Button type="submit" variant="dark" busy={save.busy}>
             Save profile
@@ -158,8 +183,12 @@ function NotificationsSection({ initial }: { initial: DigestFrequency }) {
 function Account({ me, hasPassword }: { me: MeDTO; hasPassword: boolean }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
+  useAdoptTyped({ "s-current-password": setCurrent, "s-new-password": setNext });
   const change = useAction(async () => {
-    await post("/auth/change-password", { currentPassword: current, newPassword: next, revokeOtherSessions: true });
+    await post("/auth/change-password", { currentPassword: current, newPassword: next, revokeOtherSessions: true }).catch((err) => {
+      if (err instanceof ClientError && err.code === "INVALID_PASSWORD") throw new ClientError(err.status, err.code, "The current password isn't right.");
+      throw err;
+    });
     setCurrent("");
     setNext("");
     toast("Password changed. Other devices were signed out.");
@@ -203,9 +232,11 @@ function Account({ me, hasPassword }: { me: MeDTO; hasPassword: boolean }) {
           }}
         >
           <div className="label">Change password</div>
+          {/* Lets password managers tie the new password to this account. */}
+          <input type="text" name="username" autoComplete="username" value={me.email} readOnly hidden />
           <div className="pw-grid">
-            <input className="input" type="password" placeholder="Current password" aria-label="Current password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
-            <input className="input" type="password" placeholder="New password (8+ characters)" aria-label="New password" autoComplete="new-password" minLength={8} value={next} onChange={(e) => setNext(e.target.value)} required />
+            <input id="s-current-password" className="input" type="password" placeholder="Current password" aria-label="Current password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+            <input id="s-new-password" className="input" type="password" placeholder="New password (8+ characters)" aria-label="New password" autoComplete="new-password" minLength={8} value={next} onChange={(e) => setNext(e.target.value)} required />
             <Button type="submit" variant="secondary" busy={change.busy}>
               Update
             </Button>
@@ -213,7 +244,7 @@ function Account({ me, hasPassword }: { me: MeDTO; hasPassword: boolean }) {
         </form>
       )}
       <div>
-        <Button variant="ghost" busy={signOut.busy} onClick={() => signOut.run()}>
+        <Button variant="secondary" busy={signOut.busy} onClick={() => signOut.run()}>
           Log out
         </Button>
       </div>

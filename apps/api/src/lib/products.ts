@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import {
   categories,
   domains,
@@ -37,8 +37,17 @@ export function perkAvailableSql(now: number) {
     eq(perks.active, true),
     or(isNull(perks.expiresAt), gt(perks.expiresAt, now)),
     or(isNull(perks.maxClaims), sql`${perks.claimCount} < ${perks.maxClaims}`),
+    // A unique-code perk is used up once every code is taken, whatever its claim limit says.
+    or(ne(perks.type, "unique_codes"), sql`EXISTS (SELECT 1 FROM perk_codes pc WHERE pc.perk_id = "perks"."id" AND pc.claimed_at IS NULL)`),
   );
 }
+
+/**
+ * Unclaimed codes of a perk, as a subquery column (only meaningful for unique-code perks).
+ * The outer column is spelled out: drizzle drops the table name in single-table queries, and a bare
+ * "id" inside the subquery would mean perk_codes.id.
+ */
+const codesLeftSql = sql<number>`(SELECT count(*) FROM perk_codes pc WHERE pc.perk_id = "perks"."id" AND pc.claimed_at IS NULL)`;
 
 function toCard(env: Env, p: ProductRow, maker: MakerRow, image: ImageDTO | null, cats: CategoryRef[], hasPerk: boolean): ProductCardDTO {
   return {
@@ -114,8 +123,9 @@ export async function loadCards(db: Database, env: Env, ids: string[], opts: { i
   return out;
 }
 
-export function toPublicPerk(p: typeof perks.$inferSelect, now: number): PerkPublicDTO {
-  const remaining = p.maxClaims == null ? null : Math.max(0, p.maxClaims - p.claimCount);
+export function toPublicPerk(p: typeof perks.$inferSelect, now: number, codesLeft = 0): PerkPublicDTO {
+  const byLimit = p.maxClaims == null ? null : Math.max(0, p.maxClaims - p.claimCount);
+  const remaining = p.type !== "unique_codes" ? byLimit : byLimit == null ? codesLeft : Math.min(byLimit, codesLeft);
   const expired = p.expiresAt != null && p.expiresAt <= now;
   return {
     id: p.id,
@@ -154,11 +164,11 @@ export async function loadDetail(
       .innerJoin(categories, eq(categories.id, productCategories.categoryId))
       .where(eq(productCategories.productId, id))
       .orderBy(asc(categories.sortOrder)),
-    db.select().from(perks).where(eq(perks.productId, id)).orderBy(asc(perks.id)),
+    db.select({ perk: perks, codesLeft: codesLeftSql.as("codes_left") }).from(perks).where(eq(perks.productId, id)).orderBy(asc(perks.id)),
     db.select({ hostname: domains.hostname }).from(domains).where(eq(domains.id, row.p.domainId)),
   ]);
   const imgs: ImageDTO[] = images.map((i) => ({ id: i.id, key: i.r2Key, url: imageUrl(env, i.r2Key), width: i.width, height: i.height }));
-  const publicPerks = perkRows.filter((p) => p.active).map((p) => toPublicPerk(p, now));
+  const publicPerks = perkRows.filter((r) => r.perk.active).map((r) => toPublicPerk(r.perk, now, Number(r.codesLeft)));
   const card = toCard(env, row.p, row.maker, imgs[0] ?? null, cats, publicPerks.some((p) => p.available));
   return {
     ...card,
@@ -176,7 +186,7 @@ export async function loadDetail(
 export async function viewerPerks(db: Database, productId: string, userId: string): Promise<PerkPublicDTO[]> {
   const now = nowSec();
   const rows = await db
-    .select({ perk: perks, claimedAt: perkClaims.claimedAt, code: perkCodes.code })
+    .select({ perk: perks, claimedAt: perkClaims.claimedAt, code: perkCodes.code, codesLeft: codesLeftSql.as("codes_left") })
     .from(perks)
     .leftJoin(perkClaims, and(eq(perkClaims.perkId, perks.id), eq(perkClaims.userId, userId)))
     .leftJoin(perkCodes, eq(perkCodes.id, perkClaims.codeId))
@@ -186,7 +196,7 @@ export async function viewerPerks(db: Database, productId: string, userId: strin
   return rows
     .filter((r) => r.perk.active || r.claimedAt != null)
     .map((r) => {
-      const base = toPublicPerk(r.perk, now);
+      const base = toPublicPerk(r.perk, now, Number(r.codesLeft));
       if (r.claimedAt == null) return { ...base, claimed: false };
       return { ...base, claimed: true, code: r.code ?? r.perk.sharedCode, redeemUrl: r.perk.redeemUrl };
     });

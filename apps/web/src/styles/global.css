@@ -70,6 +70,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Long words and links in user content wrap instead of widening the page. */
+  overflow-wrap: break-word;
 }
 
 img,
@@ -263,6 +265,13 @@ textarea {
   }
 }
 
+/* Declared before the stack utilities so a stacked list keeps its top margin. */
+.list-plain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 .stack-4 > * + * {
   margin-top: 4px;
 }
@@ -300,6 +309,10 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+/* The text side may shrink so a long word wraps instead of pushing the other side out. */
+.spread > :first-child {
+  min-width: 0;
 }
 
 .section-head {
@@ -342,6 +355,7 @@ textarea {
 .wordmark {
   display: inline-flex;
   align-items: center;
+  min-height: 40px;
   gap: 10px;
   font-weight: 600;
   font-size: var(--fs-17);
@@ -425,8 +439,12 @@ textarea {
   place-items: center;
   width: 36px;
   height: 36px;
+  padding: 0;
+  border: 0;
   border-radius: var(--radius);
+  background: none;
   color: var(--text-2);
+  cursor: pointer;
   transition: background var(--ease), color var(--ease);
 }
 
@@ -493,6 +511,7 @@ textarea {
   right: 0;
   top: calc(100% + 8px);
   min-width: 220px;
+  max-width: min(300px, calc(100vw - 2 * var(--gutter)));
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -553,7 +572,11 @@ textarea {
 .site-footer nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 20px;
+  gap: 0 20px;
+}
+
+.site-footer nav > * {
+  padding: 6px 0;
 }
 
 /* ---------- Buttons ---------- */
@@ -620,7 +643,9 @@ textarea {
   border: 0;
   background: none;
   height: auto;
-  padding: 4px 0;
+  /* 7px of padding minus 3px of margin: the same 4px of space as before, with a taller tap area. */
+  padding: 7px 0;
+  margin: -3px 0;
   color: var(--text);
   font-weight: 600;
   cursor: pointer;
@@ -699,6 +724,8 @@ textarea {
 /* ---------- Forms ---------- */
 .field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
   gap: 6px;
 }
 
@@ -1546,7 +1573,7 @@ dialog.modal[open] {
 /* ---------- Key/value & tables ---------- */
 .kv {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 8px 20px;
   font-size: var(--fs-15);
 }
@@ -1587,6 +1614,49 @@ dialog.modal[open] {
 
 .table-wrap {
   overflow-x: auto;
+}
+
+/* On phones a stacked table shows each row as a block: first cell on its own line, the rest below it. */
+@media (max-width: 720px) {
+  .table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .table-stack,
+  .table-stack tbody {
+    display: block;
+  }
+  .table-stack tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-stack td {
+    padding: 0;
+    border: 0;
+  }
+  .table-stack td:first-child {
+    flex: 1 0 100%;
+    min-width: 0;
+  }
+  .table-stack td:last-child {
+    margin-left: auto;
+  }
+  .table-stack td:empty {
+    display: none;
+  }
+  .table-stack td[data-label]::before {
+    content: attr(data-label);
+    margin-right: 6px;
+    font-size: var(--fs-13);
+    color: var(--text-2);
+  }
 }
 
 /* ---------- Stats ---------- */
@@ -1675,6 +1745,15 @@ dialog.modal[open] {
   flex-wrap: wrap;
 }
 
+.breadcrumbs > * {
+  min-width: 0;
+}
+
+.breadcrumbs a {
+  padding: 6px 10px;
+  margin: -6px -10px;
+}
+
 .breadcrumbs a:hover {
   color: var(--text);
 }
@@ -1697,6 +1776,13 @@ dialog.modal[open] {
 
 .link:hover {
   text-decoration-color: currentColor;
+}
+
+/* Small standalone links ("Edit", "Forgot it?") get a taller tap area without moving the layout. */
+a.t-13,
+.t-13 > a.link {
+  padding: 7px 9px;
+  margin: -7px -9px;
 }
 
 .icon-16 {
@@ -1761,12 +1847,6 @@ dialog.modal[open] {
 .sticky-aside {
   position: sticky;
   top: calc(var(--header-h) + 24px);
-}
-
-.list-plain {
-  list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 .cat-list li a {
@@ -1844,7 +1924,7 @@ dialog.modal[open] {
 
 .roadmap-item {
   display: grid;
-  grid-template-columns: 52px 1fr;
+  grid-template-columns: 52px minmax(0, 1fr);
   gap: 12px;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
@@ -1902,7 +1982,7 @@ dialog.modal[open] {
 
 .notif {
   display: grid;
-  grid-template-columns: 10px 1fr auto;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
   gap: 14px;
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
@@ -1921,7 +2001,10 @@ dialog.modal[open] {
 
 .steps {
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  gap: 4px 20px;
   font-size: var(--fs-13);
   color: var(--text-3);
   counter-reset: step;
@@ -2035,4 +2118,15 @@ dialog.modal[open] {
   background: var(--surface);
   color: var(--text);
   font-weight: 600;
+}
+
+/* Touch screens and narrow windows: chips and the image tools grow to a comfortable size. */
+@media (pointer: coarse), (max-width: 900px) {
+  a.chip {
+    height: 32px;
+  }
+  .image-picker .slot .tools button {
+    width: 32px;
+    height: 32px;
+  }
 }

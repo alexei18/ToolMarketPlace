@@ -25,6 +25,15 @@ const path = Astro.url.pathname;
     </form>
     <div class="header-actions" id="header-actions">
       <a class="icon-link show-sm" href="/search" aria-label="Search"><Icon name="search" size={18} /></a>
+      <details class="menu nav-menu">
+        <summary class="icon-link" aria-label="Menu"><Icon name="menu" size={18} /></summary>
+        <div class="menu-panel">
+          <a href="/search"><Icon name="search" />Explore</a>
+          <a href="/#categories"><Icon name="grid" />Categories</a>
+          <a href="/dashboard/new"><Icon name="plus" />Submit a product</a>
+          <a class="menu-login" href="/login"><Icon name="user" />Log in</a>
+        </div>
+      </details>
       <div class="row visitor-only">
         <a class="btn btn-ghost btn-sm" href="/login">Log in</a>
         <a class="btn btn-dark btn-sm" href="/signup">Sign up</a>
@@ -35,8 +44,8 @@ const path = Astro.url.pathname;
       </div>
     </div>
   </div>
-  <div id="account-notice"></div>
 </header>
+<div id="account-notice"></div>
 
 <style>
   .member-only {
@@ -54,6 +63,22 @@ const path = Astro.url.pathname;
   @media (max-width: 640px) {
     .show-sm {
       display: inline-grid;
+    }
+    /* Phones: "Log in" moves into the menu so search, menu and "Sign up" fit next to the logo. */
+    .visitor-only .btn-ghost {
+      display: none;
+    }
+    :global(html:not([data-auth="1"])) .menu-login {
+      display: flex;
+    }
+  }
+  .nav-menu,
+  .menu-login {
+    display: none;
+  }
+  @media (max-width: 860px) {
+    .nav-menu {
+      display: block;
     }
   }
   #account-notice:empty {
@@ -111,10 +136,6 @@ const path = Astro.url.pathname;
         toast(errorMessage(err), "error");
       }
     });
-    document.addEventListener("click", (e) => {
-      const menu = root.querySelector("details.menu");
-      if (menu?.hasAttribute("open") && !menu.contains(e.target as Node)) menu.removeAttribute("open");
-    });
 
     const notice = document.getElementById("account-notice");
     if (notice && (me as { banned?: boolean }).banned) {
@@ -131,6 +152,13 @@ const path = Astro.url.pathname;
       });
     }
   }
+
+  // Header menus close on a tap outside them (which includes opening the other menu).
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll(".site-header details.menu[open]").forEach((menu) => {
+      if (!menu.contains(e.target as Node)) menu.removeAttribute("open");
+    });
+  });
 
   init();
 </script>

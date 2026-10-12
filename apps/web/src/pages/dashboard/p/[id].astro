@@ -11,7 +11,7 @@ const [res, cats] = await Promise.all([
   apiCall<MakerProductDetailDTO>(`/maker/products/${encodeURIComponent(Astro.params.id!)}`, { request: Astro.request }),
   apiCall<{ items: CategoryDTO[] }>("/categories"),
 ]);
-if (!res.ok) return Astro.rewrite("/404");
+if (!res.ok) return Astro.rewrite(res.status < 500 ? "/404" : "/unavailable");
 const justPublished = Astro.url.searchParams.get("published") === "1";
 ---
 

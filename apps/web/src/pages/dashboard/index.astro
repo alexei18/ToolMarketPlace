@@ -67,7 +67,7 @@ const STATUS = { live: "Live", hidden: "Under review", removed: "Removed" } as c
   {
     items.length > 0 && (
       <div class="table-wrap">
-        <table class="table">
+        <table class="table table-stack">
           <thead>
             <tr>
               <th>Product</th>
@@ -95,9 +95,9 @@ const STATUS = { live: "Live", hidden: "Under review", removed: "Removed" } as c
                 <td>
                   <span class="status" data-status={p.status}>{STATUS[p.status]}</span>
                 </td>
-                <td class="num">{compact(p.viewCount)}</td>
-                <td class="num">{compact(p.clickCount)}</td>
-                <td class="num">{compact(p.saveCount)}</td>
+                <td class="num" data-label="Views">{compact(p.viewCount)}</td>
+                <td class="num" data-label="Clicks">{compact(p.clickCount)}</td>
+                <td class="num" data-label="Saves">{compact(p.saveCount)}</td>
                 <td class="num">
                   <div class="row" style="justify-content: flex-end">
                     <a class="btn btn-ghost btn-sm" href={`/p/${p.slug}`}>View</a>
