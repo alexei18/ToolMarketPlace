@@ -3,8 +3,10 @@
  * Needs the site and API running (e.g. the local test stack):
  *   SEO_TEST_URL=http://localhost:4321 bun test apps/web/test/seo.test.ts
  * Optional: SEO_GONE_PATH=/p/<slug of a hidden or removed product> to check the 410 page.
+ * While the waitlist runs (WAITLIST on, not launched) only the waitlist checks apply.
  */
 import { describe, expect, test } from "bun:test";
+import { en } from "@tm/shared/copy";
 import { DESCRIPTION_MAX, TITLE_MAX } from "../src/lib/seo";
 
 const BASE = process.env.SEO_TEST_URL?.replace(/\/$/, "");
@@ -37,7 +39,46 @@ async function sitemapPaths(kind: string): Promise<string[]> {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname);
 }
 
-describe.skipIf(!BASE)("SEO on every page type", () => {
+/** Pages that stay open during the waitlist and are listed in the pages sitemap. */
+const WAITLIST_PAGES = ["/", "/ranking", "/makers", "/about"];
+const LEGAL = ["/terms", "/terms/makers", "/privacy", "/cookies", "/guidelines", "/report", "/legal"];
+const WAITLIST = BASE ? !(await sitemapPaths("pages")).includes("/top") : false;
+
+describe.skipIf(!BASE || !WAITLIST)("SEO while the waitlist runs", () => {
+  test("the waitlist homepage: the homepage title, the waitlist description, canonical, OG image and legal links", async () => {
+    const origin = new URL(BASE!).origin;
+    const p = await page("/?utm_source=tiktok&ref=abc");
+    expect(p.status).toBe(200);
+    expect(p.h1s).toBe(1);
+    expect(p.title).toStartWith(`${en.seo.home.title} · `);
+    expect(p.description).toBe(en.seo.waitlist.description);
+    expect(p.canonical).toBe(`${origin}/`);
+    expect(p.noindex).toBe(false);
+    expect(meta(p.html, "property", "og:image")).toBe(`${origin}/og.png`);
+    expect(meta(p.html, "property", "og:image:width")).toBe("1200");
+    expect(meta(p.html, "name", "twitter:card")).toBe("summary_large_image");
+    expect(p.html).toContain('<script type="application/ld+json">');
+    expect(p.html).toContain('src="/brand/tryworthy-wordmark.svg"');
+    for (const href of ["/about", "/makers", "/ranking", "/guidelines", "/terms", "/terms/makers", "/privacy", "/cookies", "/report", "/legal"]) expect(p.html, href).toContain(`href="${href}"`);
+  });
+
+  test("open pages answer 200; everything else redirects to the waitlist, keeping the campaign tags", async () => {
+    for (const path of [...WAITLIST_PAGES, ...LEGAL]) expect(`${path}: ${(await page(path)).status}`).toBe(`${path}: 200`);
+    for (const path of ["/top", "/trending", "/new", "/perks", "/search?q=x", "/c/productivity", "/signup"]) {
+      const res = await fetch(`${BASE}${path}${path.includes("?") ? "&" : "?"}utm_source=tiktok&ref=abc`, { redirect: "manual" });
+      expect(`${path}: ${res.status}`).toBe(`${path}: 302`);
+      expect(res.headers.get("location")).toBe("/?utm_source=tiktok&ref=abc");
+      expect(res.headers.get("cache-control")).toBe("no-store");
+    }
+  });
+
+  test("sitemaps list only the open pages", async () => {
+    expect(await sitemapPaths("pages")).toEqual(WAITLIST_PAGES);
+    for (const kind of ["products", "categories", "makers", "weeks"]) expect(await sitemapPaths(kind), kind).toEqual([]);
+  });
+});
+
+describe.skipIf(!BASE || WAITLIST)("SEO on every page type", () => {
   test("indexable pages: one H1, a clean canonical, title ≤ 60, description ≤ 155, OG and Twitter tags", async () => {
     const [pages, product, category, maker, week] = await Promise.all([sitemapPaths("pages"), sitemapPaths("products"), sitemapPaths("categories"), sitemapPaths("makers"), sitemapPaths("weeks")]);
     expect(pages).toEqual(["/", "/top", "/trending", "/new", "/perks", "/ranking", "/makers", "/about"]);
