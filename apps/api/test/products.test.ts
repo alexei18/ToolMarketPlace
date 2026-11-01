@@ -63,10 +63,16 @@ describe("domains", () => {
     restore();
 
     const second = await client.post("/me/domains", { domain: "tool.dev" });
-    sitesMock({ "https://tool.dev/": { html: PAGE_HTML("Tool", { meta: `<meta name="toolmarket-verification" content="${second.data.token}">` }) } });
+    sitesMock({ "https://tool.dev/": { html: PAGE_HTML("Tool", { meta: `<meta name="tryworthy-verification" content="${second.data.token}">` }) } });
     const meta = await client.post(`/me/domains/${second.data.id}/verify`, { method: "meta" });
     expect(meta.status).toBe(200);
     expect(meta.data.method).toBe("meta");
+
+    // Tags placed before the rename keep working.
+    const third = await client.post("/me/domains", { domain: "legacy.dev" });
+    sitesMock({ "https://legacy.dev/": { html: PAGE_HTML("Legacy", { meta: `<meta name="toolmarket-verification" content="${third.data.token}">` }) } });
+    const legacy = await client.post(`/me/domains/${third.data.id}/verify`, { method: "meta" });
+    expect(legacy.status).toBe(200);
   });
 
   test("a verified domain belongs to one account; pending claims can be taken over", async () => {

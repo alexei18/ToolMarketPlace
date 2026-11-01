@@ -17,6 +17,7 @@ import {
 } from "@tm/db";
 import {
   EXPORT_LINK_HOURS,
+  LEGACY_VERIFY_META_NAME,
   PAGE_SIZE,
   VERIFY_META_NAME,
   accountDeleteSchema,
@@ -470,7 +471,7 @@ async function checkMetaTag(hostname: string, token: string): Promise<boolean> {
       const res = await safeFetch(url, { accept: "text/html" });
       if (res.status >= 400) continue;
       const meta = extractMetadata(new TextDecoder().decode(res.body), res.url).meta;
-      if (meta.get(VERIFY_META_NAME)?.trim() === token) return true;
+      if ([VERIFY_META_NAME, LEGACY_VERIFY_META_NAME].some((name) => meta.get(name)?.trim() === token)) return true;
     } catch (err) {
       if (!(err instanceof FetchError)) throw err;
     }
