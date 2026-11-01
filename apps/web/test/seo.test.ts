@@ -76,7 +76,12 @@ describe.skipIf(!BASE)("SEO on every page type", () => {
   test("product pages point at their 1200×630 card", async () => {
     const [product] = await sitemapPaths("products");
     const p = await page(product!);
-    expect(meta(p.html, "property", "og:image")).toContain(`/og/products/${product!.split("/").pop()}.png?v=`);
+    const image = meta(p.html, "property", "og:image")!;
+    expect(image).toContain(`/og/products/${product!.split("/").pop()}.png?v=`);
+    // Served on the site's own domain, like the canonical URL.
+    expect(new URL(image).origin).toBe(new URL(p.canonical!).origin);
+    const card = await fetch(BASE + new URL(image).pathname + new URL(image).search, { redirect: "manual" });
+    expect([200, 302]).toContain(card.status);
     expect(meta(p.html, "property", "og:image:width")).toBe("1200");
     expect(meta(p.html, "property", "og:image:height")).toBe("630");
   });
