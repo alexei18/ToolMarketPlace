@@ -96,7 +96,7 @@ describe("export my data", () => {
     const { made, file } = await exportOf(s.u.client);
     expect(made.data.expiresAt - Math.floor(Date.now() / 1000)).toBeWithin(EXPORT_LINK_HOURS * 3600 - 5, EXPORT_LINK_HOURS * 3600 + 1);
     expect(file.status).toBe(200);
-    expect(file.headers.get("content-disposition")).toMatch(/^attachment; filename="toolmarket-data-\d{4}-\d{2}-\d{2}\.json"$/);
+    expect(file.headers.get("content-disposition")).toMatch(/^attachment; filename="tryworthy-data-\d{4}-\d{2}-\d{2}\.json"$/);
     expect(file.headers.get("cache-control")).toBe("private, no-store");
     const data = file.data;
 

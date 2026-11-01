@@ -3,7 +3,7 @@
  * Keys are stable: other languages will implement the same `Copy` shape.
  * No dependencies, safe for browser bundles (import from "@tm/shared/copy").
  *
- * Where the docs write "ToolMarketPlace", the template takes the site name, so the brand stays in
+ * Where the docs write "Tryworthy", the template takes the site name, so the brand stays in
  * config (SITE_NAME) like the rest of the app.
  */
 
@@ -205,7 +205,7 @@ export const en = {
     },
     product: {
       title: (product: string, tagline: string) => `${product}: ${tagline}`,
-      /** The perk sentence after the short description, e.g. "60 days free on ToolMarketPlace." */
+      /** The perk sentence after the short description, e.g. "60 days free on Tryworthy." */
       perk: (perkTitle: string, siteName: string) => `${perkTitle} on ${siteName}.`,
     },
     maker: {
@@ -275,7 +275,7 @@ export const en = {
   publicReport: {
     title: "Report a product",
     url: "Product link",
-    urlHint: "Its page on ToolMarket, or the product's own website.",
+    urlHint: "Its page on Tryworthy, or the product's own website.",
     reason: "Reason",
     explanation: "Explanation",
     explanationHint: "Why you believe the product is illegal or breaks our rules. Add any evidence.",

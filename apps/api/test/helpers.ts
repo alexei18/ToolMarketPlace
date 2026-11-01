@@ -32,7 +32,7 @@ export function setup(overrides: Partial<Env> = {}): TestContext {
   const env = {
     DB: d1,
     IMAGES_BUCKET: r2,
-    SITE_NAME: "ToolMarket",
+    SITE_NAME: "Tryworthy",
     WEB_ORIGIN: WEB,
     API_ORIGIN: API,
     IMAGES_BASE_URL: "",

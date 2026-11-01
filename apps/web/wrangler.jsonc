@@ -8,7 +8,7 @@
   "observability": { "enabled": true },
   // Production: "routes": [{ "pattern": "example.com", "custom_domain": true }],
   "vars": {
-    "SITE_NAME": "ToolMarket",
+    "SITE_NAME": "Tryworthy",
     "SITE_URL": "http://localhost:4321",
     // Public API origin used by the browser (api. subdomain in production).
     "PUBLIC_API_URL": "http://localhost:8787",

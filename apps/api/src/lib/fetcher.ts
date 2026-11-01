@@ -25,7 +25,7 @@ export interface SafeFetchOptions {
   maxRedirects?: number;
 }
 
-export const BOT_UA = "Mozilla/5.0 (compatible; ToolMarketBot/1.0; +https://github.com/alexei18/ToolMarketPlace)";
+export const BOT_UA = "Mozilla/5.0 (compatible; TryworthyBot/1.0; +https://tryworthy.app)";
 
 async function assertPublicTarget(url: URL): Promise<void> {
   if (url.protocol !== "https:") throw new FetchError("Only https links can be fetched.");

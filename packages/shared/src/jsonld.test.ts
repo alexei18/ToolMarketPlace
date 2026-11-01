@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { collectionPageJsonLd, homeJsonLd, serializeJsonLd, softwareApplicationJsonLd, type JsonLdGraph, type JsonLdNode } from "./jsonld";
 
-const SITE = "https://toolmarketplace.example";
+const SITE = "https://tryworthy.app";
 
 /** Every key anywhere in the value. */
 function keys(v: unknown): string[] {
@@ -36,9 +36,9 @@ const crumbs = [
 
 describe("home", () => {
   test("Organization + WebSite with a SearchAction", () => {
-    const g = homeJsonLd({ name: "ToolMarketPlace", url: `${SITE}/`, logo: `${SITE}/icons/icon-512.png` });
+    const g = homeJsonLd({ name: "Tryworthy", url: `${SITE}/`, logo: `${SITE}/brand/icon-512.png` });
     valid(g);
-    expect(node(g, "Organization")).toMatchObject({ name: "ToolMarketPlace", url: `${SITE}/`, logo: `${SITE}/icons/icon-512.png` });
+    expect(node(g, "Organization")).toMatchObject({ name: "Tryworthy", url: `${SITE}/`, logo: `${SITE}/brand/icon-512.png` });
     expect(node(g, "WebSite").potentialAction).toEqual({
       "@type": "SearchAction",
       target: { "@type": "EntryPoint", urlTemplate: `${SITE}/search?q={search_term_string}` },

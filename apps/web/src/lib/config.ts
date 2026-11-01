@@ -4,7 +4,7 @@ import { env } from "cloudflare:workers";
 export function siteConfig() {
   const siteUrl = (env.SITE_URL || "http://localhost:4321").replace(/\/$/, "");
   return {
-    siteName: env.SITE_NAME || "ToolMarket",
+    siteName: env.SITE_NAME || "Tryworthy",
     siteUrl,
     apiUrl: (env.PUBLIC_API_URL || "http://localhost:8787").replace(/\/$/, ""),
     turnstileSiteKey: env.TURNSTILE_SITE_KEY || "",

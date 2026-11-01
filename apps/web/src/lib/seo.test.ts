@@ -14,26 +14,26 @@ describe("clip", () => {
 
 describe("templates", () => {
   test("titles keep the site name and stay within 60 characters", () => {
-    expect(homeSeo("ToolMarketPlace").title).toBe("New Apps & AI Tools Worth Trying · ToolMarketPlace");
-    expect(categorySeo("Productivity", "ToolMarketPlace")).toEqual({
-      title: "Best New Productivity Apps This Week · ToolMarketPlace",
+    expect(homeSeo("Tryworthy").title).toBe("New Apps & AI Tools Worth Trying · Tryworthy");
+    expect(categorySeo("Productivity", "Tryworthy")).toEqual({
+      title: "Best New Productivity Apps This Week · Tryworthy",
       description: "New productivity apps and AI tools, ranked by what real people save and try. Updated daily, with free trials and perks.",
     });
-    const long = withSite("A product name that goes on: and a tagline that is far too long", "ToolMarketPlace");
+    const long = withSite("A product name that goes on: and a tagline that is far too long", "Tryworthy");
     expect(long.length).toBeLessThanOrEqual(TITLE_MAX);
-    expect(long.endsWith("… · ToolMarketPlace")).toBe(true);
-    const maker = makerSeo("Maria-Magdalena Ionescu-Constantinescu de la Vrancea", "ToolMarketPlace");
+    expect(long.endsWith("… · Tryworthy")).toBe(true);
+    const maker = makerSeo("Maria-Magdalena Ionescu-Constantinescu de la Vrancea", "Tryworthy");
     expect(maker.title.length).toBeLessThanOrEqual(TITLE_MAX);
-    expect(maker.title.endsWith(" — Products on ToolMarketPlace")).toBe(true);
+    expect(maker.title.endsWith(" — Products on Tryworthy")).toBe(true);
   });
 
   test("/new and weekly archive templates", () => {
-    expect(newSeo("ToolMarketPlace").title).toBe("New Apps & AI Tools This Week · ToolMarketPlace");
-    expect(weekSeo("Sales & CRM", 44, 2026, "ToolMarketPlace")).toEqual({
-      title: "Best New Sales & CRM Apps, Week 44 2026 · ToolMarketPlace",
+    expect(newSeo("Tryworthy").title).toBe("New Apps & AI Tools This Week · Tryworthy");
+    expect(weekSeo("Sales & CRM", 44, 2026, "Tryworthy")).toEqual({
+      title: "Best New Sales & CRM Apps, Week 44 2026 · Tryworthy",
       description: "The new sales & CRM apps and AI tools launched in week 44 of 2026, ranked by what real people saved and tried.",
     });
-    for (const seo of [newSeo("ToolMarketPlace"), weekSeo("Developer Tools and Infrastructure", 44, 2026, "ToolMarketPlace")]) {
+    for (const seo of [newSeo("Tryworthy"), weekSeo("Developer Tools and Infrastructure", 44, 2026, "Tryworthy")]) {
       expect(seo.title.length).toBeLessThanOrEqual(TITLE_MAX);
       expect(seo.description.length).toBeLessThanOrEqual(DESCRIPTION_MAX);
     }
@@ -53,12 +53,12 @@ describe("templates", () => {
         description: "Ledgerly sends **polite reminders** before and after an invoice is due, so you stop writing awkward follow-up emails to every client.",
         perks: [{ title: "60 days free", available: true }],
       },
-      "ToolMarketPlace",
+      "Tryworthy",
     );
-    expect(seo.title).toBe("Ledgerly: Invoices that chase late… · ToolMarketPlace");
+    expect(seo.title).toBe("Ledgerly: Invoices that chase late… · Tryworthy");
     expect(seo.description.length).toBeLessThanOrEqual(DESCRIPTION_MAX);
     expect(seo.description).toStartWith("Ledgerly sends polite reminders");
-    expect(seo.description).toEndWith("60 days free on ToolMarketPlace.");
+    expect(seo.description).toEndWith("60 days free on Tryworthy.");
   });
 
   test("product description ends on a sentence and keeps the whole perk sentence", () => {
@@ -69,10 +69,10 @@ describe("templates", () => {
         description: ["Ledgerly sends polite reminders before and after an invoice is due, so you stop writing awkward follow-up emails.", "", "## What you get", "- Branded invoices in under a minute"].join("\n"),
         perks: [{ title: "3 months of Pro, free", available: true }],
       },
-      "ToolMarket",
+      "Tryworthy",
     );
     expect(seo.description).toBe(
-      "Ledgerly sends polite reminders before and after an invoice is due, so you stop writing awkward follow-up emails. 3 months of Pro, free on ToolMarket.",
+      "Ledgerly sends polite reminders before and after an invoice is due, so you stop writing awkward follow-up emails. 3 months of Pro, free on Tryworthy.",
     );
   });
 });

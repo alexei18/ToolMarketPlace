@@ -476,7 +476,7 @@ app.post("/reports", async (c) => {
   await requireTurnstile(c.env, input.turnstileToken, clientIp(c));
   const product = await productFromLink(c.env, db, input.url);
   if (!product || product.status === "removed") {
-    throw new ApiError("VALIDATION", "We couldn't find a listing at that link. Paste the product's page on ToolMarket or its website.", { fields: { url: ["No listing found at this link."] } });
+    throw new ApiError("VALIDATION", "We couldn't find a listing at that link. Paste the product's page on Tryworthy or its website.", { fields: { url: ["No listing found at this link."] } });
   }
   const id = newId();
   const email = input.email || null;
