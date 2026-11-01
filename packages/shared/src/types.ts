@@ -17,6 +17,7 @@ import type {
   ReviewCaseKind,
   RoadmapStatus,
   Stage,
+  WaitlistRole,
 } from "./enums";
 import type { ModerationRule } from "./moderation";
 
@@ -332,9 +333,40 @@ export interface HomeDTO {
   prelaunch: boolean;
   /** Top this week, or null while fewer than HOME_TOP_MIN quality products exist */
   top: ProductCardDTO[] | null;
-  /** Reserved accounts, only in pre-launch and from RESERVED_COUNT_MIN */
-  reservedCount: number | null;
+  /** Confirmed waitlist sign-ups, only in pre-launch and from the WAITLIST_COUNT_MIN limit */
+  waitingCount: number | null;
   categories: CategoryDTO[];
+}
+
+/** The waitlist confirmation page. */
+export interface WaitlistConfirmedDTO {
+  role: WaitlistRole;
+  /** The person picked at least one category. */
+  hasInterests: boolean;
+  /** Share link: <site>/?ref=<refCode> */
+  refCode: string;
+  /** Confirmed sign-ups that came through the share link. */
+  referrals: number;
+  /** YYYY-MM-DD, or null while the date is not set. */
+  makerAccessDate: string | null;
+  launchDate: string | null;
+}
+
+/** /admin/waitlist (docs/tiktok-campaign.md). */
+export interface WaitlistStatsDTO {
+  totals: { pending: number; queued: number; failed: number; explorers: number; makers: number; unsubscribed: number };
+  /** Confirmed sign-ups per UTC day, role and utm_campaign ("" = none). */
+  daily: { day: string; role: WaitlistRole; campaign: string; n: number }[];
+  /** Confirmed sign-ups by the "Where did you find us?" answer ("" = no answer). */
+  foundVia: { foundVia: string; n: number }[];
+  topReferrers: { email: string; refCode: string; n: number }[];
+  /** Emails the provider refused for good, newest first. */
+  failedEmails: { email: string; error: string | null; at: number }[];
+  /** Emails per UTC day (sent, deferred because of quota or rate limits, failed), the last 31 days. */
+  emailUsage: { day: string; sent: number; deferred: number; failed: number }[];
+  /** Emails sent this calendar month (UTC). */
+  emailsThisMonth: number;
+  invites: { makersInvitedAt: number | null; launchedAt: number | null; makersLeft: number; explorersLeft: number };
 }
 
 /** A statement of reasons, as the affected user sees it. */

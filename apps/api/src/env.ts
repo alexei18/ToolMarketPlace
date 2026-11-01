@@ -10,6 +10,8 @@ export interface Env {
   /** Service binding to the site worker (cache purges). */
   WEB?: Fetcher;
   USER_LIMITER?: RateLimit;
+  /** Waitlist sign-ups per IP (5 a minute). */
+  WAITLIST_LIMITER?: RateLimit;
 
   SITE_NAME: string;
   WEB_ORIGIN: string;

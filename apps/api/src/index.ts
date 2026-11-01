@@ -3,6 +3,7 @@ import type { Env } from "./env";
 import { runDigest } from "./jobs/digest";
 import { checkUsage, cleanup } from "./jobs/maintenance";
 import { runRanking } from "./jobs/ranking";
+import { processWaitlistEmails } from "./lib/waitlist";
 import { services } from "./middleware";
 
 const app = createApp();
@@ -30,6 +31,8 @@ export default {
           console.log("[ranking]", JSON.stringify(result));
         })(),
       );
+      // Waitlist emails held back by the email quota, and the invite batches.
+      ctx.waitUntil(processWaitlistEmails(env, db, controller.scheduledTime).then((r) => console.log("[waitlist]", JSON.stringify(r))));
       return;
     }
     // 08:00, 08:20 and 08:40 UTC: digest batches (the later runs continue where the first stopped).

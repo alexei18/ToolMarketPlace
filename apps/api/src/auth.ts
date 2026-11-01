@@ -1,16 +1,30 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
-import { captcha } from "better-auth/plugins";
+import { captcha, magicLink } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { schema, type Database } from "@tm/db";
 import { TERMS_VERSION, newId, nowSec } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import type { Env } from "./env";
 import { sendEmail } from "./lib/email";
 import { hashPassword, verifyPassword } from "./lib/password";
 import { isPrelaunch } from "./lib/prelaunch";
 import { uniqueUsername } from "./lib/username";
-import { mayCreateAccountDuringWaitlist } from "./lib/waitlist";
+import { adoptWaitlistData, mayCreateAccountDuringWaitlist } from "./lib/waitlist";
+
+/**
+ * Magic links are only minted by the API itself, for a maker's invite link (POST /waitlist/join);
+ * the plugin hands the URL here instead of emailing it, and the route takes it straight back.
+ */
+const mintedLinks = new Map<string, string>();
+
+export function takeMintedLink(email: string): string | null {
+  const key = email.toLowerCase();
+  const url = mintedLinks.get(key) ?? null;
+  mintedLinks.delete(key);
+  return url;
+}
 
 export function createAuth(env: Env, db: Database) {
   const secure = env.API_ORIGIN.startsWith("https://");
@@ -90,7 +104,7 @@ export function createAuth(env: Env, db: Database) {
           before: async (data, ctx) => {
             // During the waitlist only admins and invited makers get accounts (docs/tiktok-campaign.md).
             if ((await isPrelaunch(env, db)) && !(await mayCreateAccountDuringWaitlist(env, db, data.email))) {
-              throw new APIError("FORBIDDEN", { code: "WAITLIST_ONLY", message: "Accounts open on launch day. Join the waitlist to get an invite." });
+              throw new APIError("FORBIDDEN", { code: "WAITLIST_ONLY", message: en.waitlist.accountsClosed });
             }
             // Email sign-up sends the Terms version the user accepted (with the age checkbox). Google
             // sign-ups accept it in onboarding instead (POST /me/terms), since OAuth carries no extra fields.
@@ -104,12 +118,22 @@ export function createAuth(env: Env, db: Database) {
             const base = (data.name || data.email.split("@")[0] || "user").toString();
             return { data: { ...data, ...terms, username: await uniqueUsername(db, base) } };
           },
+          // A waitlist sign-up's source tags and categories move to the new account.
+          after: async (created) => {
+            await adoptWaitlistData(db, created.id, created.email);
+          },
         },
       },
     },
-    plugins: env.TURNSTILE_SECRET_KEY
-      ? [captcha({ provider: "cloudflare-turnstile", secretKey: env.TURNSTILE_SECRET_KEY, endpoints: ["/sign-up/email"] })]
-      : [],
+    plugins: [
+      magicLink({
+        expiresIn: 5 * 60,
+        sendMagicLink: ({ email, url }) => {
+          mintedLinks.set(email.toLowerCase(), url);
+        },
+      }),
+      ...(env.TURNSTILE_SECRET_KEY ? [captcha({ provider: "cloudflare-turnstile", secretKey: env.TURNSTILE_SECRET_KEY, endpoints: ["/sign-up/email"] })] : []),
+    ],
   });
 }
 

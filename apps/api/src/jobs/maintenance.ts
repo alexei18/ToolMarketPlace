@@ -1,6 +1,14 @@
-import { and, eq, inArray, isNotNull, lt, or } from "drizzle-orm";
-import { notifications, productSignals, reports, session, user, verification, type Database } from "@tm/db";
-import { RAW_SIGNAL_DAYS, READ_NOTIFICATION_DAYS, REPORTER_EMAIL_MONTHS, VERIFICATION_MAX_AGE_HOURS, addMonths } from "@tm/shared";
+import { and, eq, inArray, isNotNull, isNull, lt, or } from "drizzle-orm";
+import { notifications, productSignals, reports, session, siteState, user, verification, waitlist, type Database } from "@tm/db";
+import {
+  RAW_SIGNAL_DAYS,
+  READ_NOTIFICATION_DAYS,
+  REPORTER_EMAIL_MONTHS,
+  VERIFICATION_MAX_AGE_HOURS,
+  WAITLIST_MONTHS_AFTER_LAUNCH,
+  WAITLIST_UNCONFIRMED_DAYS,
+  addMonths,
+} from "@tm/shared";
 import type { Env } from "../env";
 import { deleteExpiredExports } from "../lib/account";
 import { flushCounters } from "../lib/counters";
@@ -32,8 +40,23 @@ export async function cleanup(env: Env, db: Database, nowMs = Date.now()): Promi
       .set({ reporterEmail: null })
       .where(and(isNotNull(reports.reporterEmail), lt(reports.decidedAt, addMonths(nowSec, -REPORTER_EMAIL_MONTHS)))),
   ]);
+  await cleanupWaitlist(db, nowSec);
   await deleteExpiredExports(env, nowMs);
   await flushCounters(db);
+}
+
+/**
+ * Unconfirmed sign-ups go WAITLIST_UNCONFIRMED_DAYS after their confirmation email was sent (or
+ * after it was refused for good); ones still waiting for the email quota stay. The whole waitlist
+ * goes WAITLIST_MONTHS_AFTER_LAUNCH after launch.
+ */
+async function cleanupWaitlist(db: Database, nowSec: number): Promise<void> {
+  const cutoff = nowSec - WAITLIST_UNCONFIRMED_DAYS * 86400;
+  await db
+    .delete(waitlist)
+    .where(and(isNull(waitlist.confirmedAt), or(lt(waitlist.confirmationSentAt, cutoff), and(isNull(waitlist.confirmationSentAt), lt(waitlist.emailFailedAt, cutoff)))));
+  const state = await db.select({ launchedAt: siteState.launchedAt }).from(siteState).where(eq(siteState.id, 1)).get();
+  if (state?.launchedAt && nowSec >= addMonths(state.launchedAt, WAITLIST_MONTHS_AFTER_LAUNCH)) await db.delete(waitlist);
 }
 
 interface UsageNumbers {

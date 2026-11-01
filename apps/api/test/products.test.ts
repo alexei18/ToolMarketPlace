@@ -281,7 +281,7 @@ describe("discovery", () => {
     const t = setup();
     await seed(t, 3, "design");
     const home = await new Client(t).get("/home");
-    expect(home.data).toMatchObject({ prelaunch: false, top: null, reservedCount: null });
+    expect(home.data).toMatchObject({ prelaunch: false, top: null, waitingCount: null });
     expect(home.data.categories.find((x: { slug: string }) => x.slug === "design")).toMatchObject({ productCount: 3, listed: true });
     const cats = await new Client(t).get("/categories");
     expect(cats.data.items).toHaveLength(20);
@@ -294,7 +294,7 @@ describe("discovery", () => {
     expect((await visitor.get("/sitemap/other")).status).toBe(404);
   });
 
-  test("home in pre-launch: top from 6 quality products, thin categories unlisted, reserved count from 100", async () => {
+  test("home in pre-launch: top from 6 quality products, thin categories unlisted", async () => {
     const t = setup();
     await seed(t, 6, "design");
     // After seeding: the waitlist lets only admins and invited makers sign up.
@@ -320,21 +320,6 @@ describe("discovery", () => {
     t.sqlite.run("UPDATE products SET quality_ok = 1");
     h = await home();
     expect(h.top).toHaveLength(6);
-
-    // Reserved = onboarded and not banned; shown only from RESERVED_COUNT_MIN.
-    t.sqlite.run("UPDATE user SET onboarded_at = NULL");
-    const addUsers = (from: number, to: number, banned: number | null = null) =>
-      t.sqlite.run(
-        `WITH RECURSIVE n(i) AS (SELECT ${from} UNION ALL SELECT i + 1 FROM n WHERE i < ${to})
-         INSERT INTO user (id, name, email, email_verified, created_at, updated_at, onboarded_at, banned_at)
-         SELECT 'r' || i, 'R', 'r' || i || '@example.com', 1, 0, 0, 1, ? FROM n`,
-        [banned],
-      );
-    addUsers(1, 99);
-    addUsers(100, 100, 1);
-    expect((await home()).reservedCount).toBeNull();
-    addUsers(101, 101);
-    expect((await home()).reservedCount).toBe(100);
 
     const after = setup({ WAITLIST: "false" });
     await seed(after, 1, "design");

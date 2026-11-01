@@ -11,7 +11,7 @@ export interface EmailMessage {
    * Bulk and marketing-style emails: a footer link to the unsubscribe page, plus the one-click
    * List-Unsubscribe headers (RFC 8058) that mail apps show next to the sender.
    */
-  unsubscribe?: { label: string; pageUrl: string; oneClickUrl: string };
+  unsubscribe?: { label: string; pageUrl: string; oneClickUrl: string; /** Why they get it, shown before the link. */ note?: string };
 }
 
 /** Most emails one batch request carries. Kept small so a nearly used daily quota still lets some through. */
@@ -109,7 +109,7 @@ async function countEmails(env: Env, column: "sent" | "deferred" | "failed", n: 
 }
 
 function renderText(msg: EmailMessage): string {
-  return [...msg.lines, msg.action ? `${msg.action.label}: ${msg.action.url}` : "", msg.unsubscribe ? `${msg.unsubscribe.label}: ${msg.unsubscribe.pageUrl}` : ""].filter(Boolean).join("\n\n");
+  return [...msg.lines, msg.action ? `${msg.action.label}: ${msg.action.url}` : "", msg.unsubscribe?.note ?? "", msg.unsubscribe ? `${msg.unsubscribe.label}: ${msg.unsubscribe.pageUrl}` : ""].filter(Boolean).join("\n\n");
 }
 
 function renderEmail(web: string, msg: EmailMessage): string {
@@ -119,7 +119,7 @@ function renderEmail(web: string, msg: EmailMessage): string {
        <p style="margin:0 0 16px;color:#6b6b6b;font-size:13px">Or paste this link: ${escapeHtml(msg.action.url)}</p>`
     : "";
   const footer = msg.unsubscribe
-    ? `<p style="margin:16px 0 0;color:#6b6b6b;font-size:13px;text-align:center"><a href="${escapeHtml(msg.unsubscribe.pageUrl)}" style="color:#6b6b6b">${escapeHtml(msg.unsubscribe.label)}</a></p>`
+    ? `<p style="margin:16px 0 0;color:#6b6b6b;font-size:13px;text-align:center">${msg.unsubscribe.note ? `${escapeHtml(msg.unsubscribe.note)}<br>` : ""}<a href="${escapeHtml(msg.unsubscribe.pageUrl)}" style="color:#6b6b6b">${escapeHtml(msg.unsubscribe.label)}</a></p>`
     : "";
   return `<!doctype html><html><body style="margin:0;background:#f7f7f5;font-family:-apple-system,Segoe UI,Inter,Arial,sans-serif;color:#111;font-size:15px;line-height:1.5">
 <div style="max-width:520px;margin:0 auto;padding:40px 24px">

@@ -20,6 +20,8 @@ export const DEFAULT_LIMITS = {
   USER_BAN_REJECTED_REPORTS: 5,
   /** Max products in one digest. */
   DIGEST_MAX_ITEMS: 10,
+  /** "[N] people are waiting" shows on the waitlist only from this many confirmed sign-ups. */
+  WAITLIST_COUNT_MIN: 300,
 } as const;
 
 export type Limits = { -readonly [K in keyof typeof DEFAULT_LIMITS]: number };

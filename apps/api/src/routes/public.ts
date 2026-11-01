@@ -1,13 +1,12 @@
 import { and, asc, count, desc, eq, exists, isNotNull, isNull, ne, sql, type SQL } from "drizzle-orm";
 import { Hono, type Context } from "hono";
-import { categories, perks, productCategories, productImages, products, reports, roadmapItems, roadmapVotes, saves, user, userInterests } from "@tm/db";
+import { categories, perks, productCategories, productImages, products, reports, roadmapItems, roadmapVotes, saves, user, userInterests, waitlist } from "@tm/db";
 import {
   CATEGORY_MIN_ELIGIBLE,
   HOME_TOP_MIN,
   NEW_PAGE_DAYS,
   PAGE_SIZE,
   PERKS_PAGE_MAX,
-  RESERVED_COUNT_MIN,
   listQuerySchema,
   nowSec,
   parseWeek,
@@ -142,26 +141,26 @@ app.get("/perks", async (c) => {
   return c.json({ items });
 });
 
-/** Home page: the pre-launch state, Top this week (when there are enough), categories and the reserved count. */
+/** Home page: the pre-launch state, Top this week (when there are enough), categories and the waitlist count. */
 app.get("/home", async (c) => {
   const db = c.get("db");
   const prelaunch = await isPrelaunch(c.env, db);
-  const [top, cats, reserved] = await Promise.all([
+  const [top, cats, waiting] = await Promise.all([
     listProducts(db, c.env, { scope: null, sort: "top", filters: {}, limit: HOME_TOP_MIN }),
     categoryList(db, prelaunch),
     prelaunch
       ? db
           .select({ n: count() })
-          .from(user)
-          .where(and(isNotNull(user.onboardedAt), isNull(user.bannedAt)))
+          .from(waitlist)
+          .where(and(isNotNull(waitlist.confirmedAt), isNull(waitlist.unsubscribedAt)))
           .get()
       : null,
   ]);
-  const reservedCount = reserved?.n ?? 0;
+  const waitingCount = waiting?.n ?? 0;
   const body: HomeDTO = {
     prelaunch,
     top: top.items.length >= HOME_TOP_MIN ? top.items : null,
-    reservedCount: prelaunch && reservedCount >= RESERVED_COUNT_MIN ? reservedCount : null,
+    waitingCount: prelaunch && waitingCount >= c.get("limits").WAITLIST_COUNT_MIN ? waitingCount : null,
     categories: cats,
   };
   return c.json(body);

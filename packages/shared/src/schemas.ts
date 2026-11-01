@@ -16,6 +16,7 @@ import {
   DIGEST_FREQUENCIES,
   FEEDBACK_MODES,
   FEEDBACK_TYPES,
+  FOUND_VIA,
   MEMBER_REPORT_REASONS,
   PERK_TYPES,
   PLATFORMS,
@@ -24,8 +25,10 @@ import {
   RANK_SORTS,
   ROADMAP_STATUSES,
   STAGES,
+  WAITLIST_ROLES,
 } from "./enums";
 import { MODERATION_RULE_IDS } from "./moderation";
+import { WAITLIST_INTERESTS_MAX } from "./prelaunch/config";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const slug = z.string().trim().min(1).max(80).regex(/^[a-z0-9-]+$/);
@@ -61,6 +64,26 @@ const utmValue = z.string().trim().min(1).max(100).nullish();
 export const firstTouchSchema = z
   .object({ source: utmValue, campaign: utmValue, content: utmValue })
   .refine((v) => v.source || v.campaign || v.content, { message: "Send at least one utm_* value." });
+
+/** Joining the waitlist (docs/tiktok-campaign.md). Category ids are checked against the database. */
+export const waitlistJoinSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
+    role: z.enum(WAITLIST_ROLES),
+    interests: z.array(z.string().max(40)).max(WAITLIST_INTERESTS_MAX).default([]),
+    productUrl: z.string().trim().max(2048).nullish(),
+    foundVia: z.enum(FOUND_VIA).nullish(),
+    utm: z.object({ source: utmValue, medium: utmValue, campaign: utmValue, content: utmValue }).partial().nullish(),
+    ref: z.string().trim().max(32).nullish(),
+    turnstileToken: z.string().max(4096).nullish(),
+  })
+  .refine((v) => v.role === "explorer" || v.interests.length <= 1, { path: ["interests"], message: "Pick one category." });
+
+export const waitlistTokenSchema = z.object({ token: z.string().min(10).max(512) });
+
+/** The two admin waitlist actions are typed out to confirm. */
+export const WAITLIST_INVITE_CONFIRM = "INVITE";
+export const WAITLIST_LAUNCH_CONFIRM = "LAUNCH";
 
 /** Deleting the account: the user types DELETE to confirm. */
 export const ACCOUNT_DELETE_CONFIRM = "DELETE";
