@@ -13,7 +13,10 @@ const res = await apiCall<{ items: ReviewQueueItemDTO[]; cases: ReviewCaseDTO[];
 
 <Base title="Admin" noindex>
   <div class="container page">
-    <h1 class="t-32" style="margin-bottom: 24px">Admin</h1>
+    <div class="spread" style="margin-bottom: 24px">
+      <h1 class="t-32">Admin</h1>
+      <a class="btn btn-secondary" href="/admin/waitlist">Waitlist</a>
+    </div>
     <Admin client:load queue={res.ok ? res.data.items : []} cases={res.ok ? res.data.cases : []} contests={res.ok ? res.data.contests : []} meId={me.id} />
   </div>
 </Base>
