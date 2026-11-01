@@ -82,7 +82,8 @@ Demo accounts (password `demo-password-123`): `alex@demo.dev` (member), `admin@e
 
 Notes for local dev:
 
-- Emails (confirmation, password reset) are printed in the API terminal when `RESEND_API_KEY` is empty. Open the link to confirm.
+- Emails (confirmation, password reset, waitlist) are printed in the API terminal when `RESEND_API_KEY` is empty. Open the link to confirm.
+- `WAITLIST` is `"true"` in `apps/api/wrangler.jsonc`, so the homepage is the waitlist and other pages redirect to it unless you are signed in. Set it to `"false"` to work on the full site.
 - `TURNSTILE_SECRET_KEY` in the example is Cloudflare's always-pass test key. Leave it empty to turn Turnstile off.
 - Use `localhost` (not `127.0.0.1`) in the browser. Cookies and the API's origin check expect `http://localhost:4321`.
 - The publish flow fetches the real page behind the link, so it needs internet access and a public `https` site.
@@ -106,13 +107,17 @@ The API tests run the real Hono app and Better Auth against an in-memory SQLite 
    bunx wrangler r2 bucket create toolmarket-images
    ```
 2. **Domains.** Production settings live in the `env.production` block of each `wrangler.jsonc` (local dev uses the top-level vars). The site worker is routed to `tryworthy.app` and the API to `api.tryworthy.app`. Optionally point a custom domain such as `img.tryworthy.app` at the R2 bucket and set `IMAGES_BASE_URL` to it.
-3. **Vars.** The canonical origin is `SITE_URL` (site) and `WEB_ORIGIN` (API), both `https://tryworthy.app`; every absolute URL is built from them. Before launch, fill in `ADMIN_EMAILS` and `VAPID_PUBLIC_KEY` in `apps/api/wrangler.jsonc`, and `TURNSTILE_SITE_KEY` and `GOOGLE_ENABLED=true` in `apps/web/wrangler.jsonc`.
+3. **Vars.** The canonical origin is `SITE_URL` (site) and `WEB_ORIGIN` (API), both `https://tryworthy.app`; every absolute URL is built from them. Before launch, fill in `ADMIN_EMAILS`, `VAPID_PUBLIC_KEY`, `MAKER_ACCESS_DATE` and `LAUNCH_DATE` (YYYY-MM-DD) in `apps/api/wrangler.jsonc`, and `TURNSTILE_SITE_KEY` and `GOOGLE_ENABLED=true` in `apps/web/wrangler.jsonc`.
 4. **Secrets.**
    - API: `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TURNSTILE_SECRET_KEY`, `RESEND_API_KEY`, `VAPID_PRIVATE_KEY`, `INTERNAL_SECRET`, and optionally `CF_ACCOUNT_ID` + `CF_API_TOKEN` (screenshots, usage alerts).
    - Site: `INTERNAL_SECRET` (same value as the API).
    - Set each with `bunx wrangler secret put NAME --env production`.
 5. **Google OAuth.** Add the redirect URI `https://api.tryworthy.app/auth/callback/google`.
 6. **Migrate and deploy.** Run `bun run db:migrate:remote`, then `bun run deploy` (API first, because the site binds to it). Both use the production environment (the site is built with `CLOUDFLARE_ENV=production`). Optionally add `"services": [{ "binding": "WEB", "service": "toolmarket-web" }]` to the API's `env.production` afterwards so cache purges use the binding.
+
+### Waitlist and launch
+
+While `WAITLIST` is `"true"` the site runs as the waitlist (`docs/tiktok-campaign.md`): the homepage collects emails with double opt-in, and anonymous visitors to other pages are sent there (legal pages, `/ranking`, `/about` and `/makers` stay open). Only admins and invited makers can create accounts. In `/admin/waitlist`, **Invite makers** sends confirmed makers a link that creates their account, and **Launch** ends the waitlist for everyone (no deploy needed) and emails explorers the top picks in their categories. Emails that hit the provider's quota wait in a queue that the 30-minute cron works through.
 
 ### Legal pages before launch
 
