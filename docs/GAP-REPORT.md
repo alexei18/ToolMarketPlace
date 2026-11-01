@@ -13,7 +13,7 @@ These block or change later steps. Neither the docs nor the code answer them.
 | # | Question | Why it matters | Blocks |
 | --- | --- | --- | --- |
 | D1 | **The "AI" category.** The seed lists `ai` as category #1 (`packages/shared/src/categories.ts`). POSITIONING says AI-powered is "a badge and a filter, not a separate category". Should `ai` be replaced by another general category (to keep 20), with its products migrated to `has_ai = true`? | It changes the seed, every product in `ai`, user interests and the SEO landing for AI | Steps 2, 3, 9 |
-| D2 | **Brand name.** The code uses `SITE_NAME = "ToolMarket"` (`apps/api/wrangler.jsonc`, `web/lib/config.ts`, README). Every doc, title template and the About text say "ToolMarketPlace". | Every title, meta tag, email and legal text | Step 1 |
+| D2 | **Brand name.** The code uses `SITE_NAME = "ToolMarket"` (`apps/api/wrangler.jsonc`, `web/lib/config.ts`, README). Every doc, title template and the About text say "ToolMarketPlace". **Resolved:** the brand is Tryworthy (https://tryworthy.app). | Every title, meta tag, email and legal text | Step 1 |
 | D3 | **Is stage `beta` the same as "Pre-launch"?** `STAGES = ["beta", "launched"]`. COPY uses "Pre-launch". A public beta is usually already launched. | Badge, filter and the SEO stage meaning | Steps 2, 4 |
 | D4 | **Is "API" a platform filter?** RANKING lists `web, iOS, Android, extensie, desktop, API`, but the COPY filter list leaves out API. POSITIONING accepts APIs. | The `platforms` enum and the filter UI | Step 2 |
 | D5 | **Indexable AI landing page.** SEO targets `/top?ai=1` for the AI cluster, but SEO also says filtered URLs are never indexed (noindex plus a canonical to the unfiltered page). The two rules contradict each other. | Needs a clean path such as `/ai` or `/top/ai` | Steps 3, 8, 10 |
@@ -77,7 +77,7 @@ The pack's own open decisions (operator, minimum age, launch criteria, number of
 - Filters: AI-powered, Pre-launch / Launched, platforms. Pricing, stage and has-perk exist only on `/search` (`packages/shared/src/schemas.ts` `searchQuerySchema`), not on category pages.
 - Onboarding: the new subtitle, "(recommended)", "Only in the app", and both final screens (there is no final screen today).
 - Category H1, intro and visitor banner text.
-- Product page: "Only on ToolMarketPlace", "Sign in to claim this perk" (today visitors see "Claim" and are sent to login, `web/scripts/product.ts:74`), the beta badge, and the feedback prompt.
+- Product page: "Only on Tryworthy", "Sign in to claim this perk" (today visitors see "Claim" and are sent to login, `web/scripts/product.ts:74`), the beta badge, and the feedback prompt.
 - The `/ranking` page, the `/about` page, the launch-day notification.
 
 ### Conflicts (current text → what COPY says)
@@ -92,7 +92,7 @@ The pack's own open decisions (operator, minimum age, launch criteria, number of
 | `c/[slug].astro:59` | Section heading "Newest first" | Top this week is the default view |
 | `c/[slug].astro:79` | "See all N products in X" / "…unlocks the full list…" | "You've seen this week's top [category] picks…" |
 | `ProductRow.astro:43`, `ProductTile.astro:25` | Card badge "Member perk" | No card perk badge in COPY ("Has a perk" is a filter label) |
-| `ProductLayout.astro:97-98` | "Member perks" / "Free account required" | "Only on ToolMarketPlace" / "Sign in to claim this perk" |
+| `ProductLayout.astro:97-98` | "Member perks" / "Free account required" | "Only on Tryworthy" / "Sign in to claim this perk" |
 | `p/[slug]/index.astro:30` | "Tell the maker what you think" | "Tell the maker what would make this a must-have." |
 | `format.ts:3` | Stage label "Beta" | "Pre-launch — try it before everyone else" (D3) |
 | `Onboarding.tsx:16-20` | Daily / Weekly / Off | Daily · Weekly (recommended) · Only in the app (D11) |

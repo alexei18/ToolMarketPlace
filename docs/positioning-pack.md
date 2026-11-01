@@ -1,10 +1,10 @@
-# ToolMarketPlace — Repoziționare, copy, SEO și pagini legale
+# Tryworthy — Repoziționare, copy, SEO și pagini legale
 
 Oct 27, 2026 · @Alexei
 
 ## Ce se schimbă
 
-ToolMarketPlace devine locul unde entuziaștii tech și creatorii de conținut află primii ce aplicații noi merită încercate — inclusiv cele cu AI — sortate după semnale reale, nu după cine a postat ultimul sau cine a adus cele mai multe voturi.
+Tryworthy devine locul unde entuziaștii tech și creatorii de conținut află primii ce aplicații noi merită încercate — inclusiv cele cu AI — sortate după semnale reale, nu după cine a postat ultimul sau cine a adus cele mai multe voturi.
 
 |  | Înainte | Acum |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ Ordinea de implementare: documentele intră în repo și Claude Code face un rap
 
 Declarația de poziționare, folosită ca sursă pentru tot copy-ul:
 
-> For tech enthusiasts and content creators who want to find great new apps before everyone else, ToolMarketPlace is the discovery platform that ranks every new launch — from weekend-built side projects to AI-powered tools — by what real people save, try and talk about, with early access and perks you can't get anywhere else. Unlike launch boards that reward whoever brings the most votes on day one, we rank by real signals, and nobody can pay to move up.
+> For tech enthusiasts and content creators who want to find great new apps before everyone else, Tryworthy is the discovery platform that ranks every new launch — from weekend-built side projects to AI-powered tools — by what real people save, try and talk about, with early access and perks you can't get anywhere else. Unlike launch boards that reward whoever brings the most votes on day one, we rank by real signals, and nobody can pay to move up.
 
 **Userul ideal**
 
@@ -128,7 +128,7 @@ Textele de mai jos sunt punctul de pornire pentru Claude Code; el le poate ajust
 
 **Pagina produsului — microcopy**
 
-- Badge perk: *Only on ToolMarketPlace*
+- Badge perk: *Only on Tryworthy*
 - Buton perk pentru vizitator: *Sign in to claim this perk*
 - Badge beta: *Pre-launch — try it before everyone else*
 - Feedback: *Tell the maker what would make this a must-have.*
@@ -145,7 +145,7 @@ Textele de mai jos sunt punctul de pornire pentru Claude Code; el le poate ajust
 
 **Pagina „About” (paragraful de bază)**
 
-*ToolMarketPlace exists because the best new apps get buried. Every day people ship apps — some built in a weekend, some with AI at their core — and most never reach the people who'd love them. We rank every new launch by what real people save, try and talk about, so you find the good ones first, and makers get seen for what they build, not for how loud they launch.*
+*Tryworthy exists because the best new apps get buried. Every day people ship apps — some built in a weekend, some with AI at their core — and most never reach the people who'd love them. We rank every new launch by what real people save, try and talk about, so you find the good ones first, and makers get seen for what they build, not for how loud they launch.*
 
 ## Clasament și filtrare (funcționalitate nouă)
 
@@ -231,12 +231,12 @@ Strategia: fiecare categorie și fiecare produs devin pagini indexabile, iar tit
 
 | Pagină | Title (≤ 60 caractere) | Meta description (≤ 155 caractere) |
 | --- | --- | --- |
-| Homepage | New Apps & AI Tools Worth Trying · ToolMarketPlace | Find the new apps worth trying before everyone else. Ranked by real people, with early access and perks you can't get anywhere else. Free. |
-| Categorie | Best New \[Category\] Apps This Week · ToolMarketPlace | New \[category\] apps and AI tools, ranked by what real people save and try. Updated daily, with free trials and perks. |
-| Top / Trending | Top New Apps This Week · ToolMarketPlace | This week's best new apps and AI tools, ranked by saves, tries and feedback from verified users. No paid rankings. |
-| Produs | \[Product\]: \[tagline\] · ToolMarketPlace | \[Short description, \~120 chars\]. \[Perk if any, e.g. "60 days free on ToolMarketPlace."\] |
-| Profil maker | \[Maker name\] — Products on ToolMarketPlace | New apps built by \[maker name\], verified on ToolMarketPlace. |
-| Perks | App Deals, Free Trials and Coupons · ToolMarketPlace | Exclusive free trials, discounts and coupons from the makers of new apps and AI tools. Free account required to claim. |
+| Homepage | New Apps & AI Tools Worth Trying · Tryworthy | Find the new apps worth trying before everyone else. Ranked by real people, with early access and perks you can't get anywhere else. Free. |
+| Categorie | Best New \[Category\] Apps This Week · Tryworthy | New \[category\] apps and AI tools, ranked by what real people save and try. Updated daily, with free trials and perks. |
+| Top / Trending | Top New Apps This Week · Tryworthy | This week's best new apps and AI tools, ranked by saves, tries and feedback from verified users. No paid rankings. |
+| Produs | \[Product\]: \[tagline\] · Tryworthy | \[Short description, \~120 chars\]. \[Perk if any, e.g. "60 days free on Tryworthy."\] |
+| Profil maker | \[Maker name\] — Products on Tryworthy | New apps built by \[maker name\], verified on Tryworthy. |
+| Perks | App Deals, Free Trials and Coupons · Tryworthy | Exclusive free trials, discounts and coupons from the makers of new apps and AI tools. Free account required to claim. |
 
 În pre-lansare, categoriile cu mai puțin de 3 produse eligibile primesc noindex și nu apar în sitemap.
 

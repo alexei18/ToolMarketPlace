@@ -1,4 +1,4 @@
-# ToolMarketPlace — Pre-launch mode
+# Tryworthy — Pre-launch mode
 
 > Extracted verbatim from `docs/positioning-pack.md` (Oct 27, 2026 · @Alexei).
 

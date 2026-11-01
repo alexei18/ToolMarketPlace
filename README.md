@@ -1,8 +1,8 @@
-# ToolMarket
+# Tryworthy
 
 A web platform where makers publish new digital products and people discover them through a personal feed across 20 categories. It is built from the product spec *Platformă de descoperire produse digitale noi* and runs entirely on Cloudflare (Workers, D1, R2), sized to start on the free plan.
 
-> **ToolMarket** is a working name. The site name comes from the `SITE_NAME` variable, so renaming means changing config and the logo, not code.
+> **Tryworthy** (https://tryworthy.app). The site name comes from the `SITE_NAME` variable and the domain from `SITE_URL` / `WEB_ORIGIN`; the logo files are in `brand/tryworthy-logo` (served from `apps/web/public/brand`).
 
 ## What's in the MVP
 
@@ -49,9 +49,9 @@ Browser ──► site worker (Astro, apps/web) ──service binding──► A
 
 | Open item | Current default | Where to change it |
 | --- | --- | --- |
-| Name and domain | `ToolMarket`, localhost | `SITE_NAME`, `WEB_ORIGIN`, `API_ORIGIN`, `SITE_URL`, logo in `apps/web/src/components/Logo.astro` |
+| Name and domain | `Tryworthy`, `https://tryworthy.app` (localhost in dev) | `SITE_NAME`, `WEB_ORIGIN`, `API_ORIGIN`, `SITE_URL`, logo in `apps/web/src/components/Logo.astro` |
 | The 20 categories | AI, Developer Tools, Productivity, Design, Marketing, Sales & CRM, Writing, Video, Audio & Music, Finance, Education, Health & Fitness, No-Code, Analytics & Data, Collaboration, Customer Support, E-commerce, Security & Privacy, HR & Recruiting, Games & Fun | Seed in `packages/db/migrations/0001_fts_and_seed.sql`; admins can edit them in `/admin` |
-| Accent and font | Deep green `#0E6B4B`, Inter 400/600 (self-hosted) | `--accent*` tokens and `@import`s in `apps/web/src/styles/global.css` |
+| Accent and font | Tryworthy green `#0E7A4F`, Inter 400/600 (self-hosted) | `--accent*` tokens and `@import`s in `apps/web/src/styles/global.css` |
 | Visitor products per category | 12 | `VISITOR_CATEGORY_LIMIT` var |
 | Report threshold | 3 | `REPORT_HIDE_THRESHOLD` var |
 | Transactional email | Resend (prints to the console when no key is set) | `apps/api/src/lib/email.ts` |

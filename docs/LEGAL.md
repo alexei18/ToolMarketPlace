@@ -1,4 +1,4 @@
-# ToolMarketPlace — Legal
+# Tryworthy — Legal
 
 > Extracted verbatim from `docs/positioning-pack.md` (Oct 27, 2026 · @Alexei).
 

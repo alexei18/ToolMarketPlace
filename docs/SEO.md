@@ -1,4 +1,4 @@
-# ToolMarketPlace — SEO
+# Tryworthy — SEO
 
 > Extracted verbatim from `docs/positioning-pack.md` (Oct 27, 2026 · @Alexei).
 
@@ -22,12 +22,12 @@ Strategia: fiecare categorie și fiecare produs devin pagini indexabile, iar tit
 
 | Pagină | Title (≤ 60 caractere) | Meta description (≤ 155 caractere) |
 | --- | --- | --- |
-| Homepage | New Apps & AI Tools Worth Trying · ToolMarketPlace | Find the new apps worth trying before everyone else. Ranked by real people, with early access and perks you can't get anywhere else. Free. |
-| Categorie | Best New \[Category\] Apps This Week · ToolMarketPlace | New \[category\] apps and AI tools, ranked by what real people save and try. Updated daily, with free trials and perks. |
-| Top / Trending | Top New Apps This Week · ToolMarketPlace | This week's best new apps and AI tools, ranked by saves, tries and feedback from verified users. No paid rankings. |
-| Produs | \[Product\]: \[tagline\] · ToolMarketPlace | \[Short description, \~120 chars\]. \[Perk if any, e.g. "60 days free on ToolMarketPlace."\] |
-| Profil maker | \[Maker name\] — Products on ToolMarketPlace | New apps built by \[maker name\], verified on ToolMarketPlace. |
-| Perks | App Deals, Free Trials and Coupons · ToolMarketPlace | Exclusive free trials, discounts and coupons from the makers of new apps and AI tools. Free account required to claim. |
+| Homepage | New Apps & AI Tools Worth Trying · Tryworthy | Find the new apps worth trying before everyone else. Ranked by real people, with early access and perks you can't get anywhere else. Free. |
+| Categorie | Best New \[Category\] Apps This Week · Tryworthy | New \[category\] apps and AI tools, ranked by what real people save and try. Updated daily, with free trials and perks. |
+| Top / Trending | Top New Apps This Week · Tryworthy | This week's best new apps and AI tools, ranked by saves, tries and feedback from verified users. No paid rankings. |
+| Produs | \[Product\]: \[tagline\] · Tryworthy | \[Short description, \~120 chars\]. \[Perk if any, e.g. "60 days free on Tryworthy."\] |
+| Profil maker | \[Maker name\] — Products on Tryworthy | New apps built by \[maker name\], verified on Tryworthy. |
+| Perks | App Deals, Free Trials and Coupons · Tryworthy | Exclusive free trials, discounts and coupons from the makers of new apps and AI tools. Free account required to claim. |
 
 În pre-lansare, categoriile cu mai puțin de 3 produse eligibile primesc noindex și nu apar în sitemap.
 

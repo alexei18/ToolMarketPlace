@@ -1,10 +1,10 @@
-# ToolMarketPlace — Positioning
+# Tryworthy — Positioning
 
 > Extracted verbatim from `docs/positioning-pack.md` (Oct 27, 2026 · @Alexei).
 
 ## Ce se schimbă
 
-ToolMarketPlace devine locul unde entuziaștii tech și creatorii de conținut află primii ce aplicații noi merită încercate — inclusiv cele cu AI — sortate după semnale reale, nu după cine a postat ultimul sau cine a adus cele mai multe voturi.
+Tryworthy devine locul unde entuziaștii tech și creatorii de conținut află primii ce aplicații noi merită încercate — inclusiv cele cu AI — sortate după semnale reale, nu după cine a postat ultimul sau cine a adus cele mai multe voturi.
 
 |  | Înainte | Acum |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ Ordinea de implementare: documentele intră în repo și Claude Code face un rap
 
 Declarația de poziționare, folosită ca sursă pentru tot copy-ul:
 
-> For tech enthusiasts and content creators who want to find great new apps before everyone else, ToolMarketPlace is the discovery platform that ranks every new launch — from weekend-built side projects to AI-powered tools — by what real people save, try and talk about, with early access and perks you can't get anywhere else. Unlike launch boards that reward whoever brings the most votes on day one, we rank by real signals, and nobody can pay to move up.
+> For tech enthusiasts and content creators who want to find great new apps before everyone else, Tryworthy is the discovery platform that ranks every new launch — from weekend-built side projects to AI-powered tools — by what real people save, try and talk about, with early access and perks you can't get anywhere else. Unlike launch boards that reward whoever brings the most votes on day one, we rank by real signals, and nobody can pay to move up.
 
 **Userul ideal**
 

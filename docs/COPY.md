@@ -1,4 +1,4 @@
-# ToolMarketPlace — Copy deck
+# Tryworthy — Copy deck
 
 > Extracted verbatim from `docs/positioning-pack.md` (Oct 27, 2026 · @Alexei).
 
@@ -79,7 +79,7 @@ Textele de mai jos sunt punctul de pornire pentru Claude Code; el le poate ajust
 
 **Pagina produsului — microcopy**
 
-- Badge perk: *Only on ToolMarketPlace*
+- Badge perk: *Only on Tryworthy*
 - Buton perk pentru vizitator: *Sign in to claim this perk*
 - Badge beta: *Pre-launch — try it before everyone else*
 - Feedback: *Tell the maker what would make this a must-have.*
@@ -96,4 +96,4 @@ Textele de mai jos sunt punctul de pornire pentru Claude Code; el le poate ajust
 
 **Pagina „About” (paragraful de bază)**
 
-*ToolMarketPlace exists because the best new apps get buried. Every day people ship apps — some built in a weekend, some with AI at their core — and most never reach the people who'd love them. We rank every new launch by what real people save, try and talk about, so you find the good ones first, and makers get seen for what they build, not for how loud they launch.*
+*Tryworthy exists because the best new apps get buried. Every day people ship apps — some built in a weekend, some with AI at their core — and most never reach the people who'd love them. We rank every new launch by what real people save, try and talk about, so you find the good ones first, and makers get seen for what they build, not for how loud they launch.*

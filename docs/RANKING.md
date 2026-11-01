@@ -1,4 +1,4 @@
-# ToolMarketPlace — Ranking
+# Tryworthy — Ranking
 
 > Extracted verbatim from `docs/positioning-pack.md` (Oct 27, 2026 · @Alexei).
 
