@@ -261,7 +261,8 @@ textarea {
   }
   .page {
     padding-top: 24px;
-    padding-bottom: 64px;
+    /* Leaves room for the taller stacked footer, so a short page doesn't scroll into empty space. */
+    min-height: calc(100vh - var(--header-h) - 260px);
   }
 }
 
@@ -470,7 +471,8 @@ textarea {
   border: 1.5px solid var(--bg);
 }
 
-@media (max-width: 860px) {
+/* Same breakpoint as .nav-menu in Header.astro: below it the five links leave the search box too narrow. */
+@media (max-width: 1080px) {
   .site-nav {
     display: none;
   }
@@ -560,6 +562,13 @@ textarea {
   padding: 32px 0 48px;
   color: var(--text-2);
   font-size: var(--fs-13);
+}
+
+@media (max-width: 720px) {
+  .site-footer {
+    margin-top: 48px;
+    padding: 24px 0;
+  }
 }
 
 .site-footer .cols {
@@ -898,11 +907,6 @@ a.chip:hover {
   color: #fff;
 }
 
-.chip-count {
-  color: var(--text-3);
-  font-variant-numeric: tabular-nums;
-}
-
 /* Perk badge: the one badge we allow */
 .perk-badge {
   display: inline-flex;
@@ -916,6 +920,47 @@ a.chip:hover {
 .perk-badge svg {
   width: 14px;
   height: 14px;
+}
+
+/* Product badges (Staff pick, Just launched, AI-powered, Founding maker, Pre-launch):
+   small, text only, one accent. Cards show two at most (lib/badges.ts). */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.badge-row {
+  gap: 6px;
+}
+
+/* Maker dashboard: quality conditions for Top and Trending */
+.quality-list {
+  display: grid;
+  gap: 6px;
+}
+
+.quality-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-15);
+}
+
+.quality-list li[data-ok="true"] svg {
+  color: var(--accent);
+}
+
+.quality-list li[data-ok="false"] {
+  color: var(--danger);
 }
 
 .status {
@@ -1527,6 +1572,12 @@ dialog.modal[open] {
   margin-top: 2px;
 }
 
+/* A gate with only a sentence (no title) */
+.gate p:only-child {
+  color: var(--text);
+  margin-top: 0;
+}
+
 /* ---------- Prose (product descriptions) ---------- */
 .prose {
   font-size: var(--fs-17);
@@ -1847,37 +1898,6 @@ a.t-13,
 .sticky-aside {
   position: sticky;
   top: calc(var(--header-h) + 24px);
-}
-
-.cat-list li a {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: var(--fs-15);
-}
-
-.cat-list li a:hover {
-  text-decoration: none;
-}
-
-.cat-list li a:hover span:first-child {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.cat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0 32px;
-}
-
-@media (max-width: 960px) {
-  .cat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 20px;
-  }
 }
 
 .feedback-item {

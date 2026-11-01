@@ -5,6 +5,7 @@
  * It goes through the real API (sign-up, uploads, publishing) and only uses direct SQL for what
  * can't be done offline: confirming emails, verifying demo domains and spreading launch dates.
  */
+import { TERMS_VERSION } from "@tm/shared";
 import { mockScreenshot } from "./mock-image";
 
 const API = process.env.API_URL ?? "http://localhost:8787";
@@ -41,7 +42,7 @@ class Session {
 async function account(email: string, name: string): Promise<{ s: Session; id: string }> {
   const s = new Session();
   try {
-    const r = await s.req<{ user: { id: string } }>("POST", "/auth/sign-up/email", { email, password: PASSWORD, name });
+    const r = await s.req<{ user: { id: string } }>("POST", "/auth/sign-up/email", { email, password: PASSWORD, name, acceptedTerms: TERMS_VERSION });
     return { s, id: r.user.id };
   } catch {
     const r = await s.req<{ user: { id: string } }>("POST", "/auth/sign-in/email", { email, password: PASSWORD });

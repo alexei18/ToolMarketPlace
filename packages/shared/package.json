@@ -5,8 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./copy": "./src/copy/en.ts",
     "./enums": "./src/enums.ts",
-    "./limits": "./src/limits.ts"
+    "./limits": "./src/limits.ts",
+    "./moderation": "./src/moderation.ts",
+    "./ranking": "./src/ranking/config.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"

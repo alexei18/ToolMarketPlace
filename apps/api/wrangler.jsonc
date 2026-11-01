@@ -19,7 +19,9 @@
     "ADMIN_EMAILS": "",
     "VAPID_SUBJECT": "mailto:hello@example.com",
     "VAPID_PUBLIC_KEY": "",
-    "EMAIL_FROM": "ToolMarket <hello@example.com>"
+    "EMAIL_FROM": "ToolMarket <hello@example.com>",
+    // Pre-launch mode (docs/PRELAUNCH.md): "true" until the public launch.
+    "PRELAUNCH": "true"
   },
   "d1_databases": [
     {
@@ -38,8 +40,9 @@
   ],
   "triggers": {
     // 08:00 UTC digest (daily users every day, weekly users on Mondays), 08:20 and 08:40 continue
-    // large batches; 03:00 UTC maintenance (cleanup + usage alerts).
-    "crons": ["0 8 * * *", "20 8 * * *", "40 8 * * *", "0 3 * * *"]
+    // large batches; 03:00 UTC maintenance (retention cleanup + usage alerts); every 30 minutes the ranking job.
+    // That is all 5 Cron Triggers of the free plan.
+    "crons": ["0 8 * * *", "20 8 * * *", "40 8 * * *", "0 3 * * *", "*/30 * * * *"]
   }
   // Secrets (wrangler secret put / .dev.vars): BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
   // TURNSTILE_SECRET_KEY, RESEND_API_KEY, VAPID_PRIVATE_KEY, INTERNAL_SECRET, CF_ACCOUNT_ID, CF_API_TOKEN

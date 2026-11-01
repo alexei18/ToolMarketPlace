@@ -13,6 +13,13 @@ const q = Astro.url.searchParams;
 const source = q.get("source");
 const cursor = q.get("cursor") ?? "";
 const params = new URLSearchParams({ cursor });
+// Ranked lists keep their view and filters while paging.
+if (source === "category" || source === "feed" || source === "latest") {
+  for (const key of ["sort", "ai", "pricing", "stage", "perk", "platform"]) {
+    const v = q.get(key);
+    if (v) params.set(key, v);
+  }
+}
 let path: string | null = null;
 switch (source) {
   case "category":

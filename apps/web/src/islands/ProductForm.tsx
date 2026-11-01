@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import type { CategoryDTO, FeedbackMode, ImageDTO, Pricing, Stage } from "@tm/shared";
+import type { CategoryDTO, FeedbackMode, ImageDTO, Platform, Pricing, Stage } from "@tm/shared";
+import { en } from "@tm/shared/copy";
+import { PLATFORMS } from "@tm/shared/enums";
 import { DESCRIPTION_MAX, TAGLINE_MAX, TITLE_MAX } from "@tm/shared/limits";
 import { call, errorMessage, toast } from "../lib/client";
 import { ArrowLeft, ArrowRight, Check, ImagePlus, X } from "./icons";
@@ -16,6 +18,8 @@ export interface ProductFormValue {
   feedbackMode: FeedbackMode;
   roadmapEnabled: boolean;
   images: ImageDTO[];
+  hasAi: boolean;
+  platforms: Platform[];
 }
 
 interface Props {
@@ -38,6 +42,8 @@ export function toPayload(v: ProductFormValue) {
     feedbackMode: v.feedbackMode,
     roadmapEnabled: v.roadmapEnabled,
     images: v.images.map((i) => ({ key: i.key })),
+    hasAi: v.hasAi,
+    platforms: v.platforms,
   };
 }
 
@@ -60,6 +66,9 @@ export default function ProductForm({ value: v, onChange, categories, error }: P
     if (v.categories.includes(slug)) set("categories", v.categories.filter((c) => c !== slug));
     else if (v.categories.length < 3) set("categories", [...v.categories, slug]);
   };
+
+  const togglePlatform = (p: Platform) =>
+    set("platforms", v.platforms.includes(p) ? v.platforms.filter((x) => x !== p) : PLATFORMS.filter((x) => x === p || v.platforms.includes(x)));
 
   const move = (i: number, dir: -1 | 1) => {
     const imgs = [...v.images];
@@ -148,7 +157,7 @@ export default function ProductForm({ value: v, onChange, categories, error }: P
         <div className="image-picker">
           {v.images.map((img, i) => (
             <div className="slot" key={img.key}>
-              <img src={img.url} alt="" />
+              <img src={img.url} alt="" width={img.width ?? 1600} height={img.height ?? 1000} />
               {i === 0 && <span className="first">Cover</span>}
               <div className="tools">
                 <button type="button" aria-label="Move left" onClick={() => move(i, -1)} disabled={i === 0}>
@@ -180,8 +189,8 @@ export default function ProductForm({ value: v, onChange, categories, error }: P
             value={v.stage}
             onChange={(x) => set("stage", x)}
             options={[
-              { value: "beta", label: "Beta" },
-              { value: "launched", label: "Launched" },
+              { value: "beta", label: en.feed.filters.stage.preLaunch },
+              { value: "launched", label: en.feed.filters.stage.launched },
             ]}
           />
         </Field>
@@ -191,11 +200,33 @@ export default function ProductForm({ value: v, onChange, categories, error }: P
             value={v.pricing}
             onChange={(x) => set("pricing", x)}
             options={[
-              { value: "free", label: "Free" },
-              { value: "freemium", label: "Freemium" },
-              { value: "paid", label: "Paid" },
+              { value: "free", label: en.feed.filters.pricing.free },
+              { value: "freemium", label: en.feed.filters.pricing.freemium },
+              { value: "paid", label: en.feed.filters.pricing.paid },
             ]}
           />
+        </Field>
+      </div>
+
+      <div className="form-grid-2">
+        <Field label="Platforms" error={fieldError(error, "platforms")}>
+          <div className="row row-wrap" style={{ gap: 16 }} role="group" aria-label="Platforms">
+            {PLATFORMS.map((p) => {
+              const on = v.platforms.includes(p);
+              return (
+                <label key={p} className="checkbox">
+                  <input type="checkbox" checked={on} disabled={on && v.platforms.length === 1} onChange={() => togglePlatform(p)} />
+                  {en.feed.filters.platform[p]}
+                </label>
+              );
+            })}
+          </div>
+        </Field>
+        <Field label={en.feed.filters.aiPowered}>
+          <label className="checkbox">
+            <input type="checkbox" checked={v.hasAi} onChange={(e) => set("hasAi", e.target.checked)} />
+            {en.makers.form.includesAi}
+          </label>
         </Field>
       </div>
 

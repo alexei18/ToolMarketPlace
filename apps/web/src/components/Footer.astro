@@ -1,21 +1,35 @@
 ---
+import { OPERATOR_NAME } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import { siteConfig } from "../lib/config";
 const { siteName } = siteConfig();
 const year = new Date().getUTCFullYear();
+const l = en.footer.links;
+// docs/LEGAL.md: the same links on every page (plain HTML, so the homepage links to /privacy and /terms for Google OAuth).
+const links: [string, string][] = [
+  ["/about", l.about],
+  ["/makers", l.makers],
+  ["/ranking", l.ranking],
+  ["/guidelines", l.guidelines],
+  ["/terms", l.terms],
+  ["/terms/makers", l.makerTerms],
+  ["/privacy", l.privacy],
+  ["/cookies", l.cookies],
+  ["/report", l.report],
+  ["/legal", l.legal],
+  ["/legal#contact", l.contact],
+];
 ---
 
 <footer class="site-footer">
   <div class="container cols">
     <div>
       <div class="w-600" style="color: var(--text)">{siteName}</div>
-      <p style="margin-top: 4px; max-width: 360px">New digital products, the day they launch. Free for makers and for everyone who likes trying new tools.</p>
+      <p style="margin-top: 4px; max-width: 360px">{en.footer.tagline}</p>
     </div>
     <nav aria-label="Footer">
-      <a href="/search">Explore</a>
-      <a href="/#categories">Categories</a>
-      <a href="/dashboard/new">Submit a product</a>
-      <a href="/sitemap.xml">Sitemap</a>
-      <span>© {year}</span>
+      {links.map(([href, label]) => <a href={href}>{label}</a>)}
+      <span>{en.footer.copyright(year, OPERATOR_NAME)}</span>
     </nav>
   </div>
 </footer>

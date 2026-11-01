@@ -37,7 +37,7 @@ const active = Object.values(filters).some(Boolean);
 const title = q ? `Search: ${q}` : "Explore new products";
 ---
 
-<Base title={title} query={q} noindex={!!q || active} canonical="/search">
+<Base title={title} query={q} noindex canonical="/search">
   <div class="container page">
     <h1 class="t-32">{q ? <>Results for “{q}”</> : "Explore"}</h1>
     <form class="search-form" method="get" action="/search" role="search">

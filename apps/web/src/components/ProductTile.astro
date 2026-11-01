@@ -1,20 +1,25 @@
 ---
 import type { ProductCardDTO } from "@tm/shared";
+import { cardBadges } from "../lib/badges";
 import { PRICING_LABEL, timeAgo } from "../lib/format";
+import Badges from "./Badges.astro";
 import Icon from "./Icon.astro";
 import ProductImage from "./ProductImage.astro";
 
 interface Props {
   product: ProductCardDTO;
+  /** Rendered image width hint, for layouts with wider tiles. */
+  sizes?: string;
 }
-const { product: p } = Astro.props;
+const { product: p, sizes = "(max-width: 560px) 100vw, 380px" } = Astro.props;
 ---
 
 <li class="tile">
-  <div class="img"><ProductImage image={p.image} title={p.title} sizes="(max-width: 560px) 100vw, 380px" /></div>
+  <div class="img"><ProductImage image={p.image} title={p.title} sizes={sizes} /></div>
   <h3 class="title"><a href={`/p/${p.slug}`}>{p.title}</a></h3>
   <p class="tagline">{p.tagline}</p>
   <div class="meta">
+    <Badges badges={cardBadges(p)} />
     {p.categories[0] && <span>{p.categories[0].name}</span>}
     <span>{PRICING_LABEL[p.pricing]}</span>
     <span>{timeAgo(p.publishedAt)}</span>

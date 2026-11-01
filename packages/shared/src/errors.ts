@@ -20,8 +20,10 @@ export const ERROR_CODES = [
   "FEEDBACK_DISABLED",
   "ROADMAP_DISABLED",
   "ALREADY_REPORTED",
+  "CONTEST_CLOSED",
   "USERNAME_TAKEN",
   "SIGNUP_REQUIRED",
+  "GONE",
   "INTERNAL",
 ] as const;
 
@@ -34,5 +36,7 @@ export interface ApiErrorBody {
     /** Link to an existing resource, e.g. the listing that already uses a URL. */
     existing?: string;
     fields?: Record<string, string[]>;
+    /** GONE: the category a hidden or removed product was listed in. */
+    category?: { slug: string; name: string };
   };
 }

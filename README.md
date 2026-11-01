@@ -42,7 +42,7 @@ Browser ──► site worker (Astro, apps/web) ──service binding──► A
 | Screenshot fallback | Browser Rendering REST API (needs `CF_ACCOUNT_ID` + `CF_API_TOKEN`). Without them, a product without `og:image` simply has no preview until the maker uploads one. |
 | Views and clicks | Counted in isolate memory and written to D1 in batches. |
 | Rate limits | Per-account daily limits are counted in D1. Requests are limited per IP (60/min) and per account (300/min) with the Rate Limiting binding. The site's own server-side API calls are exempt (they carry `INTERNAL_SECRET`). |
-| Digest | Cron at 08:00 UTC (weekly subscribers on Mondays), plus 08:20 and 08:40 runs that continue large batches. This uses 4 of the 5 free-plan Cron Triggers, including 03:00 maintenance. |
+| Digest | Cron at 08:00 UTC (weekly subscribers on Mondays), plus 08:20 and 08:40 runs that continue large batches. With 03:00 maintenance and the 30-minute ranking job, this uses all 5 free-plan Cron Triggers. |
 | Usage alerts | The daily job reads yesterday's usage from the GraphQL Analytics API. Above 70% of a free-plan limit, admins get a notification and an email. |
 
 ### Open decisions: what the code does now
@@ -113,6 +113,21 @@ The API tests run the real Hono app and Better Auth against an in-memory SQLite 
    - Set each with `bunx wrangler secret put NAME`.
 5. **Google OAuth.** Add the redirect URI `https://api.example.com/auth/callback/google`.
 6. **Migrate and deploy.** Run `bun run db:migrate:remote`, then `bun run deploy` (API first, because the site binds to it). Optionally add `"services": [{ "binding": "WEB", "service": "toolmarket-web" }]` to the API config afterwards so cache purges use the binding.
+
+### Legal pages before launch
+
+The legal pages in `apps/web/src/content/legal/*.md` are drafts and show a "Draft — pending legal review" banner until `LEGAL_DRAFT` is set to `"false"` in `apps/web/wrangler.jsonc`, after a lawyer reviews them. Replace these placeholders first (`apps/web/src/lib/legal-content.test.ts` checks that this list is complete):
+
+| Placeholder | Where | Fill in |
+| --- | --- | --- |
+| `[OPERATOR_NAME]` | legal, privacy, terms; footer (`OPERATOR_NAME` in `packages/shared/src/legal.ts`) | Legal name of the operator |
+| `[OPERATOR_ADDRESS]` | legal, privacy, terms | Registered address |
+| `[CONTACT_EMAIL]` | legal, privacy, terms, maker terms | General contact and contests |
+| `[PRIVACY_EMAIL]` | legal, privacy | Data protection requests |
+| `[DSA_CONTACT_EMAIL]` | legal, report | DSA point of contact and reports |
+| `[EU_REPRESENTATIVE]` | legal, privacy | EU representative (DSA Art. 13, GDPR Art. 27), if needed |
+| `[GOVERNING_LAW_COUNTRY]` | terms | Governing law and courts |
+| `[MIN_AGE]` | terms, privacy; sign-up checkbox (`MIN_AGE` in `packages/shared/src/legal.ts`) | Minimum age, to confirm with the lawyer |
 
 The API bundle is about 510 KB gzipped and the site worker stays well under the free plan's 3 MB limit. Move to the $5/month Workers plan when traffic needs it. The daily usage check warns at 70%.
 

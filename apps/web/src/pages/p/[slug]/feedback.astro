@@ -1,5 +1,6 @@
 ---
 import type { FeedbackDTO, Page, ProductDetailDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import Avatar from "../../../components/Avatar.astro";
 import EmptyState from "../../../components/EmptyState.astro";
 import ProductLayout from "../../../layouts/ProductLayout.astro";
@@ -8,6 +9,10 @@ import { FEEDBACK_TYPE_LABEL, timeAgo } from "../../../lib/format";
 
 const slug = Astro.params.slug!;
 const pRes = await apiCall<ProductDetailDTO>(`/products/${encodeURIComponent(slug)}`);
+if (!pRes.ok && pRes.status === 410) {
+  Astro.locals.goneCategory = pRes.error.category;
+  return Astro.rewrite("/gone");
+}
 if (!pRes.ok) return Astro.rewrite(pRes.status === 404 ? "/404" : "/unavailable");
 const p = pRes.data;
 if (p.feedbackMode === "off") return Astro.redirect(`/p/${p.slug}`, 302);
@@ -41,8 +46,8 @@ const isPublic = p.feedbackMode === "public";
               <li class="feedback-item" id={`f-${f.id}`}>
                 <div class="spread">
                   <div class="row">
-                    <Avatar name={f.author.name} image={f.author.image} size="sm" />
-                    <span class="w-600 t-15">{f.author.name}</span>
+                    <Avatar name={f.author?.name ?? en.deletedUser} image={f.author?.image ?? null} size="sm" />
+                    <span class="w-600 t-15">{f.author?.name ?? en.deletedUser}</span>
                     <span class="t-13 muted">{timeAgo(f.createdAt)}</span>
                   </div>
                   <div class="row">

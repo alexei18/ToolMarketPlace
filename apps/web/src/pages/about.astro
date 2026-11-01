@@ -1,0 +1,15 @@
+---
+import { en } from "@tm/shared/copy";
+import Base from "../layouts/Base.astro";
+import { siteConfig } from "../lib/config";
+
+const { siteName } = siteConfig();
+Astro.cache.set({ maxAge: 3600, swr: 3600 });
+---
+
+<Base title={en.footer.links.about} description={en.home.hero.subtitle}>
+  <div class="container container-narrow page">
+    <h1 class="t-32">{en.footer.links.about}</h1>
+    <p class="t-17" style="margin-top: 20px">{en.about.body(siteName)}</p>
+  </div>
+</Base>

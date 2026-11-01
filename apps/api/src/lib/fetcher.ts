@@ -1,7 +1,15 @@
 import { isPrivateIp, isPublicHostname } from "@tm/shared";
 import { resolveIps } from "./dns";
 
-export class FetchError extends Error {}
+export class FetchError extends Error {
+  /** "too_large": the site answered, but with more than maxBytes. */
+  constructor(
+    message: string,
+    readonly reason?: "too_large",
+  ) {
+    super(message);
+  }
+}
 
 export interface SafeResponse {
   url: string;
@@ -70,7 +78,7 @@ export async function safeFetch(input: string, opts: SafeFetchOptions = {}): Pro
     const declared = Number(res.headers.get("content-length") ?? "0");
     if (declared > maxBytes) {
       await res.body?.cancel();
-      throw new FetchError("The response is too large.");
+      throw new FetchError("The response is too large.", "too_large");
     }
     const body = await readLimited(res, maxBytes);
     return { url: url.toString(), status: res.status, headers: res.headers, body };
@@ -88,7 +96,7 @@ async function readLimited(res: Response, maxBytes: number): Promise<Uint8Array>
     total += value.byteLength;
     if (total > maxBytes) {
       await reader.cancel();
-      throw new FetchError("The response is too large.");
+      throw new FetchError("The response is too large.", "too_large");
     }
     chunks.push(value);
   }

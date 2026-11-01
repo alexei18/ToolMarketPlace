@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { PERK_TYPES } from "@tm/shared/enums";
-import type { CategoryDTO, FeedbackDTO, MakerProductDetailDTO, Page, PerkMakerDTO, PerkType, RoadmapItemDTO, RoadmapStatus, StatsDTO } from "@tm/shared";
+import type { CategoryDTO, FeedbackDTO, MakerProductDetailDTO, Page, PerkMakerDTO, PerkType, QualityChecksDTO, RoadmapItemDTO, RoadmapStatus, StatsDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import { ClientError, del, get, patch, post, put, toast } from "../lib/client";
 import { FEEDBACK_TYPE_LABEL, PERK_TYPE_LABEL, ROADMAP_LABEL, timeAgo } from "../lib/format";
-import { ExternalLink, Plus, Trash2 } from "./icons";
+import { Check, ExternalLink, Plus, Trash2, X } from "./icons";
 import ProductForm, { toPayload, type ProductFormValue } from "./ProductForm";
 import { Button, Empty, Field, Notice, Segmented, useAction } from "./ui";
 
@@ -66,6 +67,7 @@ export default function ProductEditor({ product, categories, justPublished, init
           </div>
         </div>
       </div>
+      {product.status === "live" && <QualityChecklist quality={product.quality} />}
       <div className="tabs" role="tablist">
         {TABS.map((t) => (
           <button key={t.id} role="tab" type="button" aria-selected={tab === t.id} onClick={() => go(t.id)}>
@@ -84,6 +86,35 @@ export default function ProductEditor({ product, categories, justPublished, init
   );
 }
 
+/* Quality conditions for Top and Trending (the score itself is never shown) */
+
+function QualityChecklist({ quality }: { quality: QualityChecksDTO }) {
+  const c = en.makers.checklist;
+  const items: [boolean, string][] = [
+    [quality.link, c.link],
+    [quality.image, c.image],
+    [quality.description, c.description],
+    [quality.tagline, c.tagline],
+    [quality.noOpenReview, c.noOpenReview],
+  ];
+  return (
+    <section className="box-surface stack-8" aria-labelledby="quality-title">
+      <h2 id="quality-title" className="t-15 w-600">
+        {c.title}
+      </h2>
+      <ul className="list-plain quality-list">
+        {items.map(([ok, label]) => (
+          <li key={label} data-ok={ok}>
+            {ok ? <Check size={15} aria-hidden="true" /> : <X size={15} aria-hidden="true" />}
+            <span>{label}</span>
+            <span className="visually-hidden">{ok ? "(done)" : "(missing)"}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /* Details */
 
 function Details({ product, categories }: { product: MakerProductDetailDTO; categories: CategoryDTO[] }) {
@@ -97,6 +128,8 @@ function Details({ product, categories }: { product: MakerProductDetailDTO; cate
     feedbackMode: product.feedbackMode,
     roadmapEnabled: product.roadmapEnabled,
     images: product.images,
+    hasAi: product.hasAi,
+    platforms: product.platforms,
   });
   const save = useAction(
     async () => {
@@ -379,7 +412,7 @@ function FeedbackRow({ f, product, onChange }: { f: FeedbackDTO; product: MakerP
     <li className="feedback-item">
       <div className="spread">
         <div className="row">
-          <span className="w-600">{f.author.name}</span>
+          <span className="w-600">{f.author?.name ?? en.deletedUser}</span>
           <span className="t-13 muted">{timeAgo(f.createdAt)}</span>
           {!f.isPublic && <span className="t-13 muted">· Private</span>}
         </div>

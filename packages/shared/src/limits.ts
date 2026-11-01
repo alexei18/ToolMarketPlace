@@ -43,3 +43,5 @@ export const INTERESTS_MIN = 3;
 export const FEEDBACK_MAX = 2000;
 export const REPLY_MAX = 2000;
 export const PAGE_SIZE = 20;
+/** The public /perks page lists at most this many perks (no paging yet). */
+export const PERKS_PAGE_MAX = 100;

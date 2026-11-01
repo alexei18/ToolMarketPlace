@@ -1,0 +1,37 @@
+---
+import type { RankSort } from "@tm/shared/enums";
+import { en } from "@tm/shared/copy";
+import { listQuery } from "../lib/listing";
+
+interface Props {
+  /** Page the tabs link to with ?sort=, e.g. /c/design or /feed */
+  base?: string;
+  /** Or one link per view, e.g. /top, /trending and /new */
+  hrefs?: Record<RankSort, string>;
+  sort: RankSort;
+  filters: URLSearchParams;
+}
+const { base, hrefs, sort, filters } = Astro.props;
+const href = (s: RankSort) => hrefs?.[s] ?? `${base}${listQuery(s, filters)}`;
+const tabs: { sort: RankSort; label: string }[] = [
+  { sort: "top", label: en.feed.tabs.top },
+  { sort: "trending", label: en.feed.tabs.trending },
+  { sort: "new", label: en.feed.tabs.new },
+];
+---
+
+<div class="rank-tabs">
+  <nav class="tabs" aria-label="Views">
+    {tabs.map((t) => <a href={href(t.sort)} aria-current={t.sort === sort ? "page" : undefined}>{t.label}</a>)}
+  </nav>
+  <p class="t-13 muted">
+    {en.feed.tabsNote} <a class="link" href="/ranking">{en.feed.rankingLink}</a>
+  </p>
+</div>
+
+<style>
+  .rank-tabs {
+    display: grid;
+    gap: 10px;
+  }
+</style>

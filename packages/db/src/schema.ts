@@ -1,16 +1,25 @@
 import { sql } from "drizzle-orm";
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex, type AnySQLiteColumn } from "drizzle-orm/sqlite-core";
 import type {
+  ContestOutcome,
+  DecisionAction,
+  DecisionTarget,
+  DecisionTrigger,
   DigestFrequency,
   DomainMethod,
   FeedbackMode,
   FeedbackType,
   NotificationType,
   PerkType,
+  Platform,
   Pricing,
   ProductStatus,
+  ModerationRule,
   ReportReason,
+  ReportSource,
+  ReviewCaseKind,
   RoadmapStatus,
+  SignalType,
   Stage,
 } from "@tm/shared";
 
@@ -37,6 +46,13 @@ export const user = sqliteTable(
     digestFrequency: text("digest_frequency").$type<DigestFrequency>().notNull().default("weekly"),
     lastDigestAt: integer("last_digest_at"),
     onboardedAt: integer("onboarded_at"),
+    /** TERMS_VERSION the user last accepted (sign-up, onboarding or the "Terms updated" notice); null = never. */
+    termsVersion: text("terms_version"),
+    termsAcceptedAt: integer("terms_accepted_at"),
+    /** First-touch source from the landing URL, saved at sign-up (docs/PRELAUNCH.md). */
+    utmSource: text("utm_source"),
+    utmCampaign: text("utm_campaign"),
+    utmContent: text("utm_content"),
   },
   (t) => [index("idx_user_digest").on(t.digestFrequency, t.lastDigestAt)],
 );
@@ -162,10 +178,26 @@ export const products = sqliteTable(
     saveCount: integer("save_count").notNull().default(0),
     publishedAt: integer("published_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
+    /** Declared by the maker ("Includes AI features") */
+    hasAi: integer("has_ai", { mode: "boolean" }).notNull().default(false),
+    platforms: text("platforms", { mode: "json" }).$type<Platform[]>().notNull().default(["web"]),
+    staffPickAt: integer("staff_pick_at"),
+    staffPickNote: text("staff_pick_note"),
+    /** Written by the ranking job (docs/RANKING.md) */
+    scoreWeek: real("score_week").notNull().default(0),
+    scoreTrending: real("score_trending").notNull().default(0),
+    qualityOk: integer("quality_ok", { mode: "boolean" }).notNull().default(false),
+    rankedAt: integer("ranked_at"),
+    /** Link health for the quality conditions (set at publish, then rechecked in rotation). */
+    linkCheckedAt: integer("link_checked_at"),
+    linkFailures: integer("link_failures").notNull().default(0),
   },
   (t) => [
     index("idx_products_status_pub").on(t.status, sql`${t.publishedAt} DESC`),
     index("idx_products_maker").on(t.makerId),
+    index("idx_products_top").on(t.status, t.qualityOk, sql`${t.scoreWeek} DESC`),
+    index("idx_products_trending").on(t.status, t.qualityOk, sql`${t.scoreTrending} DESC`),
+    index("idx_products_link_check").on(t.status, t.linkCheckedAt),
   ],
 );
 
@@ -271,9 +303,8 @@ export const feedback = sqliteTable(
     productId: text("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    /** Null once the author deleted their account: public feedback stays, shown as "Deleted user". */
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
     type: text("type").$type<FeedbackType>().notNull(),
     body: text("body").notNull(),
     /** Copied from feedback_mode when created */
@@ -322,17 +353,72 @@ export const reports = sqliteTable(
     productId: text("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
-    reporterId: text("reporter_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    /** Null for public reports (the /report form, no account needed). */
+    reporterId: text("reporter_id").references(() => user.id, { onDelete: "cascade" }),
+    source: text("source").$type<ReportSource>().notNull().default("member"),
+    /** Public reports, optional; cleared REPORTER_EMAIL_MONTHS after the report is decided. */
+    reporterEmail: text("reporter_email"),
     reason: text("reason").$type<ReportReason>().notNull(),
+    /** Member note, or the explanation on a public report */
     note: text("note"),
+    /** Public reports: the good-faith statement was confirmed */
+    goodFaith: integer("good_faith", { mode: "boolean" }),
     /** 1 when the reporter was eligible (account older than 7 days, confirmed email) */
     counts: integer("counts", { mode: "boolean" }).notNull(),
     outcome: text("outcome").$type<"upheld" | "rejected">(),
+    decidedAt: integer("decided_at"),
+    /** The decision that upheld the report; null when it was rejected. */
+    decisionId: text("decision_id").references(() => moderationDecisions.id, { onDelete: "set null" }),
     createdAt: integer("created_at").notNull(),
   },
-  (t) => [uniqueIndex("uq_reports_product_reporter").on(t.productId, t.reporterId), index("idx_reports_reporter").on(t.reporterId, t.createdAt)],
+  (t) => [
+    uniqueIndex("uq_reports_product_reporter").on(t.productId, t.reporterId),
+    index("idx_reports_reporter").on(t.reporterId, t.createdAt),
+    index("idx_reports_created").on(t.createdAt),
+    index("idx_reports_email_retention").on(t.decidedAt).where(sql`${t.reporterEmail} IS NOT NULL`),
+  ],
+);
+
+/**
+ * Statements of reasons: one row each time a product is hidden or removed or an account is suspended
+ * (docs/LEGAL.md). Each can be contested once. Rows outlive the product and the account (ids set null)
+ * so the monthly counts don't change.
+ */
+export const moderationDecisions = sqliteTable(
+  "moderation_decisions",
+  {
+    id: text("id").primaryKey(),
+    targetType: text("target_type").$type<DecisionTarget>().notNull(),
+    productId: text("product_id").references(() => products.id, { onDelete: "set null" }),
+    /** The maker, or the suspended account */
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    /** A product hidden because its maker was suspended points at the suspension. */
+    parentId: text("parent_id").references((): AnySQLiteColumn => moderationDecisions.id, { onDelete: "set null" }),
+    action: text("action").$type<DecisionAction>().notNull(),
+    trigger: text("trigger").$type<DecisionTrigger>().notNull(),
+    automated: integer("automated", { mode: "boolean" }).notNull(),
+    rule: text("rule").$type<ModerationRule>().notNull(),
+    /** Plain-language explanation shown to the user */
+    facts: text("facts").notNull(),
+    /** The admin; null when automated */
+    decidedBy: text("decided_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: integer("created_at").notNull(),
+    reversedAt: integer("reversed_at"),
+    reversedBy: text("reversed_by").references(() => user.id, { onDelete: "set null" }),
+    contestBody: text("contest_body"),
+    contestedAt: integer("contested_at"),
+    contestOutcome: text("contest_outcome").$type<ContestOutcome>(),
+    contestResponse: text("contest_response"),
+    contestResolvedAt: integer("contest_resolved_at"),
+    contestResolvedBy: text("contest_resolved_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("idx_decisions_user").on(t.userId, sql`${t.createdAt} DESC`),
+    index("idx_decisions_product").on(t.productId, sql`${t.createdAt} DESC`),
+    index("idx_decisions_parent").on(t.parentId),
+    index("idx_decisions_created").on(t.createdAt),
+    index("idx_decisions_open_contests").on(t.contestedAt).where(sql`${t.contestedAt} IS NOT NULL AND ${t.contestResolvedAt} IS NULL`),
+  ],
 );
 
 export const notifications = sqliteTable(
@@ -366,6 +452,72 @@ export const pushSubscriptions = sqliteTable(
   (t) => [index("idx_push_user").on(t.userId)],
 );
 
+/**
+ * Raw ranking signals, inserted in the request. One per user, product and type per UTC day;
+ * saves and perk claims once per user and product ever (partial unique index).
+ */
+export const productSignals = sqliteTable(
+  "product_signals",
+  {
+    id: text("id").primaryKey(),
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    type: text("type").$type<SignalType>().notNull(),
+    /** UTC day number (unix seconds / 86400) */
+    day: integer("day").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_signals_product_user_type_day").on(t.productId, t.userId, t.type, t.day),
+    uniqueIndex("uq_signals_once")
+      .on(t.productId, t.userId, t.type)
+      .where(sql`${t.type} in ('save', 'perk_claim')`),
+    index("idx_signals_day").on(t.day),
+  ],
+);
+
+/** Signals counted per product, day and type by the scheduled job. */
+export const productSignalDaily = sqliteTable(
+  "product_signal_daily",
+  {
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    day: integer("day").notNull(),
+    type: text("type").$type<SignalType>().notNull(),
+    count: integer("count").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.productId, t.day, t.type] }), index("idx_signal_daily_day").on(t.day)],
+);
+
+/** Moderation cases that don't hide the product (signal spikes). An open case keeps it out of Top and Trending. */
+export const reviewCases = sqliteTable(
+  "review_cases",
+  {
+    id: text("id").primaryKey(),
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<ReviewCaseKind>().notNull(),
+    /** JSON */
+    details: text("details").notNull(),
+    createdAt: integer("created_at").notNull(),
+    resolvedAt: integer("resolved_at"),
+    resolvedBy: text("resolved_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [index("idx_review_cases_product").on(t.productId, t.resolvedAt), index("idx_review_cases_open").on(t.resolvedAt, sql`${t.createdAt} DESC`)],
+);
+
+/** One row per deleted account, with nothing but the time of deletion. */
+export const accountDeletions = sqliteTable("account_deletions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  deletedAt: integer("deleted_at").notNull(),
+});
+
 export const blockedDomains = sqliteTable("blocked_domains", {
   hostname: text("hostname").primaryKey(),
   reason: text("reason"),
@@ -390,7 +542,12 @@ export const schema = {
   roadmapItems,
   roadmapVotes,
   reports,
+  moderationDecisions,
   notifications,
   pushSubscriptions,
+  productSignals,
+  productSignalDaily,
+  reviewCases,
+  accountDeletions,
   blockedDomains,
 };

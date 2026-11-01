@@ -1,22 +1,32 @@
 import type {
+  ContestOutcome,
+  DecisionAction,
+  DecisionTarget,
+  DecisionTrigger,
   DigestFrequency,
   DomainMethod,
   FeedbackMode,
   FeedbackType,
   NotificationType,
   PerkType,
+  Platform,
   Pricing,
   ProductStatus,
   ReportReason,
+  ReportSource,
+  ReviewCaseKind,
   RoadmapStatus,
   Stage,
 } from "./enums";
+import type { ModerationRule } from "./moderation";
 
 export interface Page<T> {
   items: T[];
   nextCursor: string | null;
   /** True when the list was cut short because the viewer has no account. */
   limited?: boolean;
+  /** Where an account continues after these items (cached visitor pages hand it to "Load more"). */
+  resumeCursor?: string | null;
 }
 
 export interface CategoryDTO {
@@ -26,6 +36,8 @@ export interface CategoryDTO {
   description: string | null;
   sortOrder: number;
   productCount?: number;
+  /** False in pre-launch while the category has fewer than CATEGORY_MIN_ELIGIBLE quality products */
+  listed?: boolean;
 }
 
 export interface CategoryRef {
@@ -63,6 +75,14 @@ export interface ProductCardDTO {
   feedbackMode: FeedbackMode;
   roadmapEnabled: boolean;
   saveCount: number;
+  hasAi: boolean;
+  platforms: Platform[];
+  /** An active staff pick (docs/RANKING.md) */
+  staffPick: boolean;
+  /** Shown in a Top list's "Just launched" slot */
+  justLaunched?: boolean;
+  /** Set once pre-launch mode records founding makers (docs/PRELAUNCH.md) */
+  foundingMaker?: boolean;
   maker: UserRef;
 }
 
@@ -89,6 +109,8 @@ export interface ProductDetailDTO extends ProductCardDTO {
   hostname: string;
   status: ProductStatus;
   updatedAt: number;
+  /** The team's note while the staff pick is active */
+  staffPickNote: string | null;
 }
 
 export interface ViewerProductStateDTO {
@@ -108,7 +130,8 @@ export interface FeedbackDTO {
   makerReply: string | null;
   resolvedAt: number | null;
   createdAt: number;
-  author: UserRef;
+  /** Null when the author deleted their account (shown as "Deleted user"). */
+  author: UserRef | null;
   roadmapItemId?: string | null;
 }
 
@@ -133,10 +156,18 @@ export interface NotificationDTO {
 }
 
 export type NotificationPayload =
-  | { kind: "digest"; frequency: "daily" | "weekly"; products: { slug: string; title: string; tagline: string }[] }
+  | {
+      kind: "digest";
+      frequency: "daily" | "weekly";
+      /** Weekly digests come one per category */
+      category?: CategoryRef;
+      products: { slug: string; title: string; tagline: string }[];
+    }
   | { kind: "feedback_reply"; productSlug: string; productTitle: string; feedbackId: string; reply: string }
   | { kind: "roadmap_shipped"; productSlug: string; productTitle: string; itemTitle: string }
-  | { kind: "system"; title: string; body: string; href?: string };
+  | { kind: "system"; title: string; body: string; href?: string }
+  /** Sent once to every reserved account on launch day (docs/PRELAUNCH.md) */
+  | { kind: "launch"; products: { slug: string; title: string; tagline: string }[] };
 
 export interface MeDTO {
   id: string;
@@ -149,7 +180,11 @@ export interface MeDTO {
   role: "user" | "admin";
   digestFrequency: DigestFrequency;
   onboarded: boolean;
+  /** TERMS_VERSION the user last accepted; null = never (docs/LEGAL.md). */
+  termsVersion: string | null;
   isMaker: boolean;
+  /** Pre-launch mode (docs/PRELAUNCH.md) */
+  prelaunch: boolean;
   interests: string[];
   unreadNotifications: number;
   createdAt: number;
@@ -192,6 +227,16 @@ export interface MakerProductDetailDTO extends ProductDetailDTO {
   viewCount: number;
   clickCount: number;
   perksFull: PerkMakerDTO[];
+  quality: QualityChecksDTO;
+}
+
+/** The conditions for Top, Trending and the digest. The numeric score is never sent. */
+export interface QualityChecksDTO {
+  link: boolean;
+  image: boolean;
+  description: boolean;
+  tagline: boolean;
+  noOpenReview: boolean;
 }
 
 export interface PerkMakerDTO {
@@ -229,6 +274,24 @@ export interface ClaimedPerkDTO {
   product: { slug: string; title: string; image: ImageDTO | null };
 }
 
+/** An available perk on the public /perks page: no codes or redeem links, claiming happens on the product page. */
+export interface PublicPerkDTO {
+  perkId: string;
+  title: string;
+  type: PerkType;
+  expiresAt: number | null;
+  product: { slug: string; title: string; image: ImageDTO | null };
+}
+
+/** A category's weekly archive: that week's quality launches, best score first. */
+export interface WeekArchiveDTO {
+  category: CategoryRef;
+  week: { slug: string; year: number; week: number };
+  items: ProductCardDTO[];
+  /** The closest earlier week that has an archive */
+  previous: { slug: string; year: number; week: number } | null;
+}
+
 export interface ReviewQueueItemDTO {
   product: MakerProductDTO;
   reports: {
@@ -237,8 +300,26 @@ export interface ReviewQueueItemDTO {
     note: string | null;
     counts: boolean;
     createdAt: number;
-    reporter: UserRef;
+    source: ReportSource;
+    /** Null for public reports. */
+    reporter: UserRef | null;
+    reporterEmail: string | null;
   }[];
+}
+
+export interface ReviewCaseDTO {
+  id: string;
+  kind: ReviewCaseKind;
+  details: { total: number; young: number; windowHours: number };
+  createdAt: number;
+  product: ProductCardDTO;
+}
+
+export interface StaffPickDTO {
+  product: ProductCardDTO;
+  note: string | null;
+  pickedAt: number;
+  expiresAt: number;
 }
 
 export interface MakerProfileDTO {
@@ -247,8 +328,53 @@ export interface MakerProfileDTO {
 }
 
 export interface HomeDTO {
-  totalProducts: number;
-  today: ProductCardDTO[];
-  recent: ProductCardDTO[];
+  /** Pre-launch mode (docs/PRELAUNCH.md) */
+  prelaunch: boolean;
+  /** Top this week, or null while fewer than HOME_TOP_MIN quality products exist */
+  top: ProductCardDTO[] | null;
+  /** Reserved accounts, only in pre-launch and from RESERVED_COUNT_MIN */
+  reservedCount: number | null;
   categories: CategoryDTO[];
+}
+
+/** A statement of reasons, as the affected user sees it. */
+export interface DecisionDTO {
+  id: string;
+  targetType: DecisionTarget;
+  action: DecisionAction;
+  trigger: DecisionTrigger;
+  automated: boolean;
+  rule: ModerationRule;
+  facts: string;
+  createdAt: number;
+  reversedAt: number | null;
+  /** Product decisions: the product (null once it was deleted). */
+  product: { id: string; slug: string; title: string } | null;
+  /** Set when a product was hidden because its maker's account was suspended. */
+  parentId: string | null;
+  contest: { body: string; contestedAt: number; outcome: ContestOutcome | null; response: string | null; resolvedAt: number | null } | null;
+  /** Last moment it can be contested; null when it can't be (already contested, reversed, or covered by the suspension). */
+  contestUntil: number | null;
+}
+
+export interface AdminDecisionDTO extends DecisionDTO {
+  user: { id: string; name: string; email: string } | null;
+  decidedBy: { id: string; name: string } | null;
+  contestResolvedBy: { id: string; name: string } | null;
+}
+
+export interface AdminReportDTO {
+  id: string;
+  reference: string;
+  source: ReportSource;
+  reason: ReportReason;
+  note: string | null;
+  reporter: UserRef | null;
+  reporterEmail: string | null;
+  goodFaith: boolean | null;
+  counts: boolean;
+  outcome: "upheld" | "rejected" | null;
+  decidedAt: number | null;
+  createdAt: number;
+  product: { id: string; slug: string; title: string; status: ProductStatus };
 }

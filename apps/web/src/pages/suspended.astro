@@ -1,0 +1,36 @@
+---
+import type { DecisionDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
+import ErrorState from "../components/ErrorState.astro";
+import Decisions from "../islands/Decisions";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { requireMe } from "../lib/session";
+
+// The one page a suspended account can use: the statement of reasons and the contest box.
+const me = await requireMe(Astro, { allowSuspended: true });
+if (me instanceof Response) return me;
+if (!me.banned) return Astro.redirect("/dashboard/decisions");
+const res = await apiCall<{ items: DecisionDTO[] }>("/me/decisions", { request: Astro.request });
+const m = en.moderation.page;
+---
+
+<Base title={m.suspendedTitle} noindex>
+  <div class="container container-narrow page">
+    <h1 class="t-32">{m.suspendedTitle}</h1>
+    <p class="t-15 muted" style="margin: 8px 0 24px">{m.suspendedIntro}</p>
+    {res.ok ? <Decisions client:load items={res.data.items} /> : <ErrorState />}
+  </div>
+</Base>
+
+<style is:global>
+  .decision {
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+  }
+  .contest-box {
+    padding: 12px 14px;
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+</style>

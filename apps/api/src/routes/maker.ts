@@ -10,6 +10,8 @@ import {
   productCategories,
   productImages,
   products,
+  reports,
+  reviewCases,
   roadmapItems,
 } from "@tm/db";
 import {
@@ -41,6 +43,7 @@ import { headImage, storeImage, type StoredImage } from "../lib/images";
 import { findOwnedProduct } from "../lib/lookup";
 import { extractMetadata, splitTitle } from "../lib/metadata";
 import { imageUrl, loadCards, loadDetail } from "../lib/products";
+import { qualityChecks } from "../lib/quality";
 import { takeScreenshot } from "../lib/screenshot";
 import { requireTurnstile } from "../lib/turnstile";
 import { body } from "../lib/validate";
@@ -219,9 +222,13 @@ app.post("/maker/products", async (c) => {
     pricing: input.pricing,
     feedbackMode: input.feedbackMode,
     roadmapEnabled: input.roadmapEnabled,
+    hasAi: input.hasAi,
+    platforms: input.platforms,
     status: "live",
     publishedAt: now,
     updatedAt: now,
+    // The preview step just fetched the page, so the link counts as checked.
+    linkCheckedAt: now,
   };
   try {
     await db.batch([
@@ -235,7 +242,7 @@ app.post("/maker/products", async (c) => {
     }
     throw err;
   }
-  c.executionCtx.waitUntil(purgeWebPaths(c.env, ["/", ...cats.map((x) => `/c/${x.slug}`)]));
+  c.executionCtx.waitUntil(purgeWebPaths(c.env, ["/", "/sitemap.xml", ...cats.map((x) => `/c/${x.slug}`)]));
   return c.json({ id, slug }, 201);
 });
 
@@ -290,7 +297,25 @@ app.get("/maker/products/:id", async (c) => {
   const p = await findOwnedProduct(db, u, c.req.param("id"));
   const detail = await loadDetail(db, c.env, { id: p.id }, { includeHidden: true });
   if (!detail) throw notFound();
-  const out: MakerProductDetailDTO = { ...detail, viewCount: p.viewCount, clickCount: p.clickCount, perksFull: await makerPerks(db, p.id) };
+  const [openReport, openCase] = await db.batch([
+    db
+      .select({ id: reports.id })
+      .from(reports)
+      .where(and(eq(reports.productId, p.id), eq(reports.counts, true), isNull(reports.outcome)))
+      .limit(1),
+    db
+      .select({ id: reviewCases.id })
+      .from(reviewCases)
+      .where(and(eq(reviewCases.productId, p.id), isNull(reviewCases.resolvedAt)))
+      .limit(1),
+  ]);
+  const out: MakerProductDetailDTO = {
+    ...detail,
+    viewCount: p.viewCount,
+    clickCount: p.clickCount,
+    perksFull: await makerPerks(db, p.id),
+    quality: qualityChecks(p, { hasImage: detail.images.length > 0, openReview: openReport.length > 0 || openCase.length > 0 }),
+  };
   return c.json(out);
 });
 
@@ -308,6 +333,8 @@ app.patch("/maker/products/:id", async (c) => {
   if (input.pricing !== undefined) patch.pricing = input.pricing;
   if (input.feedbackMode !== undefined) patch.feedbackMode = input.feedbackMode;
   if (input.roadmapEnabled !== undefined) patch.roadmapEnabled = input.roadmapEnabled;
+  if (input.hasAi !== undefined) patch.hasAi = input.hasAi;
+  if (input.platforms !== undefined) patch.platforms = input.platforms;
 
   const oldCats = await db
     .select({ slug: categories.slug })

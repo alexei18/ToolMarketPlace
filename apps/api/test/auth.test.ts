@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { TERMS_VERSION } from "@tm/shared";
 import { hashPassword, verifyPassword } from "../src/lib/password";
 import { Client, WEB, mockFetch, setup, signUp, type TestContext } from "./helpers";
 
@@ -52,6 +53,7 @@ describe("auth", () => {
     expect(me.data.username).toBe("ana_pop");
     expect(me.data.role).toBe("user");
     expect(me.data.onboarded).toBe(false);
+    expect(me.data.prelaunch).toBe(false);
     expect(me.data.isMaker).toBe(false);
     expect(me.data.digestFrequency).toBe("weekly");
   });
@@ -90,13 +92,17 @@ describe("auth", () => {
     expect((await client.get("/me")).data.role).toBe("admin");
   });
 
-  test("banned users cannot sign in", async () => {
+  test("suspended users can sign in, but only to read and contest the suspension", async () => {
     const t = setup();
     const { id } = await signUp(t, { email: "bad@example.com" });
     t.sqlite.run("UPDATE user SET banned_at = 1 WHERE id = ?", [id]);
     const c = new Client(t);
     const res = await c.post("/auth/sign-in/email", { email: "bad@example.com", password: "correct horse battery" });
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
+    expect((await c.get("/me")).data.banned).toBe(true);
+    expect((await c.get("/me/decisions")).status).toBe(200);
+    expect((await c.get("/me/saves")).data.error.code).toBe("BANNED");
+    expect((await c.put("/me/interests", { categories: ["ai", "design", "finance"] })).data.error.code).toBe("BANNED");
   });
 
   test("cross-site writes are rejected", async () => {
@@ -191,5 +197,35 @@ describe("rate limits", () => {
     expect(site.status).toBe(200);
     const forged = await new Client(t).get("/categories", { "x-internal-key": "guess" });
     expect(forged.status).toBe(429);
+  });
+});
+
+describe("terms acceptance (docs/LEGAL.md)", () => {
+  test("email sign-up needs the current Terms version and stores when it was accepted", async () => {
+    const t = setup();
+    for (const acceptedTerms of [undefined, "2000-01-01"]) {
+      const res = await new Client(t).post("/auth/sign-up/email", { email: `t${acceptedTerms}@example.com`, password: "correct horse battery", name: "T", acceptedTerms });
+      expect(res.status).toBe(400);
+      expect(res.data.code).toBe("TERMS_NOT_ACCEPTED");
+    }
+    expect(t.sqlite.query("SELECT count(*) AS n FROM user").get()).toEqual({ n: 0 });
+
+    const { client, id } = await signUp(t);
+    const row = t.sqlite.query("SELECT terms_version, terms_accepted_at FROM user WHERE id = ?").get(id) as { terms_version: string; terms_accepted_at: number };
+    expect(row.terms_version).toBe(TERMS_VERSION);
+    expect(Math.abs(row.terms_accepted_at - Date.now() / 1000)).toBeLessThan(60);
+    expect((await client.get("/me")).data.termsVersion).toBe(TERMS_VERSION);
+  });
+
+  test("Google sign-ups accept in onboarding; only the current version is accepted", async () => {
+    const t = setup(GOOGLE);
+    const { client, location } = await googleSignIn(t, { sub: "g-terms", email: "terms@gmail.com", email_verified: true, name: "Terms" });
+    expect(location).toStartWith(`${WEB}/onboarding`);
+    expect((await client.get("/me")).data.termsVersion).toBeNull();
+
+    expect((await client.post("/me/terms", { version: "2000-01-01" })).status).toBe(400);
+    expect((await client.post("/me/terms", { version: TERMS_VERSION })).status).toBe(200);
+    expect((await client.get("/me")).data.termsVersion).toBe(TERMS_VERSION);
+    expect((await new Client(t).post("/me/terms", { version: TERMS_VERSION })).status).toBe(401);
   });
 });

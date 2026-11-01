@@ -1,0 +1,10 @@
+---
+import type { Badge } from "../lib/badges";
+
+interface Props {
+  badges: Badge[];
+}
+const { badges } = Astro.props;
+---
+
+{badges.map((b) => <span class="badge" data-badge={b.kind}>{b.label}</span>)}

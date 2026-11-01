@@ -14,6 +14,7 @@ import {
 import {
   nowSec,
   renderLimitedMarkdown,
+  staffPickActive,
   type CategoryRef,
   type ImageDTO,
   type PerkPublicDTO,
@@ -49,6 +50,7 @@ export function perkAvailableSql(now: number) {
  */
 const codesLeftSql = sql<number>`(SELECT count(*) FROM perk_codes pc WHERE pc.perk_id = "perks"."id" AND pc.claimed_at IS NULL)`;
 
+/** Scores and quality flags are never copied into a DTO: the numeric score stays private (docs/RANKING.md). */
 function toCard(env: Env, p: ProductRow, maker: MakerRow, image: ImageDTO | null, cats: CategoryRef[], hasPerk: boolean): ProductCardDTO {
   return {
     id: p.id,
@@ -65,6 +67,9 @@ function toCard(env: Env, p: ProductRow, maker: MakerRow, image: ImageDTO | null
     feedbackMode: p.feedbackMode,
     roadmapEnabled: p.roadmapEnabled,
     saveCount: p.saveCount,
+    hasAi: p.hasAi,
+    platforms: p.platforms,
+    staffPick: staffPickActive(p.staffPickAt, nowSec()),
     maker: { id: maker.id, username: maker.username, name: maker.name, image: maker.image },
   };
 }
@@ -179,6 +184,7 @@ export async function loadDetail(
     hostname: domainRow[0]?.hostname ?? new URL(row.p.url).hostname,
     status: row.p.status,
     updatedAt: row.p.updatedAt,
+    staffPickNote: card.staffPick ? row.p.staffPickNote : null,
   };
 }
 

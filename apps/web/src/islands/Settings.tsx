@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import type { CategoryDTO, DigestFrequency, MeDTO } from "@tm/shared";
-import { ClientError, patch, post, put, toast } from "../lib/client";
+import { ACCOUNT_DELETE_CONFIRM, EXPORT_LINK_HOURS, type CategoryDTO, type DigestFrequency, type MeDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
+import { ClientError, del, patch, post, put, toast } from "../lib/client";
 import { disablePush, enablePush, pushState, type PushState } from "../lib/push";
 import { Check } from "./icons";
 import { Button, Field, Notice, Segmented, fieldError, useAction, useAdoptTyped } from "./ui";
@@ -18,6 +19,7 @@ export default function Settings({ me, categories, hasPassword }: Props) {
       <Interests initial={me.interests} categories={categories} />
       <NotificationsSection initial={me.digestFrequency} />
       <Account me={me} hasPassword={hasPassword} />
+      <YourData />
     </div>
   );
 }
@@ -248,6 +250,62 @@ function Account({ me, hasPassword }: { me: MeDTO; hasPassword: boolean }) {
           Log out
         </Button>
       </div>
+    </Section>
+  );
+}
+
+function YourData() {
+  const copy = en.yourData;
+  const [download, setDownload] = useState<{ url: string; expiresAt: number } | null>(null);
+  const [confirm, setConfirm] = useState("");
+  const exportData = useAction(async () => {
+    setDownload(await post<{ url: string; expiresAt: number }>("/me/export"));
+  });
+  const remove = useAction(async () => {
+    await del("/me", { confirm });
+    location.href = "/";
+  });
+  const expires = download && new Date(download.expiresAt * 1000).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return (
+    <Section id="your-data" title={copy.title} text={copy.text}>
+      <div className="stack-12">
+        <div className="label">{copy.exportTitle}</div>
+        <p className="t-15 muted">{copy.exportText(EXPORT_LINK_HOURS)}</p>
+        {download ? (
+          <div className="row row-wrap" role="status">
+            <a className="btn btn-secondary" href={download.url}>
+              {copy.download}
+            </a>
+            <span className="t-13 muted">
+              {copy.exportReady} {copy.linkExpires(expires!)}
+            </span>
+          </div>
+        ) : (
+          <div>
+            <Button variant="secondary" busy={exportData.busy} onClick={() => exportData.run()}>
+              {copy.exportTitle}
+            </Button>
+          </div>
+        )}
+      </div>
+      <form
+        className="stack-12"
+        onSubmit={(e) => {
+          e.preventDefault();
+          remove.run();
+        }}
+      >
+        <div className="label">{copy.deleteTitle}</div>
+        <p className="t-15 muted">{copy.deleteText}</p>
+        <Field label={copy.deleteConfirm(ACCOUNT_DELETE_CONFIRM)} htmlFor="s-delete-confirm">
+          <input id="s-delete-confirm" className="input" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" autoCapitalize="characters" spellCheck={false} />
+        </Field>
+        <div>
+          <Button type="submit" variant="danger" disabled={confirm !== ACCOUNT_DELETE_CONFIRM} busy={remove.busy}>
+            {copy.deleteTitle}
+          </Button>
+        </div>
+      </form>
     </Section>
   );
 }

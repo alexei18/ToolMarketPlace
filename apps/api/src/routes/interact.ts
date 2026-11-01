@@ -1,16 +1,21 @@
-import { and, asc, count, desc, eq, gt, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNull, like, or, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
 import { feedback, perkClaims, perkCodes, perks, products, reports, roadmapItems, roadmapVotes, user } from "@tm/db";
 import {
+  FEEDBACK_SIGNAL_MIN_CHARS,
   PAGE_SIZE,
   decodeCursor,
   encodeCursor,
   feedbackCreateSchema,
   feedbackReplySchema,
   newId,
+  normalizeHostname,
+  normalizeUrl,
   nowSec,
   perkClaimSchema,
+  publicReportSchema,
   reportCreateSchema,
+  reportReference,
   roadmapItemCreateSchema,
   roadmapItemUpdateSchema,
   type FeedbackDTO,
@@ -18,12 +23,16 @@ import {
   type RoadmapItemDTO,
   type RoadmapStatus,
 } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import { z } from "zod";
-import type { AppEnv } from "../env";
+import type { AppEnv, Env } from "../env";
 import { productPaths, purgeWebPaths } from "../lib/cache";
 import { ApiError, notFound } from "../lib/errors";
-import { canManage, findLiveProduct, findOwnedProduct, findProduct } from "../lib/lookup";
+import { sendEmail } from "../lib/email";
+import { canManage, findLiveProduct, findOwnedProduct, findProduct, type ProductRow } from "../lib/lookup";
+import { recordAutoHide } from "../lib/moderation";
 import { createNotifications } from "../lib/notify";
+import { trackSignal } from "../lib/signals";
 import { requireTurnstile } from "../lib/turnstile";
 import { body } from "../lib/validate";
 import { clientIp, requireUser, requireVerifiedUser } from "../middleware";
@@ -112,12 +121,13 @@ app.post("/perks/:id/claim", async (c) => {
     throw new ApiError("ALREADY_CLAIMED", "You already claimed this perk.");
   }
   c.executionCtx.waitUntil(purgeWebPaths(c.env, [`/p/${product.slug}`]));
+  trackSignal(c, product, "perk_claim");
   return c.json({ perkId: perk.id, code: code?.code ?? perk.sharedCode, redeemUrl: perk.redeemUrl, claimedAt: now, alreadyClaimed: false }, 201);
 });
 
 /* Feedback */
 
-type FeedbackRow = typeof feedback.$inferSelect & { author: { id: string; username: string | null; name: string; image: string | null }; roadmapItemId?: string | null };
+type FeedbackRow = typeof feedback.$inferSelect & { author: { id: string; username: string | null; name: string; image: string | null } | null; roadmapItemId?: string | null };
 
 function feedbackDto(r: FeedbackRow): FeedbackDTO {
   return {
@@ -148,7 +158,8 @@ app.get("/products/:id/feedback", async (c) => {
   const rows = await db
     .select({ f: feedback, author: { id: user.id, username: user.username, name: user.name, image: user.image }, roadmapItemId: roadmapItems.id })
     .from(feedback)
-    .innerJoin(user, eq(user.id, feedback.userId))
+    // Left join: public feedback of deleted accounts has no author.
+    .leftJoin(user, eq(user.id, feedback.userId))
     .leftJoin(roadmapItems, eq(roadmapItems.fromFeedbackId, feedback.id))
     .where(
       and(
@@ -187,6 +198,7 @@ app.post("/products/:id/feedback", async (c) => {
 
   const row = { id: newId(), productId: product.id, userId: u.id, type: input.type, body: input.body, isPublic: product.feedbackMode === "public", makerReply: null, resolvedAt: null, createdAt: now };
   await db.insert(feedback).values(row);
+  if (input.body.length >= FEEDBACK_SIGNAL_MIN_CHARS) trackSignal(c, product, "feedback");
   if (row.isPublic) c.executionCtx.waitUntil(purgeWebPaths(c.env, [`/p/${product.slug}/feedback`]));
   return c.json(feedbackDto({ ...row, author: { id: u.id, username: u.username, name: u.name, image: u.image } }), 201);
 });
@@ -205,7 +217,7 @@ app.post("/feedback/:id/reply", async (c) => {
   const { f, product } = await ownedFeedback(c, c.req.param("id"));
   const db = c.get("db");
   await db.update(feedback).set({ makerReply: input.reply }).where(eq(feedback.id, f.id));
-  if (f.userId !== product.makerId) {
+  if (f.userId && f.userId !== product.makerId) {
     await createNotifications(db, [
       { userId: f.userId, type: "feedback_reply", payload: { kind: "feedback_reply", productSlug: product.slug, productTitle: product.title, feedbackId: f.id, reply: input.reply.slice(0, 280) } },
     ]);
@@ -302,7 +314,7 @@ app.patch("/products/:id/roadmap/:itemId", async (c) => {
   // Tell the person whose feedback became this item that it shipped.
   if (input.status === "shipped" && item.status !== "shipped" && item.fromFeedbackId) {
     const f = await db.select({ userId: feedback.userId }).from(feedback).where(eq(feedback.id, item.fromFeedbackId)).get();
-    if (f && f.userId !== product.makerId) {
+    if (f?.userId && f.userId !== product.makerId) {
       await createNotifications(db, [
         { userId: f.userId, type: "roadmap_shipped", payload: { kind: "roadmap_shipped", productSlug: product.slug, productTitle: product.title, itemTitle: patch.title ?? item.title } },
       ]);
@@ -327,16 +339,17 @@ async function votableItem(c: Parameters<typeof requireUser>[0], itemId: string)
   if (!item) throw notFound("Roadmap item not found");
   const product = await findLiveProduct(db, item.productId);
   if (!product.roadmapEnabled) throw new ApiError("ROADMAP_DISABLED", "This roadmap is closed.");
-  return item;
+  return { item, product };
 }
 
 app.put("/roadmap/:itemId/vote", async (c) => {
   const u = requireUser(c);
   const db = c.get("db");
-  const item = await votableItem(c, c.req.param("itemId"));
+  const { item, product } = await votableItem(c, c.req.param("itemId"));
   const inserted = await db.insert(roadmapVotes).values({ itemId: item.id, userId: u.id }).onConflictDoNothing().returning({ id: roadmapVotes.itemId });
   let voteCount = item.voteCount;
   if (inserted.length) {
+    trackSignal(c, product, "vote");
     const r = await db
       .update(roadmapItems)
       .set({ voteCount: sql`${roadmapItems.voteCount} + 1` })
@@ -350,7 +363,7 @@ app.put("/roadmap/:itemId/vote", async (c) => {
 app.delete("/roadmap/:itemId/vote", async (c) => {
   const u = requireUser(c);
   const db = c.get("db");
-  const item = await votableItem(c, c.req.param("itemId"));
+  const { item } = await votableItem(c, c.req.param("itemId"));
   const removed = await db
     .delete(roadmapVotes)
     .where(and(eq(roadmapVotes.itemId, item.id), eq(roadmapVotes.userId, u.id)))
@@ -417,10 +430,77 @@ app.post("/products/:id/report", async (c) => {
         .where(and(eq(products.id, product.id), eq(products.status, "live")))
         .returning({ id: products.id });
       hidden = h.length > 0;
-      if (hidden) c.executionCtx.waitUntil(purgeWebPaths(c.env, productPaths(product.slug)));
+      if (hidden) {
+        await recordAutoHide(c.env, db, product);
+        c.executionCtx.waitUntil(purgeWebPaths(c.env, productPaths(product.slug)));
+      }
     }
   }
   return c.json({ ok: true, counted: counts, hidden }, 201);
+});
+
+/**
+ * Finds the listing a public report points at: a product page on this site (/p/<slug>), the
+ * product's own URL, or a page on its website when only one listing uses that host.
+ */
+async function productFromLink(env: Env, db: AppEnv["Variables"]["db"], input: string): Promise<ProductRow | null> {
+  let url: URL;
+  try {
+    url = new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`);
+  } catch {
+    return null;
+  }
+  const page = url.pathname.match(/^\/p\/([^/]+)/);
+  if (page && normalizeHostname(url.hostname) === normalizeHostname(new URL(env.WEB_ORIGIN).hostname)) return findProduct(db, decodeURIComponent(page[1]!));
+  const normalized = normalizeUrl(input);
+  if (!normalized) return null;
+  const exact = await db.select().from(products).where(eq(products.urlNormalized, normalized)).get();
+  if (exact) return exact;
+  const origin = `https://${normalizeHostname(url.hostname)}`;
+  const onHost = await db
+    .select()
+    .from(products)
+    .where(or(eq(products.urlNormalized, origin), like(products.urlNormalized, `${origin}/%`)))
+    .limit(2)
+    .all();
+  return onHost.length === 1 ? onHost[0]! : null;
+}
+
+/**
+ * Public report form (/report, docs/LEGAL.md): no account needed. Public reports never count toward
+ * hiding or ranking; they put the product in the admin review queue.
+ */
+app.post("/reports", async (c) => {
+  const db = c.get("db");
+  const input = await body(c, publicReportSchema);
+  await requireTurnstile(c.env, input.turnstileToken, clientIp(c));
+  const product = await productFromLink(c.env, db, input.url);
+  if (!product || product.status === "removed") {
+    throw new ApiError("VALIDATION", "We couldn't find a listing at that link. Paste the product's page on ToolMarket or its website.", { fields: { url: ["No listing found at this link."] } });
+  }
+  const id = newId();
+  const email = input.email || null;
+  await db.insert(reports).values({
+    id,
+    productId: product.id,
+    reporterId: null,
+    source: "public",
+    reporterEmail: email,
+    reason: input.reason,
+    note: input.explanation,
+    goodFaith: true,
+    counts: false,
+    outcome: null,
+    createdAt: nowSec(),
+  });
+  const reference = reportReference(id);
+  const t = en.publicReport;
+  if (email) {
+    c.executionCtx.waitUntil(
+      sendEmail(c.env, { to: email, subject: `${c.env.SITE_NAME}: ${t.received}`, lines: [t.received, t.receivedText(product.title, reference)] }).catch((err) => console.error("[report] ack email failed", err)),
+    );
+  }
+  return c.json({ reference, product: { slug: product.slug, title: product.title }, emailed: !!email }, 201);
 });
 
 export default app;

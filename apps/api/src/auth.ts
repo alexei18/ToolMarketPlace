@@ -3,8 +3,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { captcha } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
-import { schema, user as userTable, type Database } from "@tm/db";
-import { newId } from "@tm/shared";
+import { schema, type Database } from "@tm/db";
+import { TERMS_VERSION, newId, nowSec } from "@tm/shared";
 import type { Env } from "./env";
 import { sendEmail } from "./lib/email";
 import { hashPassword, verifyPassword } from "./lib/password";
@@ -67,6 +67,8 @@ export function createAuth(env: Env, db: Database) {
         bannedAt: { type: "number", required: false, input: false },
         digestFrequency: { type: "string", required: false, input: false, defaultValue: "weekly" },
         onboardedAt: { type: "number", required: false, input: false },
+        termsVersion: { type: "string", required: false, input: false },
+        termsAcceptedAt: { type: "number", required: false, input: false },
       },
     },
     session: {
@@ -83,17 +85,18 @@ export function createAuth(env: Env, db: Database) {
     databaseHooks: {
       user: {
         create: {
-          before: async (data) => {
+          before: async (data, ctx) => {
+            // Email sign-up sends the Terms version the user accepted (with the age checkbox). Google
+            // sign-ups accept it in onboarding instead (POST /me/terms), since OAuth carries no extra fields.
+            let terms = {};
+            if (ctx?.path === "/sign-up/email") {
+              if ((ctx.body as { acceptedTerms?: unknown } | undefined)?.acceptedTerms !== TERMS_VERSION) {
+                throw new APIError("BAD_REQUEST", { code: "TERMS_NOT_ACCEPTED", message: "Confirm your age and accept the Terms to create an account." });
+              }
+              terms = { termsVersion: TERMS_VERSION, termsAcceptedAt: nowSec() };
+            }
             const base = (data.name || data.email.split("@")[0] || "user").toString();
-            return { data: { ...data, username: await uniqueUsername(db, base) } };
-          },
-        },
-      },
-      session: {
-        create: {
-          before: async (session) => {
-            const row = await db.select({ bannedAt: userTable.bannedAt }).from(userTable).where(eq(userTable.id, session.userId)).get();
-            if (row?.bannedAt) throw new APIError("FORBIDDEN", { message: "This account has been suspended." });
+            return { data: { ...data, ...terms, username: await uniqueUsername(db, base) } };
           },
         },
       },

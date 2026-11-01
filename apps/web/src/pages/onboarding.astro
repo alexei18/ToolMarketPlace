@@ -1,5 +1,5 @@
 ---
-import type { CategoryDTO } from "@tm/shared";
+import { TERMS_VERSION, type CategoryDTO } from "@tm/shared";
 import Onboarding from "../islands/Onboarding";
 import Base from "../layouts/Base.astro";
 import { apiCall } from "../lib/api";
@@ -10,11 +10,13 @@ const me = await requireMe(Astro);
 if (me instanceof Response) return me;
 const cats = await apiCall<{ items: CategoryDTO[] }>("/categories");
 const next = safePath(Astro.url.searchParams.get("next")) ?? undefined;
+const needsTerms = me.termsVersion !== TERMS_VERSION;
+const termsFromSignup = Astro.url.searchParams.get("terms") === TERMS_VERSION;
 ---
 
 <Base title="Welcome" noindex>
   <div class="container container-narrow page">
-    <Onboarding client:load categories={cats.ok ? cats.data.items : []} initial={me.interests} digest={me.digestFrequency} next={next} />
+    <Onboarding client:load categories={cats.ok ? cats.data.items : []} initial={me.interests} digest={me.digestFrequency} next={next} needsTerms={needsTerms} termsFromSignup={termsFromSignup} />
   </div>
 </Base>
 

@@ -52,6 +52,11 @@ export function createApp() {
 
   app.get("/", (c) => c.json({ name: `${c.env.SITE_NAME} API`, ok: true }));
   app.get("/health", (c) => c.json({ ok: true }));
+  // The API lives on its own subdomain, so the site's robots.txt doesn't cover it. Card and product
+  // images stay fetchable: Twitterbot drops images that robots.txt disallows.
+  app.get("/robots.txt", (c) =>
+    c.text("User-agent: *\nAllow: /og/\nAllow: /img/\nDisallow: /\n", 200, { "Cache-Control": "public, max-age=86400" }),
+  );
 
   /** Product images from R2 (fallback when no img. custom domain is configured). */
   app.get("/img/:file", async (c) => {

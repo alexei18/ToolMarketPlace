@@ -1,7 +1,8 @@
 import type { FeedbackType, PerkType, Pricing, RoadmapStatus, Stage } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 
-export const STAGE_LABEL: Record<Stage, string> = { beta: "Beta", launched: "Launched" };
-export const PRICING_LABEL: Record<Pricing, string> = { free: "Free", freemium: "Freemium", paid: "Paid" };
+export const STAGE_LABEL: Record<Stage, string> = { beta: en.feed.filters.stage.preLaunch, launched: en.feed.filters.stage.launched };
+export const PRICING_LABEL: Record<Pricing, string> = en.feed.filters.pricing;
 export const FEEDBACK_TYPE_LABEL: Record<FeedbackType, string> = { bug: "Bug", idea: "Idea", praise: "Praise" };
 export const ROADMAP_LABEL: Record<RoadmapStatus, string> = { planned: "Planned", in_progress: "In progress", shipped: "Shipped" };
 export const PERK_TYPE_LABEL: Record<PerkType, string> = {

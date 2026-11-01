@@ -1,4 +1,5 @@
 ---
+import { en } from "@tm/shared/copy";
 import Icon from "./Icon.astro";
 import Logo from "./Logo.astro";
 import { siteConfig } from "../lib/config";
@@ -15,7 +16,9 @@ const path = Astro.url.pathname;
   <div class="container bar">
     <a href="/" class="wordmark" aria-label={`${siteName} home`}><Logo /><span>{siteName}</span></a>
     <nav class="site-nav" aria-label="Main">
-      <a href="/search" aria-current={path === "/search" ? "page" : undefined}>Explore</a>
+      <a href="/top" aria-current={path === "/top" ? "page" : undefined}>{en.feed.tabs.top}</a>
+      <a href="/trending" aria-current={path === "/trending" ? "page" : undefined}>{en.feed.tabs.trending}</a>
+      <a href="/new" aria-current={path === "/new" ? "page" : undefined}>{en.feed.tabs.new}</a>
       <a href="/#categories">Categories</a>
       <a href="/dashboard/new" aria-current={path.startsWith("/dashboard") ? "page" : undefined}>Submit a product</a>
     </nav>
@@ -28,7 +31,9 @@ const path = Astro.url.pathname;
       <details class="menu nav-menu">
         <summary class="icon-link" aria-label="Menu"><Icon name="menu" size={18} /></summary>
         <div class="menu-panel">
-          <a href="/search"><Icon name="search" />Explore</a>
+          <a href="/top"><Icon name="arrow-up" />{en.feed.tabs.top}</a>
+          <a href="/trending"><Icon name="trending" />{en.feed.tabs.trending}</a>
+          <a href="/new"><Icon name="clock" />{en.feed.tabs.new}</a>
           <a href="/#categories"><Icon name="grid" />Categories</a>
           <a href="/dashboard/new"><Icon name="plus" />Submit a product</a>
           <a class="menu-login" href="/login"><Icon name="user" />Log in</a>
@@ -76,7 +81,7 @@ const path = Astro.url.pathname;
   .menu-login {
     display: none;
   }
-  @media (max-width: 860px) {
+  @media (max-width: 1080px) {
     .nav-menu {
       display: block;
     }
@@ -87,6 +92,8 @@ const path = Astro.url.pathname;
 </style>
 
 <script>
+  import { TERMS_VERSION } from "@tm/shared";
+  import { en } from "@tm/shared/copy";
   import { getMe, hasSession, post, toast, errorMessage } from "../lib/client";
   import { iconSvg } from "./icons";
 
@@ -106,7 +113,7 @@ const path = Astro.url.pathname;
       document.documentElement.removeAttribute("data-auth");
       return;
     }
-    const avatar = me.image ? `<img src="${esc(me.image)}" alt="" referrerpolicy="no-referrer">` : esc(initialsOf(me.name));
+    const avatar = me.image ? `<img src="${esc(me.image)}" alt="" referrerpolicy="no-referrer" width="32" height="32">` : esc(initialsOf(me.name));
     const item = (href: string, icon: Parameters<typeof iconSvg>[0], label: string) => `<a href="${href}">${iconSvg(icon)}${label}</a>`;
     root.innerHTML = `
       <a class="icon-link" href="/notifications" aria-label="Notifications${me.unreadNotifications ? ` (${me.unreadNotifications} unread)` : ""}">
@@ -118,7 +125,7 @@ const path = Astro.url.pathname;
           <div class="menu-head"><div class="w-600 truncate">${esc(me.name)}</div><div class="t-13 muted truncate">${me.username ? "@" + esc(me.username) : esc(me.email)}</div></div>
           ${item("/feed", "sparkles", "Your feed")}
           ${item("/saved", "bookmark", "Saved")}
-          ${item("/perks", "gift", "Your perks")}
+          ${item("/perks/claimed", "gift", "Your perks")}
           <hr>
           ${me.isMaker ? item("/dashboard", "dashboard", "Maker dashboard") : item("/dashboard/domains", "globe", "Become a maker")}
           ${me.username ? item("/m/" + encodeURIComponent(me.username), "user", "Public profile") : ""}
@@ -139,13 +146,31 @@ const path = Astro.url.pathname;
 
     const notice = document.getElementById("account-notice");
     if (notice && (me as { banned?: boolean }).banned) {
-      notice.innerHTML = `<div class="container" style="padding-top:12px;padding-bottom:12px"><div class="notice notice-danger">${iconSvg("alert")}<span>This account has been suspended. Contact support if you think this is a mistake.</span></div></div>`;
+      notice.innerHTML = `<div class="container" style="padding-top:12px;padding-bottom:12px"><div class="notice notice-danger">${iconSvg("alert")}<span>This account has been suspended. <a class="link" href="/suspended">See why and contest the decision</a>.</span></div></div>`;
     } else if (notice && !me.emailVerified) {
       notice.innerHTML = `<div class="container" style="padding-top:12px;padding-bottom:12px"><div class="notice notice-warning">${iconSvg("info")}<span>Confirm your email (<b>${esc(me.email)}</b>) to claim perks and publish products. <button type="button" class="btn-text t-15" data-resend>Resend the email</button></span></div></div>`;
       notice.querySelector("[data-resend]")?.addEventListener("click", async () => {
         try {
           await post("/auth/send-verification-email", { email: me.email, callbackURL: `${location.origin}/feed?verified=1` });
           toast("Sent. Check your inbox.");
+        } catch (err) {
+          toast(errorMessage(err), "error");
+        }
+      });
+    }
+
+    // One-time notice when the Terms changed since this account last accepted them (docs/LEGAL.md).
+    // New accounts accept in sign-up or onboarding, so only onboarded ones get it.
+    if (notice && me.onboarded && me.termsVersion !== TERMS_VERSION && !(me as { banned?: boolean }).banned) {
+      const box = document.createElement("div");
+      box.className = "container";
+      box.style.cssText = "padding-top:12px;padding-bottom:12px";
+      box.innerHTML = `<div class="notice" style="align-items:center">${iconSvg("info")}<span>${en.legal.termsUpdated} <a class="link" href="/terms#changes-to-these-terms">${en.legal.termsChanges}</a></span><button type="button" class="btn-text t-15" style="margin-left:auto" data-terms-ok>${en.legal.termsDismiss}</button></div>`;
+      notice.append(box);
+      box.querySelector("[data-terms-ok]")?.addEventListener("click", async () => {
+        try {
+          await post("/me/terms", { version: TERMS_VERSION });
+          box.remove();
         } catch (err) {
           toast(errorMessage(err), "error");
         }

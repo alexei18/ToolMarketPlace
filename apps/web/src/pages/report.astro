@@ -1,0 +1,22 @@
+---
+import PublicReport from "../islands/PublicReport";
+import LegalLayout from "../layouts/LegalLayout.astro";
+
+Astro.cache.set({ maxAge: 3600, swr: 3600 });
+---
+
+<LegalLayout id="report">
+  <PublicReport client:load />
+</LegalLayout>
+
+<style is:global>
+  .report-form {
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    max-width: 640px;
+  }
+  .report-form h2 {
+    margin-bottom: 16px;
+  }
+</style>

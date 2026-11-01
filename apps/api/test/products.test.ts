@@ -230,14 +230,14 @@ describe("discovery", () => {
     const t = setup({ VISITOR_CATEGORY_LIMIT: "5" } as never);
     await seed(t, 8);
     const visitor = new Client(t);
-    const v = await visitor.get("/categories/ai/products");
+    const v = await visitor.get("/categories/ai/products?sort=new");
     expect(v.data.items).toHaveLength(5);
     expect(v.data.items[0].title).toBe("Product 7");
     expect(v.data.limited).toBe(true);
     expect(v.data.nextCursor).toBeNull();
 
     const u = await signUp(t);
-    const p1 = await u.client.get("/categories/ai/products");
+    const p1 = await u.client.get("/categories/ai/products?sort=new");
     expect(p1.data.items).toHaveLength(8);
     expect(p1.data.limited).toBe(false);
     expect((await visitor.get(`/categories/ai/products?cursor=1.x`)).data.limited).toBe(true);
@@ -253,7 +253,7 @@ describe("discovery", () => {
     const set = await u.client.put("/me/interests", { categories: ["ai", "design", "games"] });
     expect(set.status).toBe(200);
     expect((await u.client.get("/me")).data.onboarded).toBe(true);
-    const feed = await u.client.get("/feed");
+    const feed = await u.client.get("/feed?sort=new");
     expect(feed.data.items.map((p: { title: string }) => p.title)).toEqual(["Beta"]);
     expect((await new Client(t).get("/feed")).status).toBe(401);
   });
@@ -275,16 +275,90 @@ describe("discovery", () => {
     const t = setup();
     await seed(t, 3, "design");
     const home = await new Client(t).get("/home");
-    expect(home.data.today).toHaveLength(3);
-    expect(home.data.categories[0].slug).toBe("design");
-    expect(home.data.categories[0].productCount).toBe(3);
+    expect(home.data).toMatchObject({ prelaunch: false, top: null, reservedCount: null });
+    expect(home.data.categories.find((x: { slug: string }) => x.slug === "design")).toMatchObject({ productCount: 3, listed: true });
     const cats = await new Client(t).get("/categories");
     expect(cats.data.items).toHaveLength(20);
     const profile = await new Client(t).get("/makers/maker");
     expect(profile.data.products).toHaveLength(3);
-    const sitemap = await new Client(t).get("/sitemap");
-    expect(sitemap.data.products).toHaveLength(3);
-    expect(sitemap.data.makers).toEqual(["maker"]);
+    const visitor = new Client(t);
+    expect((await visitor.get("/sitemap/products")).data.items).toHaveLength(3);
+    expect((await visitor.get("/sitemap/makers")).data.items.map((x: { path: string }) => x.path)).toEqual(["/m/maker"]);
+    expect((await visitor.get("/sitemap/categories")).data.items).toHaveLength(20);
+    expect((await visitor.get("/sitemap/other")).status).toBe(404);
+  });
+
+  test("home in pre-launch: top from 6 quality products, thin categories unlisted, reserved count from 100", async () => {
+    const t = setup({ PRELAUNCH: "true" });
+    await seed(t, 6, "design");
+    const home = async () => (await new Client(t).get("/home")).data;
+    const design = (h: { categories: { slug: string; listed: boolean }[] }) => h.categories.find((x) => x.slug === "design")!;
+
+    expect((await new Client(t).get("/site")).data).toEqual({ prelaunch: true });
+    let h = await home();
+    expect(h.prelaunch).toBe(true);
+    expect(h.top).toBeNull();
+    expect(design(h).listed).toBe(false);
+    expect((await new Client(t).get("/sitemap/categories")).data.items).toEqual([]);
+
+    t.sqlite.run("UPDATE products SET quality_ok = 1 WHERE id IN (SELECT id FROM products ORDER BY id LIMIT 5)");
+    h = await home();
+    expect(h.top).toBeNull();
+    expect(design(h).listed).toBe(true);
+    expect((await new Client(t).get("/sitemap/categories")).data.items).toEqual([{ path: "/c/design" }]);
+    expect(h.categories.find((x: { slug: string }) => x.slug === "ai").listed).toBe(false);
+
+    t.sqlite.run("UPDATE products SET quality_ok = 1");
+    h = await home();
+    expect(h.top).toHaveLength(6);
+
+    // Reserved = onboarded and not banned; shown only from RESERVED_COUNT_MIN.
+    t.sqlite.run("UPDATE user SET onboarded_at = NULL");
+    const addUsers = (from: number, to: number, banned: number | null = null) =>
+      t.sqlite.run(
+        `WITH RECURSIVE n(i) AS (SELECT ${from} UNION ALL SELECT i + 1 FROM n WHERE i < ${to})
+         INSERT INTO user (id, name, email, email_verified, created_at, updated_at, onboarded_at, banned_at)
+         SELECT 'r' || i, 'R', 'r' || i || '@example.com', 1, 0, 0, 1, ? FROM n`,
+        [banned],
+      );
+    addUsers(1, 99);
+    addUsers(100, 100, 1);
+    expect((await home()).reservedCount).toBeNull();
+    addUsers(101, 101);
+    expect((await home()).reservedCount).toBe(100);
+
+    const after = setup({ PRELAUNCH: "false" });
+    await seed(after, 1, "design");
+    const launched = (await new Client(after).get("/home")).data;
+    expect(launched.prelaunch).toBe(false);
+    expect((await new Client(after).get("/site")).data).toEqual({ prelaunch: false });
+    expect(design(launched).listed).toBe(true);
+  });
+
+  test("hidden and removed products answer 410 with their category; live ones get an OG card", async () => {
+    const t = setup();
+    const m = await maker(t);
+    const { data } = await publish(m.client, { categories: ["productivity", "ai"] });
+    const visitor = new Client(t);
+
+    // No Browser Rendering configured: the card falls back to the site's default image for now.
+    const og = await visitor.req("GET", `/og/products/${data.slug}.png`);
+    expect(og.status).toBe(302);
+    expect(og.headers.get("location")).toEndWith("/og.png");
+    expect((await visitor.req("GET", "/og/products/nope.png")).status).toBe(404);
+
+    for (const status of ["hidden", "removed"]) {
+      t.sqlite.run("UPDATE products SET status = ? WHERE id = ?", [status, data.id]);
+      const res = await visitor.get(`/products/${data.slug}`);
+      expect(res.status).toBe(410);
+      // The first category by sort order (AI comes before Productivity in the seed).
+      expect(res.data.error).toMatchObject({ code: "GONE", category: { slug: "ai", name: "AI" } });
+      expect((await visitor.req("GET", `/og/products/${data.slug}.png`)).status).toBe(404);
+    }
+    expect((await visitor.get("/products/never-existed")).status).toBe(404);
+
+    const robots = await visitor.req("GET", "/robots.txt");
+    expect(robots.data).toBe(["User-agent: *", "Allow: /og/", "Allow: /img/", "Disallow: /", ""].join("\n"));
   });
 
   test("saves update counters and the saved list", async () => {

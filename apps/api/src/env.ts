@@ -20,6 +20,8 @@ export interface Env {
   VAPID_SUBJECT?: string;
   VAPID_PUBLIC_KEY?: string;
   EMAIL_FROM?: string;
+  /** "true" while the site runs in pre-launch mode (docs/PRELAUNCH.md) */
+  PRELAUNCH?: string;
 
   BETTER_AUTH_SECRET: string;
   GOOGLE_CLIENT_ID?: string;
@@ -52,13 +54,18 @@ export interface SessionUser {
   bannedAt: number | null;
   digestFrequency: "daily" | "weekly" | "off";
   onboardedAt: number | null;
+  /** TERMS_VERSION last accepted; null = never. */
+  termsVersion: string | null;
 }
 
 export interface Variables {
   db: Database;
   auth: Auth;
   limits: Limits;
+  /** Signed-in, not suspended. */
   user: SessionUser | null;
+  /** Signed-in but suspended: treated as signed out except on /me and the decision endpoints. */
+  suspendedUser: SessionUser | null;
   sessionId: string | null;
 }
 

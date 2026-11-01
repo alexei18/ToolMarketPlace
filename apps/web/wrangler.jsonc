@@ -14,7 +14,9 @@
     "PUBLIC_API_URL": "http://localhost:8787",
     // Public base URL for product images (img. subdomain in production).
     "TURNSTILE_SITE_KEY": "",
-    "GOOGLE_ENABLED": "false"
+    "GOOGLE_ENABLED": "false",
+    // Legal pages show "Draft — pending legal review" until a lawyer has reviewed them; then "false".
+    "LEGAL_DRAFT": "true"
   },
   // Server-side calls to the API go through a service binding (no public round trip, no extra request).
   "services": [{ "binding": "API", "service": "toolmarket-api" }]

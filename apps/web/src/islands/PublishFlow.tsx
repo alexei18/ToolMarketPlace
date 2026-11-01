@@ -32,6 +32,8 @@ export default function PublishFlow({ categories, domains }: Props) {
         feedbackMode: "public",
         roadmapEnabled: false,
         images: p.images,
+        hasAi: false,
+        platforms: ["web"],
       });
     },
     { silent: true },

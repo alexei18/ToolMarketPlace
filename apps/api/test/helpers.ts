@@ -1,4 +1,5 @@
 import type { Database as SQLite } from "bun:sqlite";
+import { TERMS_VERSION } from "@tm/shared";
 import { createApp } from "../src/app";
 import type { Env } from "../src/env";
 import { createD1, createR2 } from "./d1-shim";
@@ -91,7 +92,7 @@ let counter = 0;
 export async function signUp(t: TestContext, opts: { email?: string; name?: string; verified?: boolean; ageDays?: number } = {}) {
   const client = new Client(t);
   const email = opts.email ?? `user${++counter}_${Date.now()}@example.com`;
-  const res = await client.post("/auth/sign-up/email", { email, password: "correct horse battery", name: opts.name ?? `User ${counter}` });
+  const res = await client.post("/auth/sign-up/email", { email, password: "correct horse battery", name: opts.name ?? `User ${counter}`, acceptedTerms: TERMS_VERSION });
   if (res.status !== 200) throw new Error(`sign-up failed ${res.status} ${JSON.stringify(res.data)}`);
   const id = res.data.user.id as string;
   if (opts.verified !== false) t.sqlite.run("UPDATE user SET email_verified = 1 WHERE id = ?", [id]);

@@ -16,13 +16,17 @@ import {
   userInterests,
 } from "@tm/db";
 import {
+  EXPORT_LINK_HOURS,
   PAGE_SIZE,
   VERIFY_META_NAME,
+  accountDeleteSchema,
+  contestSchema,
   domainCandidates,
   decodeCursor,
   domainCreateSchema,
   domainVerifySchema,
   encodeCursor,
+  firstTouchSchema,
   interestsSchema,
   newId,
   nowSec,
@@ -30,6 +34,8 @@ import {
   pushSubscriptionSchema,
   randomToken,
   settingsSchema,
+  TERMS_VERSION,
+  termsAcceptSchema,
   verificationInstructions,
   type ClaimedPerkDTO,
   type DomainDTO,
@@ -39,16 +45,21 @@ import {
   type ProductCardDTO,
 } from "@tm/shared";
 import { z } from "zod";
+import { withAuthHint } from "../app";
 import type { AppEnv, SessionUser } from "../env";
+import { EXPORT_TOKEN_RE, buildExport, deleteAccount, exportPrefix, storeExport } from "../lib/account";
+import { contestDecision, decisionsFor } from "../lib/moderation";
 import { lookupTxt } from "../lib/dns";
 import { ApiError, notFound } from "../lib/errors";
 import { FetchError, safeFetch } from "../lib/fetcher";
 import { extractMetadata } from "../lib/metadata";
 import { imageUrl, loadCards } from "../lib/products";
+import { trackSignal } from "../lib/signals";
 import { RESERVED_USERNAMES } from "../lib/username";
 import { body } from "../lib/validate";
 import { findLiveProduct } from "../lib/lookup";
-import { isMaker, requireUser, requireVerifiedUser } from "../middleware";
+import { isPrelaunch } from "../lib/prelaunch";
+import { isMaker, requireAccount, requireUser, requireVerifiedUser } from "../middleware";
 
 const app = new Hono<AppEnv>();
 
@@ -76,17 +87,19 @@ async function meDto(c: Context<AppEnv>, u: SessionUser): Promise<MeDTO> {
     role: u.role,
     digestFrequency: u.digestFrequency,
     onboarded: u.onboardedAt != null,
+    termsVersion: u.termsVersion,
     isMaker: u.role === "admin" || (await isMaker(db, u.id)),
     interests: interests.map((i) => i.slug),
     unreadNotifications: unread[0]?.n ?? 0,
     createdAt: Math.floor(new Date(u.createdAt).getTime() / 1000),
+    prelaunch: isPrelaunch(c.env),
   };
 }
 
 app.get("/me", async (c) => {
-  const u = c.get("user");
+  const u = c.get("user") ?? c.get("suspendedUser");
   if (!u) throw new ApiError("UNAUTHORIZED", "Not signed in.");
-  // Banned users still get their profile so the UI can explain the suspension.
+  // Suspended users still get their profile so the UI can send them to the suspension page.
   return c.json({ ...(await meDto(c, u)), banned: u.bannedAt != null });
 });
 
@@ -146,6 +159,101 @@ app.patch("/me/settings", async (c) => {
   return c.json({ ok: true });
 });
 
+/* Moderation decisions about the user (docs/LEGAL.md). Suspended accounts can use these too. */
+
+app.get("/me/decisions", async (c) => {
+  const u = requireAccount(c);
+  return c.json({ items: await decisionsFor(c.get("db"), u.id), suspended: u.bannedAt != null });
+});
+
+app.post("/me/decisions/:id/contest", async (c) => {
+  const u = requireAccount(c);
+  const input = await body(c, contestSchema);
+  const result = await contestDecision(c.get("db"), u.id, c.req.param("id"), input.body);
+  if (result === "not_found") throw notFound("Decision not found");
+  if (result === "closed") throw new ApiError("CONTEST_CLOSED", "This decision can't be contested: it was already contested, reversed, or the time to contest it has passed.");
+  return c.json({ ok: true, contestedAt: result.contestedAt }, 201);
+});
+
+/* Your data (docs/LEGAL.md): export and account deletion. */
+
+/** Builds the JSON export, stores it in R2 and returns a download link valid for EXPORT_LINK_HOURS. */
+app.post("/me/export", async (c) => {
+  const u = requireUser(c);
+  const data = await buildExport(c.get("db"), u.id, c.env.SITE_NAME);
+  const { token, expiresAt } = await storeExport(c.env, u.id, data);
+  return c.json({ url: `${c.env.API_ORIGIN.replace(/\/$/, "")}/me/export/${token}`, expiresAt }, 201);
+});
+
+/** Downloads an export. Only the account that made it can open the link. */
+app.get("/me/export/:token", async (c) => {
+  const u = requireUser(c);
+  const token = c.req.param("token");
+  const obj = EXPORT_TOKEN_RE.test(token) ? await c.env.IMAGES_BUCKET.get(`${exportPrefix(u.id)}${token}.json`) : null;
+  if (!obj || Date.now() - obj.uploaded.getTime() > EXPORT_LINK_HOURS * 3_600_000) {
+    throw notFound("This download link has expired. Export your data again from Settings.");
+  }
+  const date = obj.uploaded.toISOString().slice(0, 10);
+  const site = c.env.SITE_NAME.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  return new Response(obj.body, {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "content-disposition": `attachment; filename="${site}-data-${date}.json"`,
+      "cache-control": "private, no-store",
+    },
+  });
+});
+
+/** Deletes the account and signs this browser out. */
+app.delete("/me", async (c) => {
+  const u = requireUser(c);
+  await body(c, accountDeleteSchema);
+  await deleteAccount(c.env, c.get("db"), u.id);
+  // The session row is already gone; this only clears the cookies.
+  const signOut = await c
+    .get("auth")
+    .api.signOut({ headers: c.req.raw.headers, asResponse: true })
+    .catch(() => null);
+  const res = c.json({ ok: true });
+  for (const cookie of signOut?.headers.getSetCookie() ?? []) res.headers.append("Set-Cookie", cookie);
+  return withAuthHint(res, c.env);
+});
+
+/* Terms (docs/LEGAL.md): accepted in onboarding after Google sign-up, or via the "Terms updated" notice. */
+
+app.post("/me/terms", async (c) => {
+  const u = requireUser(c);
+  const input = await body(c, termsAcceptSchema);
+  if (input.version !== TERMS_VERSION) throw new ApiError("VALIDATION", "These Terms have changed. Reload the page and try again.");
+  await c.get("db").update(user).set({ termsVersion: TERMS_VERSION, termsAcceptedAt: nowSec() }).where(eq(user.id, u.id));
+  return c.json({ ok: true });
+});
+
+/* First-touch source (docs/PRELAUNCH.md): sent once from onboarding, right after sign-up. */
+
+/** Only accounts this young can record it, so it stays the source of the sign-up. */
+const FIRST_TOUCH_WINDOW_SEC = 24 * 3600;
+
+app.post("/me/first-touch", async (c) => {
+  const u = requireUser(c);
+  const input = await body(c, firstTouchSchema);
+  const res = await c
+    .get("db")
+    .update(user)
+    .set({ utmSource: input.source ?? null, utmCampaign: input.campaign ?? null, utmContent: input.content ?? null })
+    .where(
+      and(
+        eq(user.id, u.id),
+        isNull(user.utmSource),
+        isNull(user.utmCampaign),
+        isNull(user.utmContent),
+        sql`${user.createdAt} > ${nowSec() - FIRST_TOUCH_WINDOW_SEC}`,
+      ),
+    )
+    .run();
+  return c.json({ saved: (res.meta?.changes ?? 0) > 0 });
+});
+
 /* Saves */
 
 app.get("/me/saves", async (c) => {
@@ -188,6 +296,7 @@ app.put("/me/saves/:productId", async (c) => {
       .update(products)
       .set({ saveCount: sql`${products.saveCount} + 1` })
       .where(eq(products.id, product.id));
+    trackSignal(c, product, "save");
   }
   return c.json({ saved: true, saveCount: product.saveCount + inserted.length });
 });

@@ -1,0 +1,13 @@
+---
+import { en } from "@tm/shared/copy";
+import Base from "../layouts/Base.astro";
+
+Astro.cache.set({ maxAge: 3600, swr: 3600 });
+---
+
+<Base title={en.ranking.title} description={en.feed.tabsNote}>
+  <div class="container container-narrow page">
+    <h1 class="t-32">{en.ranking.title}</h1>
+    <p class="t-17" style="margin-top: 20px">{en.ranking.body}</p>
+  </div>
+</Base>

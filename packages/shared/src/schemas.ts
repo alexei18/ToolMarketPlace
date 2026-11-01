@@ -10,7 +10,22 @@ import {
   TITLE_MAX,
 } from "./limits";
 
-import { DOMAIN_METHODS, DIGEST_FREQUENCIES, FEEDBACK_MODES, FEEDBACK_TYPES, PERK_TYPES, PRICING, REPORT_REASONS, ROADMAP_STATUSES, STAGES } from "./enums";
+import {
+  CONTEST_OUTCOMES,
+  DOMAIN_METHODS,
+  DIGEST_FREQUENCIES,
+  FEEDBACK_MODES,
+  FEEDBACK_TYPES,
+  MEMBER_REPORT_REASONS,
+  PERK_TYPES,
+  PLATFORMS,
+  PRICING,
+  PUBLIC_REPORT_REASONS,
+  RANK_SORTS,
+  ROADMAP_STATUSES,
+  STAGES,
+} from "./enums";
+import { MODERATION_RULE_IDS } from "./moderation";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const slug = z.string().trim().min(1).max(80).regex(/^[a-z0-9-]+$/);
@@ -38,6 +53,19 @@ export const settingsSchema = z
   })
   .partial();
 
+/** Accepting the Terms: the version shown to the user (TERMS_VERSION). */
+export const termsAcceptSchema = z.object({ version: z.string().max(20) });
+
+/** First-touch source (docs/PRELAUNCH.md): the utm_* params of the link that brought a new account. */
+const utmValue = z.string().trim().min(1).max(100).nullish();
+export const firstTouchSchema = z
+  .object({ source: utmValue, campaign: utmValue, content: utmValue })
+  .refine((v) => v.source || v.campaign || v.content, { message: "Send at least one utm_* value." });
+
+/** Deleting the account: the user types DELETE to confirm. */
+export const ACCOUNT_DELETE_CONFIRM = "DELETE";
+export const accountDeleteSchema = z.object({ confirm: z.literal(ACCOUNT_DELETE_CONFIRM) });
+
 export const pushSubscriptionSchema = z.object({
   endpoint: z.url().max(2048),
   keys: z.object({ p256dh: z.string().min(1).max(256), auth: z.string().min(1).max(128) }),
@@ -63,6 +91,12 @@ const productFields = {
   feedbackMode: z.enum(FEEDBACK_MODES),
   roadmapEnabled: z.boolean(),
   images: z.array(productImageInput).max(6),
+  hasAi: z.boolean(),
+  platforms: z
+    .array(z.enum(PLATFORMS))
+    .min(1, "Pick at least one platform")
+    .max(PLATFORMS.length)
+    .refine((p) => new Set(p).size === p.length, "Each platform once"),
 };
 
 export const productCreateSchema = z.object({
@@ -71,6 +105,8 @@ export const productCreateSchema = z.object({
   feedbackMode: productFields.feedbackMode.default("off"),
   roadmapEnabled: productFields.roadmapEnabled.default(false),
   images: productFields.images.default([]),
+  hasAi: productFields.hasAi.default(false),
+  platforms: productFields.platforms.default(["web"]),
 });
 
 /** Every field optional and without defaults, so a PATCH only touches what it sends. */
@@ -123,8 +159,18 @@ export const roadmapItemUpdateSchema = z.object({
 });
 
 export const reportCreateSchema = z.object({
-  reason: z.enum(REPORT_REASONS),
+  reason: z.enum(MEMBER_REPORT_REASONS),
   note: z.string().trim().max(500).optional().nullable(),
+  ...turnstileField,
+});
+
+/** The public /report form, usable without an account (docs/LEGAL.md). */
+export const publicReportSchema = z.object({
+  url: z.string().trim().min(4).max(2048),
+  reason: z.enum(PUBLIC_REPORT_REASONS),
+  explanation: z.string().trim().min(20).max(2000),
+  email: z.union([z.email().trim().toLowerCase().max(254), z.literal("")]).optional().nullable(),
+  goodFaith: z.literal(true, { error: "Confirm that your report is accurate and made in good faith." }),
   ...turnstileField,
 });
 
@@ -140,6 +186,19 @@ export const searchQuerySchema = z.object({
   cursor: z.string().max(200).optional(),
 });
 
+/** Feed, category and "all" lists: the view (Top this week, Trending, New) and the filters. */
+export const listQuerySchema = z.object({
+  sort: z.enum(RANK_SORTS).default("top"),
+  ai: z.stringbool().optional(),
+  pricing: z.enum(PRICING).optional(),
+  stage: z.enum(STAGES).optional(),
+  perk: z.stringbool().optional(),
+  platform: z.enum(PLATFORMS).optional(),
+  cursor: z.string().max(200).optional(),
+});
+
+export const staffPickSchema = z.object({ note: z.string().trim().min(1).max(140) });
+
 export const categoryUpsertSchema = z.object({
   slug,
   name: text(40),
@@ -152,4 +211,9 @@ export const blockedDomainSchema = z.object({
   reason: z.string().trim().max(200).optional().nullable(),
 });
 
-export const banSchema = z.object({ reason: z.string().trim().max(200).optional() });
+/** What an admin states when removing a product or suspending an account (the statement of reasons). */
+export const decisionInputSchema = z.object({ rule: z.enum(MODERATION_RULE_IDS), facts: z.string().trim().min(10).max(2000) });
+export const banSchema = decisionInputSchema;
+
+export const contestSchema = z.object({ body: z.string().trim().min(20).max(2000) });
+export const contestResolveSchema = z.object({ outcome: z.enum(CONTEST_OUTCOMES), response: z.string().trim().min(10).max(2000) });

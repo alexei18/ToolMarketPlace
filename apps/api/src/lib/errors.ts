@@ -21,8 +21,10 @@ const STATUS: Partial<Record<ErrorCode, ContentfulStatusCode>> = {
   DOMAIN_TAKEN: 409,
   ALREADY_CLAIMED: 409,
   ALREADY_REPORTED: 409,
+  CONTEST_CLOSED: 409,
   USERNAME_TAKEN: 409,
   PERK_UNAVAILABLE: 410,
+  GONE: 410,
   VERIFICATION_FAILED: 422,
   FETCH_FAILED: 422,
   RATE_LIMITED: 429,
@@ -34,7 +36,7 @@ export class ApiError extends Error {
   constructor(
     public code: ErrorCode,
     message: string,
-    public extra: { existing?: string; fields?: Record<string, string[]> } = {},
+    public extra: { existing?: string; fields?: Record<string, string[]>; category?: { slug: string; name: string } } = {},
   ) {
     super(message);
   }

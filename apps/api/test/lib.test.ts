@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { imageSize, sniffImageType } from "../src/lib/images";
 import { extractMetadata, splitTitle } from "../src/lib/metadata";
+import { pushMessage } from "../src/lib/notify";
 import { b64uDecode, b64uEncode, encryptPayload, generateVapidKeys, vapidHeader } from "../src/lib/webpush";
 import { ftsQuery } from "../src/routes/public";
 import { usageAlerts } from "../src/jobs/maintenance";
+import type { Env } from "../src/env";
 import { pngBytes } from "./helpers";
 
 const enc = new TextEncoder();
@@ -110,5 +112,15 @@ describe("usage alerts", () => {
     const alerts = usageAlerts({ workersRequests: 75_000, d1RowsRead: 1000, d1RowsWritten: 90_000, r2ClassA: 0, r2ClassB: 0 });
     expect(alerts).toHaveLength(2);
     expect(alerts[0]).toContain("workersRequests");
+  });
+});
+
+describe("notifications", () => {
+  test("launch day push uses the copy title and links to the feed", () => {
+    const msg = pushMessage({ WEB_ORIGIN: "https://example.com/" } as Env, {
+      kind: "launch",
+      products: [1, 2, 3, 4].map((i) => ({ slug: `p${i}`, title: `P${i}`, tagline: "t" })),
+    });
+    expect(msg).toEqual({ title: "We're live. Here's what's worth trying in your categories.", body: "P1 · P2 · P3", url: "https://example.com/feed" });
   });
 });

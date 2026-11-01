@@ -3,7 +3,7 @@ import Base from "./Base.astro";
 
 interface Props {
   title: string;
-  active: "products" | "new" | "domains" | "edit";
+  active: "products" | "new" | "domains" | "edit" | "decisions";
   wide?: boolean;
 }
 const { title, active } = Astro.props;
@@ -17,6 +17,7 @@ const { title, active } = Astro.props;
         <a href="/dashboard" aria-current={active === "products" || active === "edit" ? "page" : undefined}>Your products</a>
         <a href="/dashboard/new" aria-current={active === "new" ? "page" : undefined}>Publish a product</a>
         <a href="/dashboard/domains" aria-current={active === "domains" ? "page" : undefined}>Domains</a>
+        <a href="/dashboard/decisions" aria-current={active === "decisions" ? "page" : undefined}>Decisions</a>
       </nav>
     </aside>
     <div class="dash-main">

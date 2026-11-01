@@ -8,6 +8,10 @@ import { ROADMAP_LABEL } from "../../../lib/format";
 
 const slug = Astro.params.slug!;
 const pRes = await apiCall<ProductDetailDTO>(`/products/${encodeURIComponent(slug)}`);
+if (!pRes.ok && pRes.status === 410) {
+  Astro.locals.goneCategory = pRes.error.category;
+  return Astro.rewrite("/gone");
+}
 if (!pRes.ok) return Astro.rewrite(pRes.status === 404 ? "/404" : "/unavailable");
 const p = pRes.data;
 if (!p.roadmapEnabled) return Astro.redirect(`/p/${p.slug}`, 302);

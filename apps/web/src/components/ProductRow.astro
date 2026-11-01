@@ -1,6 +1,8 @@
 ---
 import type { ProductCardDTO } from "@tm/shared";
+import { cardBadges } from "../lib/badges";
 import { PRICING_LABEL, STAGE_LABEL, timeAgo } from "../lib/format";
+import Badges from "./Badges.astro";
 import Icon from "./Icon.astro";
 import ProductImage from "./ProductImage.astro";
 import SaveButton from "./SaveButton.astro";
@@ -11,6 +13,7 @@ interface Props {
   eager?: boolean;
 }
 const { product: p, rank, eager } = Astro.props;
+const badges = cardBadges(p);
 ---
 
 <li class="product-row">
@@ -21,6 +24,7 @@ const { product: p, rank, eager } = Astro.props;
     <h3 class="title"><a href={`/p/${p.slug}`}>{p.title}</a></h3>
     <p class="tagline">{p.tagline}</p>
     <div class="meta">
+      <Badges badges={badges} />
       {
         p.categories.length > 0 && (
           <span>
@@ -33,7 +37,7 @@ const { product: p, rank, eager } = Astro.props;
           </span>
         )
       }
-      <span>{STAGE_LABEL[p.stage]}</span>
+      {!badges.some((b) => b.kind === "preLaunch") && <span>{STAGE_LABEL[p.stage]}</span>}
       <span>{PRICING_LABEL[p.pricing]}</span>
       <time datetime={new Date(p.publishedAt * 1000).toISOString()}>{timeAgo(p.publishedAt)}</time>
       {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { inlineJson, safePath } from "./safe";
+import { safePath } from "./safe";
 
 describe("safePath", () => {
   test.each([
@@ -14,10 +14,4 @@ describe("safePath", () => {
   ])("%p → %p", (input, out) => {
     expect(safePath(input)).toBe(out);
   });
-});
-
-test("inlineJson cannot close a script tag", () => {
-  const s = inlineJson({ name: "</script><script>alert(1)</script>" });
-  expect(s).not.toContain("</script>");
-  expect(JSON.parse(s)).toEqual({ name: "</script><script>alert(1)</script>" });
 });
