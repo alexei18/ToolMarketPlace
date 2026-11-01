@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { WORDMARK_SVG } from "../src/lib/brand";
 import { imageSize, sniffImageType } from "../src/lib/images";
 import { extractMetadata, splitTitle } from "../src/lib/metadata";
 import { pushMessage } from "../src/lib/notify";
+import { ogHtml } from "../src/lib/og";
 import { b64uDecode, b64uEncode, encryptPayload, generateVapidKeys, vapidHeader } from "../src/lib/webpush";
 import { ftsQuery } from "../src/routes/public";
 import { usageAlerts } from "../src/jobs/maintenance";
@@ -122,5 +126,18 @@ describe("notifications", () => {
       products: [1, 2, 3, 4].map((i) => ({ slug: `p${i}`, title: `P${i}`, tagline: "t" })),
     });
     expect(msg).toEqual({ title: "We're live. Here's what's worth trying in your categories.", body: "P1 · P2 · P3", url: "https://example.com/feed" });
+  });
+});
+
+describe("brand", () => {
+  test("the embedded wordmark is the brand file, unchanged", () => {
+    const file = readFileSync(join(import.meta.dir, "../../web/public/brand/tryworthy-wordmark.svg"), "utf8");
+    expect(WORDMARK_SVG).toBe(file);
+  });
+
+  test("the product OG card shows the wordmark", () => {
+    const html = ogHtml({ title: "Ledgerly", image: null });
+    expect(html).toContain(`src="data:image/svg+xml,${encodeURIComponent(WORDMARK_SVG)}"`);
+    expect(html).toContain('alt="Tryworthy"');
   });
 });
