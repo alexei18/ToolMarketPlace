@@ -47,7 +47,7 @@ const graph = jsonLd ?? (noindex ? null : webPageJsonLd({ name: title ?? fullTit
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <Seo title={fullTitle} description={metaDescription} canonical={canonicalUrl} image={ogImage} imageWidth={ogSize?.width} imageHeight={ogSize?.height} noindex={noindex} siteName={siteName} />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#111111" />
     <meta name="api-origin" content={apiUrl} />
     {turnstileSiteKey && <meta name="turnstile-site-key" content={turnstileSiteKey} />}
     <script is:inline>
@@ -74,7 +74,9 @@ const graph = jsonLd ?? (noindex ? null : webPageJsonLd({ name: title ?? fullTit
       );
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preconnect" href={apiUrl} crossorigin="use-credentials" />
     {graph && <script type="application/ld+json" set:html={serializeJsonLd(graph)} />}
