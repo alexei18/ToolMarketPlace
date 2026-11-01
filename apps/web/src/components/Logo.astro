@@ -1,11 +1,15 @@
 ---
+/**
+ * The Tryworthy wordmark: the final file from brand/tryworthy-logo, used as it is.
+ * Keep `height` at 20px or more (below that use /brand/tryworthy-mark.svg) and leave clear space of
+ * at least the height of the "o" (about 0.54 × height) on every side.
+ */
 interface Props {
-  size?: number;
+  height?: number;
 }
-const { size = 22 } = Astro.props;
+const { height = 24 } = Astro.props;
+// Aspect ratio from the SVG viewBox (9206.9 × 2112.9).
+const width = Math.round((height * 9206.9) / 2112.9);
 ---
 
-<svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-  <rect width="24" height="24" rx="6" fill="#111111"></rect>
-  <path d="M9.5 4.5h4v4h4V12h-4v3.25c0 .55.45 1 1 1h3v3.25h-3.5a4.5 4.5 0 0 1-4.5-4.5V12h-3V8.5h3z" fill="#ffffff"></path>
-</svg>
+<img class="logo" src="/brand/tryworthy-wordmark.svg" alt="Tryworthy" width={width} height={height} />

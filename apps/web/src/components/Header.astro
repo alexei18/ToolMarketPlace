@@ -14,7 +14,7 @@ const path = Astro.url.pathname;
 
 <header class="site-header">
   <div class="container bar">
-    <a href="/" class="wordmark" aria-label={`${siteName} home`}><Logo /><span>{siteName}</span></a>
+    <a href="/" class="wordmark" aria-label={`${siteName} home`}><Logo /></a>
     <nav class="site-nav" aria-label="Main">
       <a href="/top" aria-current={path === "/top" ? "page" : undefined}>{en.feed.tabs.top}</a>
       <a href="/trending" aria-current={path === "/trending" ? "page" : undefined}>{en.feed.tabs.trending}</a>

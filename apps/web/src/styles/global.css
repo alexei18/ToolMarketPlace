@@ -355,22 +355,13 @@ textarea {
 
 .wordmark {
   display: inline-flex;
+  flex: none;
   align-items: center;
   min-height: 40px;
-  gap: 10px;
-  font-weight: 600;
-  font-size: var(--fs-17);
-  letter-spacing: -0.02em;
-  white-space: nowrap;
 }
 
-.wordmark:hover {
-  text-decoration: none;
-}
-
-.wordmark svg {
-  width: 22px;
-  height: 22px;
+.logo {
+  display: block;
 }
 
 .site-nav {
