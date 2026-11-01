@@ -44,11 +44,10 @@ const jsonLd = homeJsonLd({ name: siteName, url: siteUrl, logo: `${siteUrl}/bran
           <h1>{h1}</h1>
           <p class="t-17 muted lede">{hero.subtitle}</p>
           <div class="row row-wrap hero-actions">
-            <a class="btn btn-primary btn-lg" href="/signup">{prelaunch ? en.prelaunch.ctaPrimary : hero.ctaPrimary}</a>
+            <a class="btn btn-primary btn-lg" href="/signup">{hero.ctaPrimary}</a>
             {top && <a class="btn btn-secondary btn-lg" href="#top">{hero.ctaSecondary}</a>}
           </div>
           <p class="t-13 muted trust">{hero.trustLine}</p>
-          {home.reservedCount && <p class="t-13 reserved">{en.prelaunch.reservedCount(home.reservedCount)}</p>}
         </section>
 
         <section class="container section problem">
@@ -181,10 +180,6 @@ const jsonLd = homeJsonLd({ name: siteName, url: siteUrl, logo: `${siteUrl}/bran
   }
   .trust {
     margin-top: 20px;
-  }
-  .reserved {
-    margin-top: 4px;
-    font-weight: 600;
   }
 
   .problem {

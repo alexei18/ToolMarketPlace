@@ -43,10 +43,9 @@ export const en = {
     },
   },
 
-  /** Variants shown while PRELAUNCH is on. */
+  /** Variants shown in pre-launch mode (while WAITLIST is on). */
   prelaunch: {
     label: "Launching soon",
-    ctaPrimary: "Reserve your feed — free",
     makers: {
       title: "Launching something? Join as a founding maker — your product goes into the launch-day digest.",
       cta: "Submit your product",
@@ -54,8 +53,122 @@ export const en = {
     onboardingDone: "You're in. On launch day you'll get this week's top picks in your categories.",
     /** docs/PRELAUNCH.md */
     feedOpensOnLaunchDay: "Your feed opens on launch day",
-    /** docs/PRELAUNCH.md. Only rendered above the configured threshold, with `count` read from the DB. */
-    reservedCount: (count: number) => `${count} people have reserved their feed`,
+  },
+
+  /**
+   * The waitlist (docs/COPY.md "Waitlist", approved 2026-11-01). Dates arrive formatted
+   * ("December 8, 2026") or null while MAKER_ACCESS_DATE / LAUNCH_DATE are not set.
+   */
+  waitlist: {
+    roles: { explorer: "I want to discover apps", maker: "I build apps" },
+    roleLine: {
+      explorer: "Be first to find the new apps worth trying.",
+      maker: "Launch where people actually try new apps. Makers get in a week early.",
+    },
+    email: "Email",
+    emailPlaceholder: "you@example.com",
+    submit: { explorer: "Join the waitlist", maker: "Get early access" },
+    categories: { label: "Pick your categories (optional)", hint: "Up to 5. Your launch-day email starts with these." },
+    productUrl: { label: "Your product's link (optional)", placeholder: "https://yourapp.com" },
+    productCategory: "Category (optional)",
+    foundVia: {
+      label: "Where did you find us? (optional)",
+      options: { tiktok: "TikTok", instagram: "Instagram", x: "X", friend: "A friend", search: "Search", other: "Other" },
+    },
+    consent: "We'll only email you about the waitlist and launch.",
+    privacyLink: "Privacy Policy",
+    /** Only rendered from the WAITLIST_COUNT_MIN limit, with `count` read from the DB. */
+    waitingCount: (count: number) => `${count} people are waiting`,
+    sent: {
+      title: "Check your inbox",
+      text: (email: string) => `We're sending a confirmation link to ${email}. Open it to join the waitlist.`,
+      spam: "Not there? Check your spam or Promotions folder.",
+      restart: "Wrong email? Start again",
+    },
+    errors: {
+      email: "Enter a valid email address.",
+      rateLimited: "Too many attempts. Wait a minute and try again.",
+      generic: "Something went wrong. Try again.",
+    },
+    blocks: {
+      ranking: { title: "Ranked by real people", text: "Top this week and Trending, built from saves, tries and feedback — not paid votes.", link: "How ranking works" },
+      firstToTry: { title: "First to try", text: "Test apps before launch and claim perks makers give only here." },
+      makers: {
+        title: "Makers get in a week early",
+        text: "Launching something? Get access 7 days before launch: verify your domain and publish your product, so it's live the moment we open.",
+      },
+    },
+    faq: {
+      title: "FAQ",
+      what: {
+        q: (siteName: string) => `What is ${siteName}?`,
+        a: "The new apps worth trying — before everyone else, with perks you can't get anywhere else. We rank every new launch by what real people save, try and talk about.",
+      },
+      when: { q: "When do you launch?", a: (date: string | null) => (date ? `On ${date}. We'll email you that day.` : "Soon. We'll email you on launch day.") },
+      free: {
+        q: "Is it free?",
+        a: (siteName: string) => `Yes. Discovering apps on ${siteName} is free, and listing your product is free.`,
+      },
+      pay: { q: "Can makers pay to rank higher?", a: "No. Nobody can pay to rank higher, and makers' own activity doesn't count." },
+      makers: {
+        q: "I build apps. What do I get?",
+        a: "Access 7 days before launch to verify your domain and publish your product. It's live on launch day, and the top products in each category are featured in our launch-day email.",
+      },
+      emails: {
+        q: "What will you email me?",
+        a: "A confirmation link now, and one invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click.",
+      },
+      data: { q: "What do you do with my email?", a: "We use it only for these emails and never sell it.", link: "See our Privacy Policy." },
+    },
+    confirmed: {
+      title: "You're on the list.",
+      explorer: (date: string | null) => (date ? `On launch day (${date}) we'll email you the top picks in your categories.` : "On launch day we'll email you the top picks in your categories."),
+      explorerNoCategories: (date: string | null) => (date ? `On launch day (${date}) we'll email you this week's top new apps.` : "On launch day we'll email you this week's top new apps."),
+      maker: (date: string | null) =>
+        `${date ? `You get access on ${date}.` : "You get access a week before launch."} We'll email you a link to create your account, verify your domain and publish your product.`,
+      shareTitle: "Share your link",
+      shareText: "Friends who join through it are counted here.",
+      referrals: (n: number) => (n === 1 ? "1 person joined through your link" : `${n} people joined through your link`),
+      copy: "Copy link",
+      copied: "Copied",
+      invalid: "This link has expired or doesn't work. Enter your email again and we'll send a new one.",
+      back: "Back to the waitlist",
+    },
+    unsubscribe: {
+      working: "Unsubscribing…",
+      button: "Unsubscribe",
+      done: "You're unsubscribed. We won't email you about the waitlist again.",
+      rejoin: "Changed your mind? Join again",
+    },
+    emails: {
+      footer: (siteName: string) => `You're getting this because you joined the ${siteName} waitlist.`,
+      unsubscribe: "Unsubscribe",
+      confirm: {
+        subject: (siteName: string) => `Confirm your spot on the ${siteName} waitlist`,
+        explorer: "Confirm your email to join the waitlist. On launch day you'll get the new apps worth trying in your categories.",
+        maker: "Confirm your email to join the waitlist. Makers get access a week before launch.",
+        expiry: "The link works for 48 hours. If you didn't sign up, ignore this email.",
+        button: "Confirm my email",
+      },
+      makerInvite: {
+        subject: (siteName: string) => `Your early access to ${siteName}`,
+        intro: (launchDate: string | null) =>
+          `You're in a week before everyone else. Create your account, verify your domain and publish your product before launch day${launchDate ? ` (${launchDate})` : ""}.`,
+        live: "Products published before launch are live on day one, and the top ones in each category are featured in our launch-day email.",
+        expiry: "The link works for 30 days.",
+        button: "Create my account",
+      },
+      launch: {
+        /** The launch-day notification line (COPY.md "Notificări digest"). */
+        subject: "We're live. Here's what's worth trying in your categories.",
+        subjectNoCategories: "We're live. Here's what's worth trying this week.",
+        /** "[Product] — [tagline]" */
+        item: (title: string, tagline: string) => `${title} — ${tagline}`,
+        button: "Build my feed — free",
+      },
+    },
+    accountsClosed: "Accounts open on launch day. Join the waitlist to get an invite.",
+    login: { before: "New here? ", link: "Join the waitlist" },
   },
 
   /** Feed and category pages: tabs, badges and filters. */
@@ -212,6 +325,10 @@ export const en = {
       /** Suffix after the maker's name; the full title is "<name> — Products on <site>". */
       titleSuffix: (siteName: string) => ` — Products on ${siteName}`,
       description: (name: string, siteName: string) => `New apps built by ${name}, verified on ${siteName}.`,
+    },
+    /** The homepage while the waitlist runs: the homepage title, the description adapted (docs/COPY.md "Waitlist"). */
+    waitlist: {
+      description: "Find the new apps worth trying before everyone else. Join the free waitlist for early access and perks you can't get anywhere else.",
     },
     perks: {
       title: "App Deals, Free Trials and Coupons",
