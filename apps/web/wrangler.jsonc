@@ -6,7 +6,7 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "binding": "ASSETS", "directory": "./dist" },
   "observability": { "enabled": true },
-  // Production: "routes": [{ "pattern": "example.com", "custom_domain": true }],
+  // Local dev uses the top-level vars; `bun run deploy` builds with CLOUDFLARE_ENV=production (env.production below).
   "vars": {
     "SITE_NAME": "Tryworthy",
     "SITE_URL": "http://localhost:4321",
@@ -19,7 +19,25 @@
     "LEGAL_DRAFT": "true"
   },
   // Server-side calls to the API go through a service binding (no public round trip, no extra request).
-  "services": [{ "binding": "API", "service": "toolmarket-api" }]
+  "services": [{ "binding": "API", "service": "toolmarket-api" }],
   // Secret: INTERNAL_SECRET (same value as the API worker) protects /internal/purge and marks
   // server-side API calls.
+  "env": {
+    "production": {
+      "name": "toolmarket-web",
+      "routes": [{ "pattern": "tryworthy.app", "custom_domain": true }],
+      // Vars and bindings are not inherited from the top level, so they are repeated here.
+      "vars": {
+        "SITE_NAME": "Tryworthy",
+        // The canonical origin: canonical tags, sitemap, robots.txt, Open Graph and JSON-LD URLs.
+        "SITE_URL": "https://tryworthy.app",
+        "PUBLIC_API_URL": "https://api.tryworthy.app",
+        // Fill in before launch.
+        "TURNSTILE_SITE_KEY": "",
+        "GOOGLE_ENABLED": "false",
+        "LEGAL_DRAFT": "true"
+      },
+      "services": [{ "binding": "API", "service": "toolmarket-api" }]
+    }
+  }
 }

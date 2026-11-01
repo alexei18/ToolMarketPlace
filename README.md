@@ -105,14 +105,14 @@ The API tests run the real Hono app and Better Auth against an in-memory SQLite 
    bunx wrangler d1 create toolmarket
    bunx wrangler r2 bucket create toolmarket-images
    ```
-2. **Domains.** Add routes: the site worker on `example.com`, the API on `api.example.com`, and point a custom domain such as `img.example.com` at the R2 bucket.
-3. **Vars.** In `apps/api/wrangler.jsonc` set `WEB_ORIGIN`, `API_ORIGIN`, `IMAGES_BASE_URL=https://img.example.com`, `COOKIE_DOMAIN=example.com`, `ADMIN_EMAILS`, `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` and `EMAIL_FROM`. In `apps/web/wrangler.jsonc` set `SITE_URL`, `PUBLIC_API_URL`, `TURNSTILE_SITE_KEY`, `GOOGLE_ENABLED=true`, and `site` / `PUBLIC_SITE_URL` for the build.
+2. **Domains.** Production settings live in the `env.production` block of each `wrangler.jsonc` (local dev uses the top-level vars). The site worker is routed to `tryworthy.app` and the API to `api.tryworthy.app`. Optionally point a custom domain such as `img.tryworthy.app` at the R2 bucket and set `IMAGES_BASE_URL` to it.
+3. **Vars.** The canonical origin is `SITE_URL` (site) and `WEB_ORIGIN` (API), both `https://tryworthy.app`; every absolute URL is built from them. Before launch, fill in `ADMIN_EMAILS` and `VAPID_PUBLIC_KEY` in `apps/api/wrangler.jsonc`, and `TURNSTILE_SITE_KEY` and `GOOGLE_ENABLED=true` in `apps/web/wrangler.jsonc`.
 4. **Secrets.**
    - API: `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TURNSTILE_SECRET_KEY`, `RESEND_API_KEY`, `VAPID_PRIVATE_KEY`, `INTERNAL_SECRET`, and optionally `CF_ACCOUNT_ID` + `CF_API_TOKEN` (screenshots, usage alerts).
    - Site: `INTERNAL_SECRET` (same value as the API).
-   - Set each with `bunx wrangler secret put NAME`.
-5. **Google OAuth.** Add the redirect URI `https://api.example.com/auth/callback/google`.
-6. **Migrate and deploy.** Run `bun run db:migrate:remote`, then `bun run deploy` (API first, because the site binds to it). Optionally add `"services": [{ "binding": "WEB", "service": "toolmarket-web" }]` to the API config afterwards so cache purges use the binding.
+   - Set each with `bunx wrangler secret put NAME --env production`.
+5. **Google OAuth.** Add the redirect URI `https://api.tryworthy.app/auth/callback/google`.
+6. **Migrate and deploy.** Run `bun run db:migrate:remote`, then `bun run deploy` (API first, because the site binds to it). Both use the production environment (the site is built with `CLOUDFLARE_ENV=production`). Optionally add `"services": [{ "binding": "WEB", "service": "toolmarket-web" }]` to the API's `env.production` afterwards so cache purges use the binding.
 
 ### Legal pages before launch
 
