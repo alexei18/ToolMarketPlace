@@ -55,7 +55,7 @@ describe("templates", () => {
       },
       "Tryworthy",
     );
-    expect(seo.title).toBe("Ledgerly: Invoices that chase late… · Tryworthy");
+    expect(seo.title).toBe("Ledgerly: Invoices that chase late payments… · Tryworthy");
     expect(seo.description.length).toBeLessThanOrEqual(DESCRIPTION_MAX);
     expect(seo.description).toStartWith("Ledgerly sends polite reminders");
     expect(seo.description).toEndWith("60 days free on Tryworthy.");
