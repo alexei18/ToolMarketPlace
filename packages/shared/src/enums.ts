@@ -24,6 +24,9 @@ export const DECISION_TARGETS = ["product", "account"] as const;
 export const DECISION_ACTIONS = ["hidden", "removed", "suspended"] as const;
 export const DECISION_TRIGGERS = ["reports", "admin", "suspension", "rejected_reports", "removed_products"] as const;
 export const CONTEST_OUTCOMES = ["upheld", "reversed"] as const;
+/** Waitlist (docs/tiktok-campaign.md): who signed up, and the optional "Where did you find us?" answer. */
+export const WAITLIST_ROLES = ["explorer", "maker"] as const;
+export const FOUND_VIA = ["tiktok", "instagram", "x", "friend", "search", "other"] as const;
 
 export type Stage = (typeof STAGES)[number];
 export type Pricing = (typeof PRICING)[number];
@@ -46,3 +49,5 @@ export type DecisionTarget = (typeof DECISION_TARGETS)[number];
 export type DecisionAction = (typeof DECISION_ACTIONS)[number];
 export type DecisionTrigger = (typeof DECISION_TRIGGERS)[number];
 export type ContestOutcome = (typeof CONTEST_OUTCOMES)[number];
+export type WaitlistRole = (typeof WAITLIST_ROLES)[number];
+export type FoundVia = (typeof FOUND_VIA)[number];

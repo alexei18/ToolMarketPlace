@@ -8,6 +8,7 @@ import type {
   DigestFrequency,
   DomainMethod,
   FeedbackMode,
+  FoundVia,
   FeedbackType,
   NotificationType,
   PerkType,
@@ -21,6 +22,7 @@ import type {
   RoadmapStatus,
   SignalType,
   Stage,
+  WaitlistRole,
 } from "@tm/shared";
 
 /*
@@ -523,6 +525,69 @@ export const blockedDomains = sqliteTable("blocked_domains", {
   reason: text("reason"),
 });
 
+/**
+ * Email waitlist (docs/tiktok-campaign.md). A row is pending until the confirmation link is used;
+ * no IP address is stored. Every row is deleted 6 months after launch (packages/shared/src/retention.ts).
+ */
+export const waitlist = sqliteTable(
+  "waitlist",
+  {
+    id: text("id").primaryKey(),
+    /** Trimmed and lowercased by the API. */
+    email: text("email").notNull().unique(),
+    role: text("role").$type<WaitlistRole>().notNull(),
+    /** JSON array of category ids: up to 5 for explorers, at most 1 (their product's category) for makers. */
+    interests: text("interests").notNull().default("[]"),
+    productUrl: text("product_url"),
+    utmSource: text("utm_source"),
+    utmMedium: text("utm_medium"),
+    utmCampaign: text("utm_campaign"),
+    utmContent: text("utm_content"),
+    foundVia: text("found_via").$type<FoundVia>(),
+    /** Personal share code: /?ref=CODE */
+    refCode: text("ref_code").notNull().unique(),
+    /** The waitlist row whose share link brought this person. */
+    referredBy: text("referred_by").references((): AnySQLiteColumn => waitlist.id, { onDelete: "set null" }),
+    confirmedAt: integer("confirmed_at"),
+    /** The confirmation email could not be sent yet (email quota or rate limit); the cron retries it. */
+    confirmationQueued: integer("confirmation_queued", { mode: "boolean" }).notNull().default(false),
+    /** When the last confirmation email actually went out; unconfirmed rows are deleted 7 days later. */
+    confirmationSentAt: integer("confirmation_sent_at"),
+    /** Last email that the provider refused for good (not a quota or rate limit), with its error. Cleared on the next success. */
+    emailFailedAt: integer("email_failed_at"),
+    emailError: text("email_error"),
+    /** Makers: the early-access invite. Explorers: the launch invite. */
+    invitedAt: integer("invited_at"),
+    unsubscribedAt: integer("unsubscribed_at"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    index("idx_waitlist_referred_by").on(t.referredBy).where(sql`${t.referredBy} IS NOT NULL`),
+    index("idx_waitlist_confirmed").on(t.confirmedAt).where(sql`${t.confirmedAt} IS NOT NULL`),
+    index("idx_waitlist_pending").on(t.confirmationSentAt).where(sql`${t.confirmedAt} IS NULL`),
+    index("idx_waitlist_queued").on(t.createdAt).where(sql`${t.confirmationQueued} = 1`),
+    index("idx_waitlist_invites").on(t.role, t.invitedAt).where(sql`${t.confirmedAt} IS NOT NULL AND ${t.unsubscribedAt} IS NULL`),
+  ],
+);
+
+/** A single row (id 1), set by the admin "Invite makers" and "Launch" actions. */
+export const siteState = sqliteTable("site_state", {
+  id: integer("id").primaryKey(),
+  makersInvitedAt: integer("makers_invited_at"),
+  launchedAt: integer("launched_at"),
+});
+
+/** Emails per UTC day, counted where they are sent, so the admin can watch the email plan's daily and monthly limits. */
+export const emailUsage = sqliteTable("email_usage", {
+  /** UTC day number (unix seconds / 86400) */
+  day: integer("day").primaryKey(),
+  sent: integer("sent").notNull().default(0),
+  /** Refused because of the provider's quota or rate limit; retried later. */
+  deferred: integer("deferred").notNull().default(0),
+  /** Refused for good (bad address, rejected content…). */
+  failed: integer("failed").notNull().default(0),
+});
+
 export const schema = {
   user,
   session,
@@ -550,4 +615,7 @@ export const schema = {
   reviewCases,
   accountDeletions,
   blockedDomains,
+  waitlist,
+  siteState,
+  emailUsage,
 };
