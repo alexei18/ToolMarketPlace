@@ -1,10 +1,10 @@
 ---
 title: Maker Terms
-description: Extra rules for makers who publish on ToolMarket - domain verification, ownership, perks, limits and reasons for removal.
+description: Extra rules for makers who publish on Tryworthy - domain verification, ownership, perks, limits and reasons for removal.
 updated: 2026-10-30
 ---
 
-These terms apply when you publish a product on ToolMarket. They add to the [Terms of Service](/terms) and the [Community Guidelines](/guidelines).
+These terms apply when you publish a product on Tryworthy. They add to the [Terms of Service](/terms) and the [Community Guidelines](/guidelines).
 
 ## Verifying your domain
 
@@ -21,11 +21,11 @@ By publishing, you confirm that:
 
 ## Responsibility for your product
 
-You are responsible for your product, its website, its terms and how it handles its users' data. ToolMarket only lists it. If someone makes a claim against us because of your product or listing, you agree to help us deal with it and to cover the losses it causes us, as far as the law allows.
+You are responsible for your product, its website, its terms and how it handles its users' data. Tryworthy only lists it. If someone makes a claim against us because of your product or listing, you agree to help us deal with it and to cover the losses it causes us, as far as the law allows.
 
 ## Perks
 
-Perks are your offer to ToolMarket members; we are not a party to them.
+Perks are your offer to Tryworthy members; we are not a party to them.
 
 - Describe each perk clearly, with its conditions and expiry date.
 - Honour every perk that is claimed while it is active, including codes you uploaded.

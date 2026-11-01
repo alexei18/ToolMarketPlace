@@ -1,10 +1,10 @@
 ---
 title: Report content
-description: How to report illegal content, scams, malware or rule-breaking listings on ToolMarket, with or without an account.
+description: How to report illegal content, scams, malware or rule-breaking listings on Tryworthy, with or without an account.
 updated: 2026-10-30
 ---
 
-Anyone can report content on ToolMarket that they believe is illegal or breaks our [Community Guidelines](/guidelines), with or without an account.
+Anyone can report content on Tryworthy that they believe is illegal or breaks our [Community Guidelines](/guidelines), with or without an account.
 
 ## What you can report
 

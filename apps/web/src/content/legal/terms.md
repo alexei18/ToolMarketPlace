@@ -1,29 +1,29 @@
 ---
 title: Terms of Service
-description: The rules for using ToolMarket - accounts, content, perks, how ranking works, moderation and how to contest a removal.
+description: The rules for using Tryworthy - accounts, content, perks, how ranking works, moderation and how to contest a removal.
 updated: 2026-10-30
 ---
 
-These terms apply to everyone who uses ToolMarket. By creating an account or using the site, you agree to them. If you publish products, the [Maker Terms](/terms/makers) apply as well.
+These terms apply to everyone who uses Tryworthy. By creating an account or using the site, you agree to them. If you publish products, the [Maker Terms](/terms/makers) apply as well.
 
 ## Who we are
 
-ToolMarket is operated by [OPERATOR_NAME], [OPERATOR_ADDRESS] ("we", "us"). You can reach us at [CONTACT_EMAIL]. Our legal and contact details are on the [Legal](/legal) page.
+Tryworthy is operated by [OPERATOR_NAME], [OPERATOR_ADDRESS] ("we", "us"). You can reach us at [CONTACT_EMAIL]. Our legal and contact details are on the [Legal](/legal) page.
 
-## What ToolMarket is
+## What Tryworthy is
 
-ToolMarket is a place to discover new digital products the day they launch. Makers publish their products; members save them, claim perks, send feedback and vote on roadmaps. The service is free.
+Tryworthy is a place to discover new digital products the day they launch. Makers publish their products; members save them, claim perks, send feedback and vote on roadmaps. The service is free.
 
 ## Your account
 
 - You must be at least [MIN_AGE] years old to create an account.
 - Give accurate information and keep your password safe. You are responsible for what happens under your account.
 - One person, one account. Don't create accounts to boost products, get around limits or come back after a ban.
-- You can stop using ToolMarket at any time and delete your account in [Settings](/settings) (see the [Privacy Policy](/privacy#your-rights)).
+- You can stop using Tryworthy at any time and delete your account in [Settings](/settings) (see the [Privacy Policy](/privacy#your-rights)).
 
 ## Your content
 
-Feedback, roadmap ideas, profile details and product listings you post stay yours. You give us a worldwide, non-exclusive, royalty-free licence to host, show, copy and adapt them (for example resize images or quote a product in a digest) for as long as they are on ToolMarket and as needed to run, improve and promote the service. The licence ends when you delete the content or your account, except for copies we must keep by law and content others have already shared.
+Feedback, roadmap ideas, profile details and product listings you post stay yours. You give us a worldwide, non-exclusive, royalty-free licence to host, show, copy and adapt them (for example resize images or quote a product in a digest) for as long as they are on Tryworthy and as needed to run, improve and promote the service. The licence ends when you delete the content or your account, except for copies we must keep by law and content others have already shared.
 
 You must have the rights to what you post, and it must follow the [Community Guidelines](/guidelines).
 
@@ -62,18 +62,18 @@ If we hid or removed your content or suspended your account and you think we got
 
 ## Things we are not responsible for
 
-- Products listed on ToolMarket are made and sold by their makers. We don't test them and don't guarantee their quality, safety or legality. Your use of a product is between you and its maker.
+- Products listed on Tryworthy are made and sold by their makers. We don't test them and don't guarantee their quality, safety or legality. Your use of a product is between you and its maker.
 - Links take you to websites we don't control.
-- We provide ToolMarket "as is". We work to keep it available and accurate but can't promise it will always be.
+- We provide Tryworthy "as is". We work to keep it available and accurate but can't promise it will always be.
 - To the extent the law allows, we are not liable for indirect or consequential losses, or for losses caused by products, perks or content of other users. Nothing in these terms limits liability that can't be limited by law.
 
 ## Ending your account
 
-You can stop using ToolMarket at any time. We can suspend or close an account that breaks these terms, the Community Guidelines or the Maker Terms, or when the law requires it. We tell you why unless the law or safety reasons prevent it, and you can contest the decision as described above.
+You can stop using Tryworthy at any time. We can suspend or close an account that breaks these terms, the Community Guidelines or the Maker Terms, or when the law requires it. We tell you why unless the law or safety reasons prevent it, and you can contest the decision as described above.
 
 ## Changes to these terms
 
-We may change these terms when the service or the law changes. We update the date at the top and tell signed-in users on the site. If you keep using ToolMarket after a change applies, the new terms apply to you.
+We may change these terms when the service or the law changes. We update the date at the top and tell signed-in users on the site. If you keep using Tryworthy after a change applies, the new terms apply to you.
 
 - **30 October 2026:** first version.
 - **30 October 2026, update:** you can contest a decision from your dashboard or, if your account is suspended, from the page you see when you sign in. A person reviews every contest.

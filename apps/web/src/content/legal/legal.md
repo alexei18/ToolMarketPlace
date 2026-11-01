@@ -1,12 +1,12 @@
 ---
 title: Legal and contact
-description: Who operates ToolMarket, how to contact us, our points of contact for privacy and the Digital Services Act, and all legal pages.
+description: Who operates Tryworthy, how to contact us, our points of contact for privacy and the Digital Services Act, and all legal pages.
 updated: 2026-10-30
 ---
 
 ## Operator
 
-ToolMarket is operated by:
+Tryworthy is operated by:
 
 [OPERATOR_NAME]\
 [OPERATOR_ADDRESS]

@@ -1,10 +1,10 @@
 ---
 title: Privacy Policy
-description: What personal data ToolMarket collects, why, how long we keep it, who processes it for us and how to use your rights.
+description: What personal data Tryworthy collects, why, how long we keep it, who processes it for us and how to use your rights.
 updated: 2026-10-31
 ---
 
-This policy explains what personal data ToolMarket collects, why we collect it, how long we keep it and what you can do about it. It is written to meet Moldova's Law no. 195/2024 on personal data protection and the EU General Data Protection Regulation (GDPR).
+This policy explains what personal data Tryworthy collects, why we collect it, how long we keep it and what you can do about it. It is written to meet Moldova's Law no. 195/2024 on personal data protection and the EU General Data Protection Regulation (GDPR).
 
 ## The short version
 
@@ -15,7 +15,7 @@ This policy explains what personal data ToolMarket collects, why we collect it, 
 
 ## Who is responsible
 
-ToolMarket is operated by [OPERATOR_NAME], [OPERATOR_ADDRESS] ("we"). We are the controller of the personal data described here.
+Tryworthy is operated by [OPERATOR_NAME], [OPERATOR_ADDRESS] ("we"). We are the controller of the personal data described here.
 
 - Privacy questions and requests: [PRIVACY_EMAIL]
 - Everything else: [CONTACT_EMAIL]
@@ -34,7 +34,7 @@ For each activity below you'll find the data, why we need it, the legal basis an
 
 ### Where you came from
 
-- **Data:** if the link that brought you to ToolMarket had campaign tags (`utm_source`, `utm_campaign`, `utm_content`, for example from one of our videos), we save them on your account when you sign up. Only the first ones count. Until then they travel in the page address only; we don't store them in your browser.
+- **Data:** if the link that brought you to Tryworthy had campaign tags (`utm_source`, `utm_campaign`, `utm_content`, for example from one of our videos), we save them on your account when you sign up. Only the first ones count. Until then they travel in the page address only; we don't store them in your browser.
 - **Why:** to know which videos and campaigns bring people who sign up.
 - **Legal basis:** legitimate interest.
 - **Kept:** until you delete your account. They are included in your data export.

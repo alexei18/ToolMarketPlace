@@ -1,10 +1,10 @@
 ---
 title: Cookie Policy
-description: The cookies and browser storage ToolMarket uses. Only what is needed to keep you signed in - no analytics or advertising cookies.
+description: The cookies and browser storage Tryworthy uses. Only what is needed to keep you signed in - no analytics or advertising cookies.
 updated: 2026-10-31
 ---
 
-ToolMarket uses only the cookies and browser storage needed for the site to work. We don't use analytics, advertising or tracking cookies, so we don't show a cookie banner. This follows Moldova's Law no. 284/2004 on electronic commerce and the EU ePrivacy rules, which allow strictly necessary cookies without consent.
+Tryworthy uses only the cookies and browser storage needed for the site to work. We don't use analytics, advertising or tracking cookies, so we don't show a cookie banner. This follows Moldova's Law no. 284/2004 on electronic commerce and the EU ePrivacy rules, which allow strictly necessary cookies without consent.
 
 ## Cookies we set
 

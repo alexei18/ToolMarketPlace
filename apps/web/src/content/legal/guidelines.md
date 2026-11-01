@@ -1,10 +1,10 @@
 ---
 title: Community Guidelines
-description: What isn't allowed in product listings, perks, feedback and reports on ToolMarket, and what happens when the rules are broken.
+description: What isn't allowed in product listings, perks, feedback and reports on Tryworthy, and what happens when the rules are broken.
 updated: 2026-10-30
 ---
 
-ToolMarket works when listings are real and feedback is honest. These rules apply to product listings, perks, feedback, roadmap ideas, profiles and reports.
+Tryworthy works when listings are real and feedback is honest. These rules apply to product listings, perks, feedback, roadmap ideas, profiles and reports.
 
 ## Not allowed in listings
 
