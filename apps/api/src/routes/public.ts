@@ -28,7 +28,7 @@ import { ApiError, notFound } from "../lib/errors";
 import { listProducts, type ListScope } from "../lib/listing";
 import { findLiveProduct } from "../lib/lookup";
 import { productOgImage } from "../lib/og";
-import { isPrelaunch } from "../lib/prelaunch";
+import { configDate, isPrelaunch } from "../lib/prelaunch";
 import { imageUrl, loadCards, loadDetail, perkAvailableSql, viewerPerks } from "../lib/products";
 import { trackSignal } from "../lib/signals";
 import { query } from "../lib/validate";
@@ -61,14 +61,18 @@ async function categoryList(db: AppEnv["Variables"]["db"], prelaunch: boolean): 
 }
 
 /** Site-wide state for pages that render without a session (e.g. /makers). */
-app.get("/site", (c) => {
+app.get("/site", async (c) => {
   c.header("Cache-Control", "public, max-age=60");
-  return c.json({ prelaunch: isPrelaunch(c.env) });
+  return c.json({
+    prelaunch: await isPrelaunch(c.env, c.get("db")),
+    makerAccessDate: configDate(c.env.MAKER_ACCESS_DATE),
+    launchDate: configDate(c.env.LAUNCH_DATE),
+  });
 });
 
 app.get("/categories", async (c) => {
   c.header("Cache-Control", "public, max-age=60");
-  return c.json({ items: await categoryList(c.get("db"), isPrelaunch(c.env)) });
+  return c.json({ items: await categoryList(c.get("db"), await isPrelaunch(c.env, c.get("db"))) });
 });
 
 app.get("/categories/:slug", async (c) => {
@@ -107,7 +111,7 @@ app.get("/products", async (c) => c.json(await rankedList(c, null, nowSec() - NE
 app.get("/categories/:slug/weeks/:week", async (c) => {
   const db = c.get("db");
   const week = parseWeek(c.req.param("week"));
-  if (!week || isPrelaunch(c.env)) throw notFound("Archive not found");
+  if (!week || (await isPrelaunch(c.env, db))) throw notFound("Archive not found");
   const cat = await db.select({ id: categories.id, slug: categories.slug, name: categories.name }).from(categories).where(eq(categories.slug, c.req.param("slug"))).get();
   if (!cat) throw notFound("Category not found");
   const archive = await weekArchive(db, c.env, cat.id, week.index, nowSec());
@@ -141,7 +145,7 @@ app.get("/perks", async (c) => {
 /** Home page: the pre-launch state, Top this week (when there are enough), categories and the reserved count. */
 app.get("/home", async (c) => {
   const db = c.get("db");
-  const prelaunch = isPrelaunch(c.env);
+  const prelaunch = await isPrelaunch(c.env, db);
   const [top, cats, reserved] = await Promise.all([
     listProducts(db, c.env, { scope: null, sort: "top", filters: {}, limit: HOME_TOP_MIN }),
     categoryList(db, prelaunch),
@@ -328,18 +332,20 @@ app.get("/makers/:username", async (c) => {
 });
 
 /**
- * One child sitemap's entries (docs/SEO.md): live products, listed categories (pre-launch hides thin
- * ones), makers with at least one live product and weekly category archives (none in pre-launch).
+ * One child sitemap's entries (docs/SEO.md): live products, listed categories, makers with at least
+ * one live product and weekly category archives. All empty in pre-launch, when those pages redirect
+ * to the waitlist.
  */
 app.get("/sitemap/:kind", async (c) => {
   const db = c.get("db");
+  if (await isPrelaunch(c.env, db)) return c.json({ items: [] });
   switch (c.req.param("kind")) {
     case "products": {
       const rows = await db.select({ slug: products.slug, updatedAt: products.updatedAt }).from(products).where(live).orderBy(desc(products.publishedAt)).limit(45000);
       return c.json({ items: rows.map((r) => ({ path: `/p/${r.slug}`, updatedAt: r.updatedAt })) });
     }
     case "categories": {
-      const cats = await categoryList(db, isPrelaunch(c.env));
+      const cats = await categoryList(db, false);
       return c.json({ items: cats.filter((x) => x.listed).map((x) => ({ path: `/c/${x.slug}` })) });
     }
     case "makers": {
@@ -353,7 +359,6 @@ app.get("/sitemap/:kind", async (c) => {
       return c.json({ items: rows.map((r) => ({ path: `/m/${r.username}`, updatedAt: r.updatedAt })) });
     }
     case "weeks": {
-      if (isPrelaunch(c.env)) return c.json({ items: [] });
       const weeks = await archivedWeeks(db, nowSec());
       return c.json({ items: weeks.map((w) => ({ path: `/c/${w.category}/week/${w.week}` })) });
     }

@@ -295,12 +295,14 @@ describe("discovery", () => {
   });
 
   test("home in pre-launch: top from 6 quality products, thin categories unlisted, reserved count from 100", async () => {
-    const t = setup({ PRELAUNCH: "true" });
+    const t = setup();
     await seed(t, 6, "design");
+    // After seeding: the waitlist lets only admins and invited makers sign up.
+    t.env.WAITLIST = "true";
     const home = async () => (await new Client(t).get("/home")).data;
     const design = (h: { categories: { slug: string; listed: boolean }[] }) => h.categories.find((x) => x.slug === "design")!;
 
-    expect((await new Client(t).get("/site")).data).toEqual({ prelaunch: true });
+    expect((await new Client(t).get("/site")).data).toEqual({ prelaunch: true, makerAccessDate: null, launchDate: null });
     let h = await home();
     expect(h.prelaunch).toBe(true);
     expect(h.top).toBeNull();
@@ -311,7 +313,8 @@ describe("discovery", () => {
     h = await home();
     expect(h.top).toBeNull();
     expect(design(h).listed).toBe(true);
-    expect((await new Client(t).get("/sitemap/categories")).data.items).toEqual([{ path: "/c/design" }]);
+    // Category pages redirect to the waitlist, so the sitemap stays empty.
+    expect((await new Client(t).get("/sitemap/categories")).data.items).toEqual([]);
     expect(h.categories.find((x: { slug: string }) => x.slug === "ai").listed).toBe(false);
 
     t.sqlite.run("UPDATE products SET quality_ok = 1");
@@ -333,11 +336,11 @@ describe("discovery", () => {
     addUsers(101, 101);
     expect((await home()).reservedCount).toBe(100);
 
-    const after = setup({ PRELAUNCH: "false" });
+    const after = setup({ WAITLIST: "false" });
     await seed(after, 1, "design");
     const launched = (await new Client(after).get("/home")).data;
     expect(launched.prelaunch).toBe(false);
-    expect((await new Client(after).get("/site")).data).toEqual({ prelaunch: false });
+    expect((await new Client(after).get("/site")).data).toEqual({ prelaunch: false, makerAccessDate: null, launchDate: null });
     expect(design(launched).listed).toBe(true);
   });
 

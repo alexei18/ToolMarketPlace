@@ -8,7 +8,9 @@ import { TERMS_VERSION, newId, nowSec } from "@tm/shared";
 import type { Env } from "./env";
 import { sendEmail } from "./lib/email";
 import { hashPassword, verifyPassword } from "./lib/password";
+import { isPrelaunch } from "./lib/prelaunch";
 import { uniqueUsername } from "./lib/username";
+import { mayCreateAccountDuringWaitlist } from "./lib/waitlist";
 
 export function createAuth(env: Env, db: Database) {
   const secure = env.API_ORIGIN.startsWith("https://");
@@ -86,6 +88,10 @@ export function createAuth(env: Env, db: Database) {
       user: {
         create: {
           before: async (data, ctx) => {
+            // During the waitlist only admins and invited makers get accounts (docs/tiktok-campaign.md).
+            if ((await isPrelaunch(env, db)) && !(await mayCreateAccountDuringWaitlist(env, db, data.email))) {
+              throw new APIError("FORBIDDEN", { code: "WAITLIST_ONLY", message: "Accounts open on launch day. Join the waitlist to get an invite." });
+            }
             // Email sign-up sends the Terms version the user accepted (with the age checkbox). Google
             // sign-ups accept it in onboarding instead (POST /me/terms), since OAuth carries no extra fields.
             let terms = {};

@@ -423,7 +423,7 @@ describe("weekly archives", () => {
     expect(sitemap.data.items).toEqual([{ path: `/c/productivity/week/${slug}` }, { path: `/c/productivity/week/${isoWeek(w - 2).slug}` }]);
 
     // Not generated in pre-launch.
-    t.env.PRELAUNCH = "true";
+    t.env.WAITLIST = "true";
     expect((await new Client(t).get(`/categories/productivity/weeks/${slug}`)).status).toBe(404);
     expect((await new Client(t).get("/sitemap/weeks")).data.items).toEqual([]);
   });

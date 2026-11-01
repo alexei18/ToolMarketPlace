@@ -19,8 +19,12 @@
     "VAPID_SUBJECT": "mailto:hello@example.com",
     "VAPID_PUBLIC_KEY": "",
     "EMAIL_FROM": "Tryworthy <hello@example.com>",
-    // Pre-launch mode (docs/PRELAUNCH.md): "true" until the public launch.
-    "PRELAUNCH": "true"
+    // Pre-launch mode, run as the waitlist (docs/PRELAUNCH.md): "true" until the admin Launch action,
+    // which records the launch in D1 (site_state), so this var can stay as it is.
+    "WAITLIST": "true",
+    // Waitlist dates (docs/tiktok-campaign.md), as YYYY-MM-DD. Placeholders until the dates are set.
+    "MAKER_ACCESS_DATE": "YYYY-MM-DD",
+    "LAUNCH_DATE": "YYYY-MM-DD"
   },
   "d1_databases": [
     {
@@ -64,7 +68,10 @@
         "VAPID_SUBJECT": "mailto:hello@tryworthy.app",
         "VAPID_PUBLIC_KEY": "",
         "EMAIL_FROM": "Tryworthy <hello@tryworthy.app>",
-        "PRELAUNCH": "true"
+        "WAITLIST": "true",
+        // Fill in before the first video: the day makers get access and the public launch day (YYYY-MM-DD).
+        "MAKER_ACCESS_DATE": "YYYY-MM-DD",
+        "LAUNCH_DATE": "YYYY-MM-DD"
       },
       "d1_databases": [
         {

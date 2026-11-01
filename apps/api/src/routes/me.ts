@@ -93,7 +93,7 @@ async function meDto(c: Context<AppEnv>, u: SessionUser): Promise<MeDTO> {
     interests: interests.map((i) => i.slug),
     unreadNotifications: unread[0]?.n ?? 0,
     createdAt: Math.floor(new Date(u.createdAt).getTime() / 1000),
-    prelaunch: isPrelaunch(c.env),
+    prelaunch: await isPrelaunch(c.env, db),
   };
 }
 

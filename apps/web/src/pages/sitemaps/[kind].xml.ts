@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { apiCall } from "../../lib/api";
 import { siteConfig } from "../../lib/config";
 import { SITEMAPS } from "../../lib/seo";
+import { isOpenDuringWaitlist } from "../../lib/waitlist";
 
 /** Public pages that aren't built from D1 rows. */
 const PAGES = ["/", "/top", "/trending", "/new", "/perks", "/ranking", "/makers", "/about"];
@@ -18,7 +19,12 @@ export const GET: APIRoute = async (ctx) => {
   if (!SITEMAPS.includes(kind)) return new Response("Not found", { status: 404 });
   const { siteUrl } = siteConfig();
   let entries: Entry[] = PAGES.map((path) => ({ path }));
-  if (kind !== "pages") {
+  if (kind === "pages") {
+    // During the waitlist the other pages redirect to it (lib/waitlist.ts).
+    const site = await apiCall<{ prelaunch: boolean }>("/site");
+    if (!site.ok) return new Response("Sitemap unavailable", { status: 503 });
+    if (site.data.prelaunch) entries = entries.filter((e) => isOpenDuringWaitlist(e.path));
+  } else {
     const res = await apiCall<{ items: Entry[] }>(`/sitemap/${kind}`);
     if (!res.ok) return new Response("Sitemap unavailable", { status: 503 });
     entries = res.data.items;

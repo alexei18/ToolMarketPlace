@@ -20,8 +20,12 @@ export interface Env {
   VAPID_SUBJECT?: string;
   VAPID_PUBLIC_KEY?: string;
   EMAIL_FROM?: string;
-  /** "true" while the site runs in pre-launch mode (docs/PRELAUNCH.md) */
-  PRELAUNCH?: string;
+  /** "true" runs the site as the waitlist (pre-launch mode, docs/PRELAUNCH.md) until the admin Launch action. */
+  WAITLIST?: string;
+  /** Day invited makers get access, YYYY-MM-DD (docs/tiktok-campaign.md). Anything else counts as not set yet. */
+  MAKER_ACCESS_DATE?: string;
+  /** Public launch day, YYYY-MM-DD. Anything else counts as not set yet. */
+  LAUNCH_DATE?: string;
 
   BETTER_AUTH_SECRET: string;
   GOOGLE_CLIENT_ID?: string;
