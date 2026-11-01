@@ -97,3 +97,100 @@ Textele de mai jos sunt punctul de pornire pentru Claude Code; el le poate ajust
 **Pagina „About” (paragraful de bază)**
 
 *Tryworthy exists because the best new apps get buried. Every day people ship apps — some built in a weekend, some with AI at their core — and most never reach the people who'd love them. We rank every new launch by what real people save, try and talk about, so you find the good ones first, and makers get seen for what they build, not for how loud they launch.*
+
+## Waitlist (de aprobat)
+
+Adăugat 2026-11-01 pentru pagina de waitlist din `docs/tiktok-campaign.md`; înlocuiește „Reserve your feed”. Sursa fiecărui rând: **COPY** = text existent din acest document, **TikTok** = `docs/tiktok-campaign.md`, **Prompt** = cerința waitlist-ului, **Nou** = scris acum, de aprobat. `[N]` și datele vin din baza de date sau din config; când o dată nu e setată, se folosește varianta fără dată.
+
+**Pagina de waitlist — hero și formular** (homepage cât timp WAITLIST e activ)
+
+| Element | Text | Sursa |
+| --- | --- | --- |
+| Etichetă | Launching soon | COPY |
+| H1 | Find the new apps worth trying — before everyone else. | COPY / Prompt |
+| Subtitlu (se ascunde pe mobil dacă formularul nu mai încape) | New apps and AI tools, ranked by what real people save and try — with early access and perks you can't get anywhere else. | COPY |
+| Comutator | I want to discover apps · I build apps | Prompt |
+| Linie sub comutator (explorer) | Be first to find the new apps worth trying. | TikTok |
+| Linie sub comutator (maker) | Launch where people actually try new apps. Makers get in a week early. | TikTok |
+| Câmp email | Email · placeholder: you@example.com | Nou |
+| Buton | Join the waitlist | TikTok („Join the waitlist — link in bio”) |
+| Categorii (explorer, pliat) | Pick your categories (optional) · Up to 5. Your launch-day email starts with these. | Nou |
+| Link produs (maker) | Your product's link (optional) · placeholder: https://yourapp.com | Nou |
+| Categorie (maker) | Category (optional) | Nou |
+| Sursă | Where did you find us? (optional) · TikTok · Instagram · X · A friend · Search · Other | TikTok / Prompt |
+| Consimțământ sub buton | By joining you agree to our Privacy Policy | Prompt |
+| Contor (doar peste prag, N din DB) | [N] people are waiting | Prompt |
+
+**După trimitere** (același ecran pentru toți, inclusiv când emailul e în coadă)
+
+| Element | Text | Sursa |
+| --- | --- | --- |
+| Titlu | Check your inbox | Prompt |
+| Text | We're sending a confirmation link to [email]. Open it to join the waitlist. | Nou |
+| Link | Wrong email? Start again | Nou |
+| Email invalid | Enter a valid email address. | Nou |
+| Prea multe încercări | Too many attempts. Wait a minute and try again. | existent în formularul de login |
+| Orice altă eroare | Something went wrong. Try again. | Nou |
+
+**Sub fold — 3 blocuri**
+
+| Bloc | Titlu | Text | Sursa |
+| --- | --- | --- | --- |
+| Clasament | Ranked by real people | Top this week and Trending, built from saves, tries and feedback — not paid votes. · link: How ranking works | COPY |
+| Perks și acces devreme | First to try | Test apps before launch and claim perks makers give only here. | COPY |
+| Makeri | Makers get in a week early | Launching something? Get access 7 days before launch: verify your domain, publish your product, and it goes into the launch-day digest. | TikTok (titlu) / COPY (finalul) / Nou (legătura) |
+
+**FAQ**
+
+| Întrebare | Răspuns | Sursa |
+| --- | --- | --- |
+| What is Tryworthy? | The new apps worth trying — before everyone else, with perks you can't get anywhere else. We rank every new launch by what real people save, try and talk about. | COPY (footer + About) |
+| When do you launch? | On [LAUNCH_DATE]. We'll email you that day. · fără dată: Soon. We'll email you on launch day. | Nou |
+| Is it free? | Yes. Free forever. | COPY (linia de încredere) |
+| Can makers pay to rank higher? | No. Nobody can pay to rank higher, and makers' own activity doesn't count. | COPY (/ranking) |
+| I build apps. What do I get? | Access 7 days before launch to verify your domain and publish your product. Founding makers' products go into the launch-day digest. | TikTok / COPY |
+| What will you email me? | A confirmation link now, and one invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click. | Nou |
+| What do you do with my email? | We use it only for these emails and never sell it. See our Privacy Policy. | Nou |
+
+**Pagina de confirmare** (`/waitlist/confirm`)
+
+| Element | Text | Sursa |
+| --- | --- | --- |
+| Titlu | You're on the list. | Nou |
+| Explorer | On launch day ([LAUNCH_DATE]) we'll email you the top picks in your categories. · fără dată: On launch day we'll email you the top picks in your categories. | Nou |
+| Maker | You get access on [MAKER_ACCESS_DATE]. We'll email you a link to create your account, verify your domain and publish your product. · fără dată: You get access a week before launch. … | Prompt / Nou |
+| Share — titlu | Share your link | Nou |
+| Share — text | Friends who join through it are counted here. | Nou |
+| Contor share (N din DB) | [N] people joined through your link · 1 person joined through your link | Nou |
+| Buton | Copy link · după click: Copied | Nou |
+| Link expirat sau invalid | This link has expired or doesn't work. Enter your email again and we'll send a new one. · buton: Back to the waitlist | Nou |
+
+**Dezabonare** (`/waitlist/unsubscribe`)
+
+| Element | Text | Sursa |
+| --- | --- | --- |
+| În curs | Unsubscribing… · fără JavaScript, buton: Unsubscribe | Nou |
+| Gata | You're unsubscribed. We won't email you about the waitlist again. · link: Changed your mind? Join again | Nou |
+
+**Emailuri** (toate au wordmark-ul, versiune text și în subsol: „You're getting this because you joined the Tryworthy waitlist.” + „Unsubscribe”)
+
+| Email | Subiect | Text | Buton | Sursa |
+| --- | --- | --- | --- | --- |
+| Confirmare (explorer) | Confirm your spot on the Tryworthy waitlist | Confirm your email to join the waitlist. On launch day you'll get the new apps worth trying in your categories. · The link works for 48 hours. If you didn't sign up, ignore this email. | Confirm my email | Nou |
+| Confirmare (maker) | Confirm your spot on the Tryworthy waitlist | Confirm your email to join the waitlist. Makers get access a week before launch. · The link works for 48 hours. If you didn't sign up, ignore this email. | Confirm my email | Nou / TikTok |
+| Invitație maker | Your early access to Tryworthy | You're in a week before everyone else. Create your account, verify your domain and publish your product before launch day ([LAUNCH_DATE]). · Products published now go into the launch-day digest. · The link works for 30 days. | Create my account | Nou / COPY |
+| Invitație lansare (explorer) | We're live. Here's what's worth trying in your categories. | Lista: „[Product] — [tagline]”, până la 5, din categoriile alese (top general dacă n-a ales). Fără produse: doar subiectul și butonul. | Build my feed — free | COPY |
+
+**Cont în timpul waitlist-ului**
+
+| Element | Text | Sursa |
+| --- | --- | --- |
+| Eroare la creare cont (Google sau email) | Accounts open on launch day. Join the waitlist to get an invite. | Nou |
+| Login, subsol (în loc de „Create a free account”) | New here? Join the waitlist | Nou |
+
+**SEO** (homepage în timpul waitlist-ului)
+
+| Element | Text | Sursa |
+| --- | --- | --- |
+| Title | New Apps & AI Tools Worth Trying · Tryworthy | SEO.md |
+| Meta description | Find the new apps worth trying before everyone else. Join the free waitlist for early access and perks you can't get anywhere else. | SEO.md, adaptat |
