@@ -2,7 +2,16 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXPORT_LINK_HOURS, MODERATION_RULES, RAW_SIGNAL_DAYS, READ_NOTIFICATION_DAYS, REPORTER_EMAIL_MONTHS, VERIFICATION_MAX_AGE_HOURS } from "@tm/shared";
+import {
+  EXPORT_LINK_HOURS,
+  MODERATION_RULES,
+  RAW_SIGNAL_DAYS,
+  READ_NOTIFICATION_DAYS,
+  REPORTER_EMAIL_MONTHS,
+  VERIFICATION_MAX_AGE_HOURS,
+  WAITLIST_MONTHS_AFTER_LAUNCH,
+  WAITLIST_UNCONFIRMED_DAYS,
+} from "@tm/shared";
 import { DESCRIPTION_MAX } from "./seo";
 
 const DIR = join(import.meta.dir, "../content/legal");
@@ -62,5 +71,7 @@ describe("legal pages content", () => {
     expect(num(/individual records are deleted after (\d+) days/)).toBe(RAW_SIGNAL_DAYS);
     expect(num(/The download link works for (\d+) hours/)).toBe(EXPORT_LINK_HOURS);
     expect(num(/Your email address is deleted (\d+) months after we decide the report/)).toBe(REPORTER_EMAIL_MONTHS);
+    expect(num(/your sign-up is deleted (\d+) days after we send the confirmation email/)).toBe(WAITLIST_UNCONFIRMED_DAYS);
+    expect(num(/All waitlist data is deleted (\d+) months after launch/)).toBe(WAITLIST_MONTHS_AFTER_LAUNCH);
   });
 });
