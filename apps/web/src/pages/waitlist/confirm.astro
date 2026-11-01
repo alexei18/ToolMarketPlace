@@ -1,0 +1,129 @@
+---
+/*
+ * The confirmation link from the waitlist email. The page itself carries no token: its script posts
+ * the token from the address, so mail scanners that open links don't confirm anyone. Every variant
+ * of the text is rendered here; the script shows the one that fits.
+ */
+import { longDate } from "@tm/shared";
+import { en } from "@tm/shared/copy";
+import Logo from "../../components/Logo.astro";
+import Base from "../../layouts/Base.astro";
+import { apiCall } from "../../lib/api";
+import { siteConfig } from "../../lib/config";
+
+const { siteName, siteUrl } = siteConfig();
+const site = await apiCall<{ makerAccessDate: string | null; launchDate: string | null }>("/site");
+const makerDate = site.ok && site.data.makerAccessDate ? longDate(site.data.makerAccessDate) : null;
+const launchDate = site.ok && site.data.launchDate ? longDate(site.data.launchDate) : null;
+const c = en.waitlist.confirmed;
+---
+
+<Base title={c.title} noindex header={false}>
+  <div class="container page wl-page">
+    <a href="/" aria-label={`${siteName} home`}><Logo /></a>
+    <div id="wl-confirm" class="wl-result" aria-busy="true" data-site={siteUrl}>
+      <div data-state="ok" hidden>
+        <h1 class="t-32">{c.title}</h1>
+        <p class="t-17" data-variant="explorer" hidden>{c.explorer(launchDate)}</p>
+        <p class="t-17" data-variant="explorerNoCategories" hidden>{c.explorerNoCategories(launchDate)}</p>
+        <p class="t-17" data-variant="maker" hidden>{c.maker(makerDate)}</p>
+        <div class="wl-share">
+          <h2 class="t-17 w-600">{c.shareTitle}</h2>
+          <p class="muted">{c.shareText}</p>
+          <div class="wl-share-row">
+            <label class="visually-hidden" for="wl-share-link">{c.shareTitle}</label>
+            <input id="wl-share-link" class="input" readonly />
+            <button type="button" id="wl-copy" class="btn btn-dark" data-copied={c.copied}>{c.copy}</button>
+          </div>
+          <p class="t-13 w-600" id="wl-referrals" data-one={c.referrals(1)} data-many={c.referrals(2).replace("2", "{n}")}></p>
+        </div>
+      </div>
+      <div data-state="invalid" hidden>
+        <p class="t-17">{c.invalid}</p>
+        <a class="btn btn-primary" href="/#waitlist">{c.back}</a>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { call } from "../../lib/client";
+
+  interface Confirmed {
+    role: "explorer" | "maker";
+    hasInterests: boolean;
+    refCode: string;
+    referrals: number;
+  }
+
+  const root = document.querySelector<HTMLElement>("#wl-confirm")!;
+  const show = (state: "ok" | "invalid") => {
+    root.querySelector<HTMLElement>(`[data-state="${state}"]`)!.hidden = false;
+    root.removeAttribute("aria-busy");
+  };
+  const token = new URLSearchParams(location.search).get("t");
+  if (!token) show("invalid");
+  else
+    call<Confirmed>("POST", "/waitlist/confirm", { token })
+      .then((d) => {
+        const variant = d.role === "maker" ? "maker" : d.hasInterests ? "explorer" : "explorerNoCategories";
+        root.querySelector<HTMLElement>(`[data-variant="${variant}"]`)!.hidden = false;
+        const input = root.querySelector<HTMLInputElement>("#wl-share-link")!;
+        input.value = `${root.dataset.site}/?ref=${d.refCode}`;
+        const count = root.querySelector<HTMLElement>("#wl-referrals")!;
+        count.textContent = d.referrals === 1 ? count.dataset.one! : count.dataset.many!.replace("{n}", String(d.referrals));
+        const copy = root.querySelector<HTMLButtonElement>("#wl-copy")!;
+        const label = copy.textContent;
+        copy.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(input.value);
+          } catch {
+            // No clipboard access (some in-app browsers): leave the link selected to copy by hand.
+            input.select();
+            return;
+          }
+          copy.textContent = copy.dataset.copied!;
+          setTimeout(() => (copy.textContent = label), 2000);
+        });
+        show("ok");
+      })
+      .catch(() => show("invalid"));
+</script>
+
+<style is:global>
+  .wl-page {
+    max-width: 640px;
+  }
+  .wl-result {
+    margin-top: 40px;
+    min-height: 200px;
+  }
+  .wl-result > div {
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+  }
+  .wl-result > div[hidden] {
+    display: none;
+  }
+  .wl-share {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 20px;
+    border-radius: var(--radius-img);
+    background: var(--accent-soft);
+  }
+  .wl-share-row {
+    display: flex;
+    gap: 8px;
+  }
+  .wl-share-row .input {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .wl-share-row .btn {
+    flex: none;
+  }
+</style>

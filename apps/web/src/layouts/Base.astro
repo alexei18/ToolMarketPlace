@@ -24,10 +24,12 @@ interface Props {
   jsonLd?: JsonLdGraph | null;
   /** Hide header/footer (auth pages). */
   bare?: boolean;
+  /** false hides only the header (the waitlist homepage, whose catalog links would redirect back). */
+  header?: boolean;
 }
 
 const { siteName, siteUrl, apiUrl, turnstileSiteKey } = siteConfig();
-const { title, seo, description, canonical = Astro.originPathname, image = null, imageSize, noindex = false, query, jsonLd = null, bare = false } = Astro.props;
+const { title, seo, description, canonical = Astro.originPathname, image = null, imageSize, noindex = false, query, jsonLd = null, bare = false, header = true } = Astro.props;
 
 const home = homeSeo(siteName);
 const fullTitle = seo?.title ?? (title ? withSite(title, siteName) : home.title);
@@ -84,7 +86,7 @@ const graph = jsonLd ?? (noindex ? null : webPageJsonLd({ name: title ?? fullTit
   </head>
   <body>
     <a class="visually-hidden" href="#main">Skip to content</a>
-    {!bare && <Header query={query} />}
+    {!bare && header && <Header query={query} />}
     <main id="main">
       <slot />
     </main>

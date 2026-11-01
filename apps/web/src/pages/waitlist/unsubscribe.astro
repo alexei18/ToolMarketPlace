@@ -1,0 +1,72 @@
+---
+/*
+ * The unsubscribe link in waitlist emails. The script posts the token from the address (link
+ * scanners don't run it); without JavaScript the button posts it straight to the API's one-click URL.
+ */
+import { en } from "@tm/shared/copy";
+import Logo from "../../components/Logo.astro";
+import Base from "../../layouts/Base.astro";
+import { siteConfig } from "../../lib/config";
+
+const { siteName, apiUrl } = siteConfig();
+const u = en.waitlist.unsubscribe;
+const token = Astro.url.searchParams.get("t") ?? "";
+---
+
+<Base title={u.button} noindex header={false}>
+  <div class="container page wl-page">
+    <a href="/" aria-label={`${siteName} home`}><Logo /></a>
+    <div id="wl-unsub" class="wl-result">
+      <div data-state="working">
+        <p class="t-17" aria-busy="true">{u.working}</p>
+        <noscript>
+          <form method="post" action={`${apiUrl}/waitlist/unsubscribe?t=${encodeURIComponent(token)}`}>
+            <input type="hidden" name="List-Unsubscribe" value="One-Click" />
+            <button class="btn btn-dark" type="submit">{u.button}</button>
+          </form>
+        </noscript>
+      </div>
+      <div data-state="done" hidden>
+        <p class="t-17">{u.done}</p>
+        <a class="link" href="/#waitlist">{u.rejoin}</a>
+      </div>
+      <div data-state="invalid" hidden>
+        <p class="t-17">{en.waitlist.confirmed.invalid}</p>
+        <a class="btn btn-primary" href="/#waitlist">{en.waitlist.confirmed.back}</a>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { call } from "../../lib/client";
+
+  const root = document.querySelector<HTMLElement>("#wl-unsub")!;
+  const show = (state: "done" | "invalid") => {
+    root.querySelector<HTMLElement>('[data-state="working"]')!.hidden = true;
+    root.querySelector<HTMLElement>(`[data-state="${state}"]`)!.hidden = false;
+  };
+  const token = new URLSearchParams(location.search).get("t");
+  if (!token) show("invalid");
+  else
+    call("POST", "/waitlist/unsubscribe", { token })
+      .then(() => show("done"))
+      .catch(() => show("invalid"));
+</script>
+
+<style is:global>
+  .wl-page {
+    max-width: 640px;
+  }
+  .wl-result {
+    margin-top: 40px;
+  }
+  .wl-result > div {
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+  }
+  .wl-result > div[hidden] {
+    display: none;
+  }
+</style>

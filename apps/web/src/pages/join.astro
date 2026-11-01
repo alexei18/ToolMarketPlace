@@ -1,0 +1,29 @@
+---
+/*
+ * A maker's early-access invite link: the API checks the signed invite and returns a fresh,
+ * short-lived sign-in link that creates the account (or signs in) and opens onboarding.
+ */
+import { en } from "@tm/shared/copy";
+import Logo from "../components/Logo.astro";
+import Base from "../layouts/Base.astro";
+import { apiCall } from "../lib/api";
+import { siteConfig } from "../lib/config";
+
+Astro.response.headers.set("Cache-Control", "private, no-store");
+const token = Astro.url.searchParams.get("t");
+if (token) {
+  const res = await apiCall<{ url: string }>("/waitlist/join", { method: "POST", body: { token } });
+  if (res.ok) return Astro.redirect(res.data.url, 302);
+}
+const { siteName } = siteConfig();
+---
+
+<Base title={en.waitlist.emails.makerInvite.button} noindex header={false}>
+  <div class="container page" style="max-width: 640px">
+    <a href="/" aria-label={`${siteName} home`}><Logo /></a>
+    <div class="stack-16" style="margin-top: 40px">
+      <p class="t-17">{en.waitlist.confirmed.invalid}</p>
+      <a class="btn btn-primary" href="/#waitlist">{en.waitlist.confirmed.back}</a>
+    </div>
+  </div>
+</Base>

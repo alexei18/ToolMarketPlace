@@ -1,26 +1,30 @@
 ---
-import { homeJsonLd, type HomeDTO } from "@tm/shared";
+import { homeJsonLd, longDate, type HomeDTO } from "@tm/shared";
 import { en } from "@tm/shared/copy";
 import ErrorState from "../components/ErrorState.astro";
 import Icon from "../components/Icon.astro";
 import ProductTile from "../components/ProductTile.astro";
+import Waitlist from "../components/Waitlist.astro";
 import Base from "../layouts/Base.astro";
 import { apiCall } from "../lib/api";
 import { siteConfig } from "../lib/config";
+import { homeSeo } from "../lib/seo";
 
 const { siteName, siteUrl } = siteConfig();
-const res = await apiCall<HomeDTO>("/home");
+const [res, site] = await Promise.all([apiCall<HomeDTO>("/home"), apiCall<{ launchDate: string | null }>("/site")]);
 // The hero and makers copy depend on the pre-launch flag, which only the API knows: no guessing when it's down.
 if (res.ok) Astro.cache.set({ maxAge: 60, swr: 60, tags: ["home", "products"] });
 else Astro.response.status = 503;
 
 const home = res.ok ? res.data : null;
+// Pre-launch mode runs as the waitlist: the homepage is the waitlist page (components/Waitlist.astro).
 const prelaunch = home?.prelaunch ?? false;
+const launchDate = site.ok && site.data.launchDate ? longDate(site.data.launchDate) : null;
 const top = home?.top ?? null;
 const categories = home?.categories ?? [];
 const listed = categories.filter((c) => c.listed !== false);
 const h1 = Astro.url.searchParams.get("h") === "b" ? en.home.hero.h1B : en.home.hero.h1A;
-const makers = prelaunch ? en.prelaunch.makers : en.makers;
+const makers = en.makers;
 const hero = en.home.hero;
 const steps = [en.home.howItWorks.pick, en.home.howItWorks.rank, en.home.howItWorks.first];
 const pillars = Object.values(en.home.benefits);
@@ -28,7 +32,7 @@ const pillars = Object.values(en.home.benefits);
 const jsonLd = homeJsonLd({ name: siteName, url: siteUrl, logo: `${siteUrl}/brand/icon-512.png` });
 ---
 
-<Base jsonLd={jsonLd}>
+<Base jsonLd={jsonLd} header={!prelaunch} seo={prelaunch ? { title: homeSeo(siteName).title, description: en.seo.waitlist.description } : undefined}>
   {
     !home && (
       <div class="container page">
@@ -36,11 +40,11 @@ const jsonLd = homeJsonLd({ name: siteName, url: siteUrl, logo: `${siteUrl}/bran
       </div>
     )
   }
+  {home && prelaunch && <Waitlist categories={categories} waitingCount={home.waitingCount} launchDate={launchDate} siteName={siteName} />}
   {
-    home && (
+    home && !prelaunch && (
       <>
         <section class="container hero">
-          {prelaunch && <p class="launch-label">{en.prelaunch.label}</p>}
           <h1>{h1}</h1>
           <p class="t-17 muted lede">{hero.subtitle}</p>
           <div class="row row-wrap hero-actions">
@@ -153,22 +157,6 @@ const jsonLd = homeJsonLd({ name: siteName, url: siteUrl, logo: `${siteUrl}/bran
     font-size: clamp(38px, 6.2vw, 72px);
     line-height: 1.02;
     letter-spacing: -0.035em;
-  }
-  .launch-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    font-size: var(--fs-13);
-    font-weight: 600;
-    color: var(--accent);
-  }
-  .launch-label::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
   }
   .lede {
     max-width: 560px;
