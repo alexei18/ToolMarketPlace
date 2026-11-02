@@ -2,6 +2,7 @@
  * Burned-in captions from words.json: pages of 2–4 words, broken after punctuation and at beat
  * cuts, each shown from its first word until the next page starts.
  */
+import { CAPTION_BANDS } from "./layout";
 import type { Timeline } from "./timeline";
 import type { Word } from "./types";
 import { displayWord, normalizeWord } from "./words";
@@ -25,6 +26,7 @@ export interface CaptionPage {
 
 const MAX = 4;
 const MIN = 2;
+const BAND_WIDTH = CAPTION_BANDS.top.w;
 
 /** Caption type: one line, 58 px, smaller only when a page would not fit the 720 px band. */
 export const CAPTION_FONT = { size: 58, min: 44, padX: 28 };
@@ -70,12 +72,27 @@ export function captionPages(words: Word[], timeline: Timeline, keywords: string
       phrases.splice(p--, 1);
     }
   }
-  // Pages: each phrase in as few pages of at most 4 words as possible, balanced (5 → 3 + 2, 7 → 4 + 3).
+  // Pages: each phrase in as few pages as possible, balanced (5 → 3 + 2, 7 → 4 + 3, 13 → 4 + 3 + 3 + 3),
+  // each of 2–4 words and short enough for one line in the band. More pages when a page is too long.
   const groups: number[][] = [];
   for (const phrase of phrases) {
-    const count = Math.ceil(phrase.length / MAX);
-    const size = Math.ceil(phrase.length / count);
-    for (let i = 0; i < phrase.length; i += size) groups.push(phrase.slice(i, i + size));
+    const n = phrase.length;
+    const split = (count: number) => {
+      const base = Math.floor(n / count);
+      const extra = n % count;
+      const pages: number[][] = [];
+      let at = 0;
+      for (let p = 0; p < count; p++) {
+        const size = base + (p < extra ? 1 : 0);
+        pages.push(phrase.slice(at, at + size));
+        at += size;
+      }
+      return pages;
+    };
+    const fits = (pages: number[][]) => pages.every((pg) => captionFontSize(pg.map((i) => displayWord(words[i]!.word)).join(" "), BAND_WIDTH) >= CAPTION_FONT.min);
+    let pages = split(Math.ceil(n / MAX));
+    for (let count = Math.ceil(n / MAX) + 1; !fits(pages) && count <= Math.floor(n / MIN); count++) pages = split(count);
+    groups.push(...pages);
   }
 
   const frame = (s: number) => Math.round(s * fps);
