@@ -10,7 +10,17 @@
     "hookText": "Every app that went viral was on someone's screen first. Here's how to be that someone.",
     "visualStyle": "Real Tryworthy UI (Trending, feed) in a phone",
     "animationStyle": "Fast cuts, zoom on taps, cursor",
-    "coverText": "Find it before it trends"
+    "coverText": "Find it before it trends",
+    "caption": "Every app that went viral was on someone's screen first. Want to be that someone? Join the waitlist, link in bio.",
+    "hashtags": [
+      "#newapps",
+      "#techtok",
+      "#contentcreator",
+      "#appdiscovery"
+    ],
+    "pinnedComment": "Which app do you wish you'd found earlier? Join the waitlist, link in bio.",
+    "musicSearch": "upbeat tech electronic",
+    "changedVariable": ""
   },
   "script": "Every app that went viral was on someone's screen first. Here's how to be that someone. Open Tryworthy and tap the Trending tab. It shows what's picking up speed this week, before it hits your feed. Spot one you like and save it. Want something nobody has covered yet? Filter for Pre-launch and try it before everyone else. Then be the first to make a video about it. That's how you find it before it trends. Join the waitlist, link in bio.",
   "beats": [
@@ -20,8 +30,9 @@
       "props": {
         "lines": [
           "Every app that",
-          "went viral was on",
-          "someone's screen first."
+          "went viral was",
+          "on someone's",
+          "screen first."
         ],
         "mode": "slam",
         "highlight": [
@@ -35,8 +46,9 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Here's how to be",
-          "that someone."
+          "Here's how",
+          "to be that",
+          "someone."
         ],
         "mode": "slam",
         "highlight": [
@@ -52,8 +64,9 @@
         "capture": "v2-top",
         "zoom": {
           "cue": "tap",
-          "target": "trendingTab",
-          "scale": 1.8
+          "target": "tabs",
+          "scale": 1.4,
+          "centerX": 150
         },
         "cursor": [
           {
@@ -118,7 +131,8 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Want something",
+          "Want",
+          "something",
           "nobody has",
           "covered yet?"
         ],
@@ -158,9 +172,9 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Then be the first",
-          "to make a video",
-          "about it."
+          "Then be the",
+          "first to make a",
+          "video about it."
         ],
         "mode": "typewriter",
         "highlight": [
@@ -170,12 +184,13 @@
       }
     },
     {
-      "cue": "that's",
+      "cue": "find",
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Find it before",
-          "it trends."
+          "Find it",
+          "before it",
+          "trends."
         ],
         "mode": "slam",
         "highlight": [
@@ -207,7 +222,8 @@
       "height": 844,
       "scale": 2,
       "targets": {
-        "trendingTab": ".rank-tabs nav a[href=\"/trending\"]"
+        "trendingTab": ".rank-tabs nav a[href=\"/trending\"]",
+        "tabs": ".rank-tabs nav.tabs"
       }
     },
     "v2-trending": {

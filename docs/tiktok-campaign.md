@@ -94,6 +94,8 @@ Regula care rezolvă ambele probleme: vocea e ceasul video-ului. Animațiile nu 
 - CTA-ul e spus, nu doar afișat: „Join the waitlist, link in bio.” la final, endscreen-ul pe „Join”, video-ul se termină la 0,6 s după ultimul cuvânt.
 - Ritm 2,8–3,5 cuvinte pe secundă, scripturi de 75–90 de cuvinte, tempoul înregistrat neatins.
 - Niciun cadru nu stă pe loc mai mult de 1,5 s fără o schimbare cu sens.
+- Textul kinetic încape pe lățimea de 720 px (corpul de literă se micșorează, minimum 72 px) și ecranul nu rămâne gol: fiecare scenă pornește pe primul ei cuvânt afișat, iar toate cuvintele spuse apar pe ecran.
+- Capturile păstrează lățimea reală a paginii, ca interfața să nu fie strivită; elementele foarte mici (insignă, buton) se decupează la device scale 5, ca să rămână clare.
 - Video-urile în stil întunecat folosesc varianta albă a wordmark-ului și subtitrări pe fundal întunecat; contrastul textului e verificat (minimum 4,5:1).
 
 **Trei surse de voce, același pipeline de la pasul 3**

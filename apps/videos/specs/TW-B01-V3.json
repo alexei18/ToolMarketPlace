@@ -10,7 +10,17 @@
     "hookText": "Built something with AI this weekend? Nobody's going to find it. Unless you launch it where people actually try new apps.",
     "visualStyle": "White, editorial, large type in brand colors",
     "animationStyle": "Self-typing text; the logo's checks drawing themselves",
-    "coverText": "Built it? Launch here first"
+    "coverText": "Built it? Launch here first",
+    "caption": "Built something with AI this weekend? Launch it where people actually try new apps. Makers get in a week early. Join the waitlist, link in bio.",
+    "hashtags": [
+      "#buildinpublic",
+      "#indiemaker",
+      "#vibecoding",
+      "#newapps"
+    ],
+    "pinnedComment": "What did you build this weekend? Join the waitlist as a maker, link in bio.",
+    "musicSearch": "light acoustic motivational",
+    "changedVariable": ""
   },
   "script": "Built something with AI this weekend? Nobody's going to find it. Unless you launch it where people actually try new apps. On Tryworthy, makers get in a week early. Verify your domain, paste your link, and you're live on launch day. List it as Pre-launch and find your first testers. They send feedback straight to you and vote on your roadmap. Offer a perk people can only claim here. Listing your product on Tryworthy is free. Join the waitlist, link in bio.",
   "beats": [
@@ -19,9 +29,10 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Built something",
-          "with AI",
-          "this weekend?"
+          "Built",
+          "something",
+          "with AI this",
+          "weekend?"
         ],
         "mode": "typewriter",
         "highlight": [
@@ -35,8 +46,9 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Nobody's going",
-          "to find it."
+          "Nobody's",
+          "going to",
+          "find it."
         ],
         "mode": "slam",
         "size": 140
@@ -47,8 +59,9 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Unless you launch it",
-          "where people actually",
+          "Unless you",
+          "launch it where",
+          "people actually",
           "try new apps."
         ],
         "mode": "typewriter",
@@ -59,7 +72,7 @@
       }
     },
     {
-      "cue": "on",
+      "cue": "makers",
       "scene": "KineticText",
       "props": {
         "lines": [
@@ -79,8 +92,9 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Verify your domain,",
-          "paste your link,"
+          "Verify your",
+          "domain, paste",
+          "your link,"
         ],
         "mode": "typewriter",
         "size": 110
@@ -123,10 +137,10 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "They send feedback",
-          "straight to you",
-          "and vote on",
-          "your roadmap."
+          "They send",
+          "feedback straight",
+          "to you and vote",
+          "on your roadmap."
         ],
         "mode": "typewriter",
         "highlight": [
@@ -142,7 +156,8 @@
       "props": {
         "lines": [
           "Offer a perk",
-          "people can only",
+          "people",
+          "can only",
           "claim here."
         ],
         "mode": "slam",
@@ -175,7 +190,7 @@
   "endscreen": "light",
   "cover": {
     "cue": "weekend",
-    "offsetFrames": 3
+    "offsetFrames": 10
   },
   "captures": {
     "v3-prelaunch-card": {

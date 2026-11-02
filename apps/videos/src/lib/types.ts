@@ -27,7 +27,23 @@ export interface VideoSpec {
   batch?: string;
   concept: string;
   /** The creative attributes of the concept, for the tracking sheet (docs/tiktok-campaign.md). */
-  meta?: { title: string; audience: string; message: string; hookType: string; hookText: string; visualStyle: string; animationStyle: string; coverText: string };
+  meta?: {
+    title: string;
+    audience: string;
+    message: string;
+    hookType: string;
+    hookText: string;
+    visualStyle: string;
+    animationStyle: string;
+    coverText: string;
+    /** Posting fields: a caption of 100–150 characters with a question or the CTA, 3–5 hashtags, the pinned comment, a search term for TikTok's Commercial Music Library. */
+    caption?: string;
+    hashtags?: string[];
+    pinnedComment?: string;
+    musicSearch?: string;
+    /** What differs from the other videos of the batch; empty for a first batch. */
+    changedVariable?: string;
+  };
   /** The exact narration; must match vo/<ID>.txt word for word. */
   script: string;
   beats: BeatSpec[];

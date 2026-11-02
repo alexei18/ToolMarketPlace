@@ -10,7 +10,17 @@
     "hookText": "Hot take: launch leaderboards are a popularity contest.",
     "visualStyle": "High contrast black and green, huge text, clean meme style",
     "animationStyle": "Hard cuts, text dropping on the voice's rhythm",
-    "coverText": "Votes can't buy this"
+    "coverText": "Votes can't buy this",
+    "caption": "Hot take: launch leaderboards are a popularity contest. Nobody can pay to rank higher on Tryworthy. Agree? Join the waitlist, link in bio.",
+    "hashtags": [
+      "#hottake",
+      "#techtok",
+      "#startups",
+      "#newapps"
+    ],
+    "pinnedComment": "Should leaderboards count votes at all? Join the waitlist, link in bio.",
+    "musicSearch": "bold hip hop instrumental beat",
+    "changedVariable": ""
   },
   "script": "Hot take, launch leaderboards are a popularity contest. Whoever brings the most votes on day one wins. That tells you who has the biggest audience, not which app is good. So we built the opposite of that. Tryworthy ranks every new launch by what people did with it this week. Saves, perk claims and feedback from verified accounts. Each person counts once, and makers' own activity doesn't count. Nobody can pay to rank higher. Join the waitlist, link in bio.",
   "beats": [
@@ -19,8 +29,8 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Hot take:",
-          "launch leaderboards",
+          "Hot take: launch",
+          "leaderboards",
           "are a popularity",
           "contest."
         ],
@@ -37,26 +47,29 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Most votes",
-          "on day one",
-          "wins."
+          "Whoever",
+          "brings the",
+          "most votes",
+          "on day",
+          "one wins."
         ],
         "mode": "slam",
         "highlight": [
           "wins"
         ],
-        "size": 150
+        "size": 140
       }
     },
     {
-      "cue": "that",
+      "cue": "who",
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Who has the",
-          "biggest audience,",
-          "not which app",
-          "is good."
+          "Who has",
+          "the biggest",
+          "audience,",
+          "not which",
+          "app is good."
         ],
         "mode": "slam",
         "highlight": [
@@ -71,24 +84,25 @@
       "props": {
         "lines": [
           "So we built",
-          "the opposite."
+          "the opposite",
+          "of that."
         ],
         "mode": "slam",
         "highlight": [
           "opposite"
         ],
-        "size": 140
+        "size": 130
       }
     },
     {
-      "cue": "tryworthy",
+      "cue": "every",
       "scene": "KineticText",
       "props": {
         "lines": [
           "Every new launch,",
           "ranked by what",
-          "people did with it",
-          "this week."
+          "people did with",
+          "it this week."
         ],
         "mode": "slam",
         "highlight": [
@@ -130,8 +144,9 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Nobody can pay",
-          "to rank higher."
+          "Nobody",
+          "can pay to",
+          "rank higher."
         ],
         "mode": "slam",
         "highlight": [

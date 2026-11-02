@@ -10,7 +10,16 @@
     "hookText": "Someone built the app you've been looking for. You'll never see it.",
     "visualStyle": "Dark, cinematic; one app card is the character",
     "animationStyle": "Slow moves, a single light crossing the card",
-    "coverText": "The app you'll never see"
+    "coverText": "The app you'll never see",
+    "caption": "Someone built the app you've been looking for, and you'll never see it. Want the good ones to find you first? Join the waitlist, link in bio.",
+    "hashtags": [
+      "#newapps",
+      "#appdiscovery",
+      "#techtok"
+    ],
+    "pinnedComment": "What's the best app you found by accident? Join the waitlist, link in bio.",
+    "musicSearch": "cinematic ambient slow",
+    "changedVariable": ""
   },
   "script": "Someone built the app you've been looking for. You'll never see it. They worked on it for months, and launched it on a quiet Tuesday. A few friends saved it, and then the feed moved on. The good stuff gets buried under whoever shouts loudest. Tryworthy ranks every new launch by what real people save and try. So the good ones find you first. Be first to find the new apps worth trying. Join the waitlist, link in bio.",
   "beats": [
@@ -19,9 +28,10 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "Someone built",
-          "the app you've",
-          "been looking for."
+          "Someone",
+          "built the app",
+          "you've been",
+          "looking for."
         ],
         "mode": "slam",
         "size": 120
@@ -47,8 +57,8 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "They worked on it",
-          "for months,"
+          "They worked on",
+          "it for months,"
         ],
         "mode": "typewriter",
         "size": 110
@@ -141,8 +151,9 @@
       "scene": "KineticText",
       "props": {
         "lines": [
-          "So the good ones",
-          "find you first."
+          "So the good",
+          "ones find",
+          "you first."
         ],
         "mode": "slam",
         "highlight": [
