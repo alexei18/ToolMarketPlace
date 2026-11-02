@@ -13,6 +13,8 @@
     "video:render": "tsx scripts/render.ts",
     "video:batch": "tsx scripts/batch.ts",
     "video:sheet": "tsx scripts/contact-sheet.ts",
+    "video:tracker": "tsx scripts/tracker.ts",
+    "video:relayout": "tsx scripts/relayout.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
@@ -23,6 +25,7 @@
     "@remotion/fonts": "4.0.539",
     "@remotion/install-whisper-cpp": "4.0.539",
     "@remotion/renderer": "4.0.539",
+    "exceljs": "^4.4.0",
     "kokoro-js": "^1.2.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, interpolate } from "remotion";
 import { FONTS, themeColors } from "../brand";
 import { spokenTimes, useBeat } from "../context";
+import { fitKinetic } from "../lib/kinetic";
 import { TEXT_BLOCK } from "../lib/stage";
 import { normalizeWord } from "../lib/words";
 import { EASE_IN_OUT, progress } from "../motion";
@@ -25,8 +26,11 @@ const LINE_HEIGHT = 1.06;
  * the lines shown so far stay centered: the first word lands in the middle of the frame, not at
  * the top of an empty block.
  */
-export const KineticText: React.FC<KineticTextProps> = ({ lines, mode = "slam", highlight, size = 108 }) => {
+export const KineticText: React.FC<KineticTextProps> = ({ lines, mode = "slam", highlight, size: wanted = 108 }) => {
   const ctx = useBeat();
+  // The lines are kept as written; the type shrinks until the widest one fits the column.
+  const fitted = fitKinetic(lines, wanted);
+  const size = fitted.size;
   const colors = themeColors(ctx.theme);
   const keys = new Set((highlight ?? ctx.keywords).map(normalizeWord));
   const words = lines.map((l) => l.split(/\s+/).filter(Boolean));
@@ -68,14 +72,15 @@ export const KineticText: React.FC<KineticTextProps> = ({ lines, mode = "slam", 
         }}
       >
         {words.map((line, li) => (
-          <div key={li} style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
+          <div key={li} style={{ display: "flex", flexWrap: fitted.fits ? "nowrap" : "wrap", justifyContent: "center" }}>
             {line.map((w, wi) => {
               const [start, end] = times[n++]!;
               const isKey = keys.has(normalizeWord(w));
-              // Slam: a word takes its place in the line as it lands, so a half-said line stays centered.
-              const grow = mode === "slam" ? progress(f, start, 5) : 1;
+              // A word takes its place in the line as it lands (slam) or starts typing, so a half-said
+              // line stays centered; a highlight line is all there from the start.
+              const grow = mode === "slam" ? progress(f, start, 5) : mode === "typewriter" ? (f >= start ? 1 : 0) : 1;
               return (
-                <span key={wi} style={{ display: "inline-block", whiteSpace: "nowrap", maxWidth: `${grow * w.length * 0.8}em`, marginLeft: wi > 0 ? grow * size * 0.24 : 0 }}>
+                <span key={wi} style={{ display: "inline-block", whiteSpace: "nowrap", maxWidth: mode === "slam" ? `${grow * w.length * 0.8}em` : undefined, marginLeft: wi > 0 ? grow * size * 0.24 : 0 }}>
                   <KWord word={w} mode={mode} isKey={isKey} start={start} end={end} frame={f} accent={colors.accent} size={size} />
                 </span>
               );
@@ -100,13 +105,12 @@ const KWord: React.FC<{ word: string; mode: NonNullable<KineticTextProps["mode"]
   const color = isKey ? accent : undefined;
   if (mode === "typewriter") {
     const chars = [...word];
-    const span = Math.max(3, Math.min(end - start, chars.length * 2));
+    // Typing finishes a little before the word does, so the line is complete when the voice moves on.
+    const span = Math.max(3, Math.min(Math.floor((end - start) * 0.8), chars.length * 2));
     const shown = Math.floor(interpolate(frame, [start, start + span], [0, chars.length], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
     return (
-      <span style={{ color, whiteSpace: "pre" }}>
-        <span>{chars.slice(0, shown).join("")}</span>
-        <span style={{ opacity: 0 }}>{chars.slice(shown).join("")}</span>
-      </span>
+      // Only the typed letters take space, so the line stays centered while it types.
+      <span style={{ color, whiteSpace: "pre" }}>{chars.slice(0, shown).join("")}</span>
     );
   }
   if (mode === "highlight") {

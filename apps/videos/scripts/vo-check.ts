@@ -7,6 +7,8 @@
  * missing captures, a script that doesn't end with "Join the waitlist, link in bio.", more than
  * 0.8 s of silence at the end, a batch script outside 75–90 words, colors under 4.5:1 contrast,
  * a dark video with the light endscreen, and a CardCrop captured under device scale 3.
+ * KineticText lines that don't fit the 720 px column, and a KineticText beat that leaves the screen
+ * empty for over 0.3 s while it waits for its first word.
  * Warns (doesn't fail) on a pace outside 2.8–3.5 words/s and on any shot that holds longer than
  * 1.5 s without a meaningful change. Writes out/checks/<ID>.vo-check.json and .md; render.ts
  * refuses to run unless the latest report passed and is newer than its inputs.
@@ -17,7 +19,8 @@ import type { CaptureMeta } from "../src/captures";
 import { CAPTION_FONT, captionFontSize, captionPages } from "../src/lib/captions";
 import { CAPTION_BANDS, CENTER_X, centerX, DECOR, inside, intersects, MAX_CENTER_OFFSET, SAFE } from "../src/lib/layout";
 import { beatFocus, mainElement, MIN_TEXT, talkedAbout, TEXT_BLOCK, type MainElement } from "../src/lib/stage";
-import { longHolds, MAX_HOLD_SECONDS, screenEvents } from "../src/lib/events";
+import { emptyStarts, longHolds, MAX_EMPTY_SECONDS, MAX_HOLD_SECONDS, screenEvents } from "../src/lib/events";
+import { fitKinetic, MIN_KINETIC_SIZE, SMALL_KINETIC_SIZE } from "../src/lib/kinetic";
 import { captionColors, contrast, over, themeColors, uiSceneBg } from "../src/lib/theme";
 import { buildTimeline, CTA, END_TAIL_SECONDS, FPS } from "../src/lib/timeline";
 import type { Word } from "../src/lib/types";
@@ -62,6 +65,8 @@ export interface CheckReport {
   ui: { beat: number; scene: string; target: string; box: string; name?: number; secondary?: number; ok: boolean; problem?: string }[];
   /** Text and background pairs of the video's theme. */
   contrast: { what: string; fg: string; bg: string; ratio: number; ok: boolean }[];
+  /** KineticText sizing: the size asked for, and the size that fits the column. */
+  kinetic: { beat: number; wanted: number; size: number; fits: boolean; widest: string }[];
   /** Stretches with no meaningful change (warning above 1.5 s). */
   holds: { from: number; until: number; seconds: number; beat: number; after: string }[];
 }
@@ -229,6 +234,25 @@ export async function checkVoice(id: string): Promise<CheckReport> {
   const holds = longHolds(tl, screenEvents(tl, words, FPS), FPS);
   for (const h of holds) warnings.push(`${h.beat ? `beat ${h.beat}` : "endscreen"} holds ${h.seconds} s without a change (frames ${h.from}–${h.until}, after ${h.after}); max ${MAX_HOLD_SECONDS} s`);
 
+  // Kinetic text: every line fits the 720 px column (the type shrinks to fit, never below 72 px), and
+  // no beat leaves the screen empty while it waits for its first word.
+  const kinetic: CheckReport["kinetic"] = [];
+  spec.beats.forEach((b, i) => {
+    if (b.scene !== "KineticText") return;
+    const p = (b.props ?? {}) as { lines?: string[]; size?: number };
+    const fit = fitKinetic(p.lines ?? [], p.size ?? 108);
+    kinetic.push({ beat: i + 1, wanted: p.size ?? 108, size: fit.size, fits: fit.fits, widest: fit.widest });
+    if (!fit.fits) failures.push(`beat ${i + 1} (KineticText): "${fit.widest}" is too wide for the 720 px column even at ${MIN_KINETIC_SIZE} px; break the line`);
+    else if (fit.size < SMALL_KINETIC_SIZE) warnings.push(`beat ${i + 1} (KineticText): the text shrinks to ${fit.size} px to fit "${fit.widest}"; shorter lines would read bigger`);
+  });
+  for (const e of emptyStarts(tl, words, FPS)) {
+    failures.push(
+      Number.isFinite(e.seconds)
+        ? `beat ${e.beat} (KineticText): the screen is empty for ${e.seconds} s at its start (max ${MAX_EMPTY_SECONDS} s); its first word "${e.word}" is spoken later: start the beat on it (cue "${e.word.toLowerCase().replace(/[^a-z0-9']/g, "")}")`
+        : `beat ${e.beat} (KineticText): its first word "${e.word}" is never spoken inside the beat`,
+    );
+  }
+
   // Dark videos: the white wordmark (dark endscreen) and dark captions; every text pair readable.
   const theme = spec.style.theme;
   if (theme === "dark" && spec.endscreen !== "dark") failures.push(`a dark video needs the dark endscreen (the white wordmark), not "${spec.endscreen}"`);
@@ -284,6 +308,7 @@ export async function checkVoice(id: string): Promise<CheckReport> {
     layout,
     ui,
     contrast: contrastRows,
+    kinetic,
     holds,
   };
   ensureDir(paths.checks);
@@ -329,6 +354,12 @@ function markdown(r: CheckReport): string {
           "| --- | --- | --- | --- | --- | --- | --- |",
           ...r.ui.map((u) => `| ${u.beat} | ${u.scene} | ${u.target} | ${u.box} | ${u.name ?? "–"} | ${u.secondary ?? "–"} | ${u.ok ? "yes" : `**no**: ${u.problem}`} |`),
         ]
+      : ["None in this video."]),
+    "",
+    "## Kinetic text",
+    "",
+    ...(r.kinetic.length
+      ? ["| Beat | Asked | Fits at | Widest line |", "| --- | --- | --- | --- |", ...r.kinetic.map((k) => `| ${k.beat} | ${k.wanted} px | ${k.size} px${k.fits ? "" : " **too wide**"} | ${k.widest} |`)]
       : ["None in this video."]),
     "",
     `## Contrast (min ${LIMITS.minContrast}:1)`,

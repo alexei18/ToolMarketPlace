@@ -90,6 +90,33 @@ export function screenEvents(tl: Timeline, words: Word[], fps: number): ScreenEv
   return events.sort((a, b) => a.frame - b.frame);
 }
 
+/** A KineticText beat shows nothing until its first on-screen word is spoken: longer than this is an empty screen. */
+export const MAX_EMPTY_SECONDS = 0.3;
+
+/**
+ * KineticText beats (slam, typewriter) whose first word is spoken well after the beat starts: the
+ * screen is empty until then, so the beat should start on that word instead (cue = that word).
+ */
+export function emptyStarts(tl: Timeline, words: Word[], fps: number): { beat: number; seconds: number; word: string; frame: number }[] {
+  const out: { beat: number; seconds: number; word: string; frame: number }[] = [];
+  tl.beats.forEach((b, i) => {
+    if (b.scene !== "KineticText") return;
+    const p = (b.props ?? {}) as { lines?: string[]; mode?: string };
+    if (p.mode === "highlight") return;
+    const next = tl.beats[i + 1];
+    const range: [number, number] = [b.cueIndex, next ? next.cueIndex : tl.ctaIndex >= 0 ? tl.ctaIndex : words.length];
+    const shown = (p.lines ?? []).flatMap((l) => l.split(/\s+/).filter(Boolean));
+    const first = shownWordFrames(words, range, shown.slice(0, 1), fps)[0];
+    if (!first) {
+      out.push({ beat: i + 1, seconds: Infinity, word: shown[0] ?? "", frame: b.from });
+      return;
+    }
+    const seconds = (first.frame - (i === 0 ? 0 : b.from)) / fps;
+    if (seconds > MAX_EMPTY_SECONDS) out.push({ beat: i + 1, seconds: +seconds.toFixed(2), word: first.word, frame: first.frame });
+  });
+  return out;
+}
+
 /** Stretches longer than MAX_HOLD_SECONDS with no meaningful change, until the video ends. */
 export function longHolds(tl: Timeline, events: ScreenEvent[], fps: number): { from: number; until: number; seconds: number; beat: number; after: string }[] {
   const out: { from: number; until: number; seconds: number; beat: number; after: string }[] = [];
