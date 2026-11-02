@@ -59,7 +59,7 @@ export const CardCrop: React.FC<CardCropProps> = ({ capture, target, cursor = []
     <AbsoluteFill style={{ backgroundColor: uiSceneBg(ctx.theme), overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, opacity: enter, transform: `translateY(${(1 - enter) * 60}px) scale(${interpolate(enter, [0, 1], [0.96, 1])})`, transformOrigin: "540px 840px" }}>
         {illustrative && (
-          <div style={{ position: "absolute", left: l.card.x, top: l.card.y - 48, width: l.card.w, textAlign: "center", fontFamily: FONTS.body, fontSize: 26, color: colors.muted }}>Illustrative</div>
+          <div style={{ position: "absolute", left: l.card.x, top: l.card.y + l.card.h + 16, width: l.card.w, textAlign: "center", fontFamily: FONTS.body, fontSize: 26, color: colors.muted }}>Illustrative</div>
         )}
         <div
           style={{

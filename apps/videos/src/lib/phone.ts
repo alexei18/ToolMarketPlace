@@ -38,6 +38,8 @@ export interface ZoomSpec {
   cue: string;
   target: string;
   scale: number;
+  /** Page x (CSS px) the view is centered on, instead of the target's center (e.g. to keep a left-aligned bar's start in view). */
+  centerX?: number;
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), Math.max(lo, hi));
@@ -59,7 +61,7 @@ export function zoomView(meta: CaptureMeta, zoom: ZoomSpec): View {
   const { screen } = phoneLayout(meta);
   const w = meta.width / zoom.scale;
   const h = (w * screen.h) / screen.w;
-  return { x: clamp(t.x + t.w / 2 - w / 2, 0, meta.width - w), y: clamp(t.y + t.h / 2 - h / 2, 0, meta.height - h), w };
+  return { x: clamp((zoom.centerX ?? t.x + t.w / 2) - w / 2, 0, meta.width - w), y: clamp(t.y + t.h / 2 - h / 2, 0, meta.height - h), w };
 }
 
 export function lerpView(a: View, b: View, t: number): View {
@@ -97,7 +99,11 @@ export function finalView(meta: CaptureMeta, p: PhoneFrameSpec): View {
   return p.zoom ? zoomView(meta, p.zoom) : scrollView(meta, p.scroll?.at(-1)?.y ?? 0);
 }
 
-/** Targets the voice talks about in a PhoneFrame: the highlight, the cursor's targets and the zoom target. */
+/**
+ * Targets the voice talks about in a PhoneFrame: the highlight and the cursor's targets; the zoom
+ * target only when nothing else is named (a zoom frames the view, it doesn't have to be legible as a whole).
+ */
 export function phoneTargets(p: PhoneFrameSpec): string[] {
-  return [...new Set([p.highlight?.target, ...(p.cursor ?? []).map((c) => c.target), p.zoom?.target].filter((t): t is string => !!t))];
+  const named = [p.highlight?.target, ...(p.cursor ?? []).map((c) => c.target)].filter((t): t is string => !!t);
+  return [...new Set(named.length ? named : p.zoom ? [p.zoom.target] : [])];
 }
