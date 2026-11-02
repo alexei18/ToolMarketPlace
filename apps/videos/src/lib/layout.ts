@@ -15,10 +15,13 @@ export const CENTER_Y = SAFE.y + SAFE.h / 2;
 /** How far a scene's main element may sit from x = 540 (vo-check). */
 export const MAX_CENTER_OFFSET = 8;
 
-/** Caption block positions inside the safe zone. */
-export const CAPTION_BOXES: Record<"top" | "bottom", Rect> = {
-  top: { x: SAFE.x, y: SAFE.y, w: SAFE.w, h: 140 },
-  bottom: { x: SAFE.x, y: SAFE.y + SAFE.h - 210, w: SAFE.w, h: 210 },
+/**
+ * Caption bands, one per video: top (y 280–380) when UI fills the middle, otherwise bottom
+ * (y 1180–1380). Captions are centered on x = 540 inside the band and never move to the other.
+ */
+export const CAPTION_BANDS: Record<"top" | "bottom", Rect> = {
+  top: { x: SAFE.x, y: 280, w: SAFE.w, h: 100 },
+  bottom: { x: SAFE.x, y: 1180, w: SAFE.w, h: 200 },
 };
 
 /** A box of the given size centered on x = 540 (and on `cy`, the middle of the safe band by default). */

@@ -26,6 +26,16 @@ export interface CaptionPage {
 const MAX = 4;
 const MIN = 2;
 
+/** Caption type: one line, 58 px, smaller only when a page would not fit the 720 px band. */
+export const CAPTION_FONT = { size: 58, min: 44, padX: 28 };
+/** Inter Tight 600 averages under 0.56 em per character (spaces included): an upper estimate. */
+const EM_PER_CHAR = 0.56;
+
+/** Font size that keeps a page on one line inside the band. */
+export function captionFontSize(text: string, bandWidth: number): number {
+  return Math.min(CAPTION_FONT.size, Math.floor((bandWidth - CAPTION_FONT.padX * 2) / (text.length * EM_PER_CHAR)));
+}
+
 export function captionPages(words: Word[], timeline: Timeline, keywords: string[] = [], fps = 30): CaptionPage[] {
   const keys = new Set(keywords.map(normalizeWord));
   const beatStarts = new Set(timeline.beats.map((b) => b.cueIndex));

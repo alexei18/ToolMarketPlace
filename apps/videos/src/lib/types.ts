@@ -15,8 +15,8 @@ export interface BeatSpec {
   cue: string;
   scene: SceneName;
   props?: Record<string, unknown>;
-  /** Where this beat's captions sit inside the safe zone; "none" hides them (e.g. kinetic text already shows the words). */
-  captions?: "top" | "bottom" | "none";
+  /** Captions during this beat: "none" hides them (default for scenes that show their own words). The band is per video (style.captions). */
+  captions?: "show" | "none";
   /** The UI area the voice talks about during this beat, in video pixels. Captions must not cover it (vo-check). */
   focus?: Rect;
 }
@@ -33,6 +33,8 @@ export interface VideoSpec {
     theme: "light" | "dark";
     /** Words shown in the accent color in captions and kinetic text. */
     keywords?: string[];
+    /** The caption band for the whole video; default top when UI fills the middle (PhoneFrame, CardCrop), else bottom. */
+    captions?: "top" | "bottom";
   };
   endscreen: "light" | "dark";
   /** Real-UI captures this video uses (scripts/capture.ts), by name. */

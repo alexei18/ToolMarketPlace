@@ -23,7 +23,6 @@
     {
       "cue": "here",
       "scene": "PhoneFrame",
-      "captions": "top",
       "props": {
         "capture": "top-mobile",
         "scroll": [

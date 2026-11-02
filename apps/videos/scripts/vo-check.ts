@@ -1,7 +1,7 @@
 /*
  * The gate before rendering. Fails on: pauses over 0.35 s, a first word later than 0.3 s, any beat
- * starting more than 3 frames from its cue word, captions outside 2–4 words or the safe zone or on
- * top of the UI the voice talks about, a scene whose main element is more than 8 px off the center
+ * starting more than 3 frames from its cue word, captions outside 2–4 words or one line, outside
+ * the video's one band or on top of the UI the voice talks about, a scene whose main element is more than 8 px off the center
  * line x = 540 or outside its zone, UI the voice talks about outside the safe zone or with text
  * under 40 px (names) / 32 px (other text), a script that differs from vo/<ID>.txt or the voice, and
  * missing captures. Writes out/checks/<ID>.vo-check.json and .md; render.ts refuses to run unless
@@ -10,13 +10,13 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { CaptureMeta } from "../src/captures";
-import { captionPages } from "../src/lib/captions";
-import { CAPTION_BOXES, CENTER_X, centerX, DECOR, inside, intersects, MAX_CENTER_OFFSET, SAFE } from "../src/lib/layout";
+import { CAPTION_FONT, captionFontSize, captionPages } from "../src/lib/captions";
+import { CAPTION_BANDS, CENTER_X, centerX, DECOR, inside, intersects, MAX_CENTER_OFFSET, SAFE } from "../src/lib/layout";
 import { beatFocus, mainElement, MIN_TEXT, talkedAbout, TEXT_BLOCK, type MainElement } from "../src/lib/stage";
 import { buildTimeline, FPS } from "../src/lib/timeline";
 import type { Word } from "../src/lib/types";
 import { normalizeWord, scriptWords } from "../src/lib/words";
-import { captionPosition } from "../src/scenes/names";
+import { captionBand, showsCaptions } from "../src/scenes/names";
 import { decodeMono, ensureDir, fail, idArg, loadSpec, mtime, narrationMatchesSpec, paths, ROOT, writeJson } from "./lib/common";
 import { silenceMap } from "./lib/silence";
 
@@ -149,15 +149,22 @@ export async function checkVoice(id: string): Promise<CheckReport> {
     }
   });
 
+  // Captions: one band for the whole video, centered on x = 540, one line per page.
+  for (const [i, b] of spec.beats.entries()) {
+    const c = b.captions as string | undefined;
+    if (c && c !== "show" && c !== "none") failures.push(`beat ${i + 1}: captions "${c}": the caption band is per video (style.captions: "top" or "bottom"); a beat can only say "show" or "none"`);
+  }
+  const band = captionBand(spec);
   const pages = captionPages(words, tl, spec.style.keywords, FPS);
   const captions = pages.map((p) => {
     const b = tl.beats[p.beat]!;
-    const position = captionPosition(b);
+    const position = showsCaptions(b) ? band : "none";
     const text = p.words.map((w) => w.text).join(" ");
     let problem: string | undefined;
     if (p.words.length < LIMITS.captionWords[0] || p.words.length > LIMITS.captionWords[1]) problem = `${p.words.length} words (2–4 per page)`;
-    if (position !== "none") {
-      const box = CAPTION_BOXES[position];
+    else if (position !== "none" && captionFontSize(text, CAPTION_BANDS[band].w) < CAPTION_FONT.min) problem = "too long for one line in the 720 px band";
+    if (position !== "none" && !problem) {
+      const box = CAPTION_BANDS[position];
       let focus;
       try {
         focus = beatFocus(spec.beats[p.beat]!, captures);

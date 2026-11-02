@@ -10,7 +10,7 @@ import { buildTimeline, FPS } from "./lib/timeline";
 import type { VideoSpec, Word } from "./lib/types";
 import { Endscreen } from "./scenes/Endscreen";
 import { SCENES } from "./scenes";
-import { captionPosition } from "./scenes/names";
+import { captionBand, showsCaptions } from "./scenes/names";
 import { beatFocus } from "./lib/stage";
 
 export interface VideoProps {
@@ -28,7 +28,8 @@ export const Video: React.FC<VideoProps> = ({ spec, words, captures, debugSafeZo
   const pages = useMemo(() => captionPages(words, tl, spec.style.keywords, FPS), [words, tl, spec.style.keywords]);
   const frame = useCurrentFrame();
   const colors = themeColors(spec.style.theme);
-  const captionPos = (beat: number) => captionPosition(tl.beats[beat]!);
+  const band = captionBand(spec);
+  const shown = (beat: number) => showsCaptions(tl.beats[beat]!);
   const current = tl.beats.find((b) => frame >= b.from && frame < b.from + b.durationInFrames);
 
   return (
@@ -51,10 +52,10 @@ export const Video: React.FC<VideoProps> = ({ spec, words, captures, debugSafeZo
           <Endscreen variant={spec.endscreen} />
         </Sequence>
         <Sequence from={0} durationInFrames={tl.voiceEndFrame} name="Captions">
-          <Captions pages={pages} positionOf={captionPos} theme={spec.style.theme} />
+          <Captions pages={pages} band={band} shown={shown} theme={spec.style.theme} />
         </Sequence>
         <Html5Audio src={staticFile(`vo/${spec.id}.wav`)} />
-        {debugSafeZone && <SafeZoneOverlay focus={current ? beatFocus(current, captures) : undefined} />}
+        {debugSafeZone && <SafeZoneOverlay band={band} focus={current ? beatFocus(current, captures) : undefined} />}
       </AbsoluteFill>
     </CapturesContext.Provider>
   );

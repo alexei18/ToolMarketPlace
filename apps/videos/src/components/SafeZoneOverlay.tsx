@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill } from "remotion";
-import { CAPTION_BOXES, CENTER_X, CENTER_Y, DECOR, SAFE } from "../lib/layout";
+import { CAPTION_BANDS, CENTER_X, CENTER_Y, DECOR, SAFE } from "../lib/layout";
 import type { Rect } from "../lib/types";
 
 const box = (r: Rect, style: React.CSSProperties) => <div style={{ position: "absolute", left: r.x, top: r.y, width: r.w, height: r.h, boxSizing: "border-box", ...style }} />;
@@ -15,9 +15,9 @@ const AMBER = "rgba(245,158,11,0.16)";
  * Debug only (never in renders). Red: covered by TikTok or outside every zone. Amber: decoration
  * only (bezel, shadows), x 100–980 × y 200–1500. Dashed: the safe zone for critical text and the
  * UI the voice talks about, x 180–900 × y 260–1420. Magenta: the center line x = 540 every element
- * is centered on. Blue: caption boxes. Yellow: the beat's focus (what captions must not cover).
+ * is centered on. Blue: the caption bands (the video's band bold). Yellow: the beat's focus (what captions must not cover).
  */
-export const SafeZoneOverlay: React.FC<{ focus?: Rect }> = ({ focus }) => (
+export const SafeZoneOverlay: React.FC<{ focus?: Rect; band?: "top" | "bottom" }> = ({ focus, band }) => (
   <AbsoluteFill style={{ pointerEvents: "none" }}>
     {/* Outside the decoration zone. */}
     {box({ x: 0, y: 0, w: 1080, h: DECOR.y }, { background: RED })}
@@ -31,8 +31,9 @@ export const SafeZoneOverlay: React.FC<{ focus?: Rect }> = ({ focus }) => (
     {box({ x: SAFE.x + SAFE.w, y: SAFE.y, w: DECOR.x + DECOR.w - SAFE.x - SAFE.w, h: SAFE.h }, { background: AMBER })}
     {box(DECOR, { border: "2px dotted rgba(245,158,11,0.95)" })}
     {box(SAFE, { border: "3px dashed rgba(220,38,38,0.95)" })}
-    {box(CAPTION_BOXES.top, { border: "2px dotted rgba(37,99,235,0.85)" })}
-    {box(CAPTION_BOXES.bottom, { border: "2px dotted rgba(37,99,235,0.85)" })}
+    {(["top", "bottom"] as const).map((b) => (
+      <React.Fragment key={b}>{box(CAPTION_BANDS[b], { border: `${!band || band === b ? 3 : 1}px dotted rgba(37,99,235,${!band || band === b ? 0.9 : 0.35})` })}</React.Fragment>
+    ))}
     {/* Center lines. */}
     {box({ x: CENTER_X - 1, y: 0, w: 2, h: 1920 }, { background: "rgba(219,39,119,0.85)" })}
     {box({ x: SAFE.x, y: CENTER_Y - 1, w: SAFE.w, h: 2 }, { background: "rgba(219,39,119,0.45)" })}

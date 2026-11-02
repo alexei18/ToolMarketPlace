@@ -12,4 +12,4 @@ import { StatOrQuote } from "./StatOrQuote";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const SCENES: Record<SceneName, React.FC<any>> = { KineticText, PhoneFrame, CardCrop, CardReveal, LightSweep, CheckDraw, StatOrQuote };
 
-export { SHOWS_OWN_WORDS, captionPosition } from "./names";
+export { SHOWS_OWN_WORDS, UI_SCENES, captionBand, showsCaptions } from "./names";
