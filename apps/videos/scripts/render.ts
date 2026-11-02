@@ -10,7 +10,8 @@ import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { captionPages } from "../src/lib/captions";
 import { buildTimeline, FPS } from "../src/lib/timeline";
-import { maxScroll, phoneLayout } from "../src/lib/phone";
+import { cardLayout, type CardCropSpec } from "../src/lib/cardcrop";
+import { finalView, phoneLayout, type PhoneFrameSpec } from "../src/lib/phone";
 import type { Word } from "../src/lib/types";
 import { findCue } from "../src/lib/words";
 import { webpackOverride } from "../webpack-override";
@@ -73,30 +74,39 @@ export async function renderVideo(id: string, serveUrl?: string): Promise<{ outp
   const checks: string[] = [];
   ensureDir(paths.checks);
   for (const b of tl.beats) {
-    if (b.scene !== "PhoneFrame") continue;
-    const p = b.props as { capture: string; scroll?: { cue?: string; y: number }[] };
+    if (b.scene !== "PhoneFrame" && b.scene !== "CardCrop") continue;
+    const p = b.props as unknown as PhoneFrameSpec & CardCropSpec & { capture: string; state?: { cue: string; name: string; delayFrames?: number } };
     const meta = captures[p.capture]!;
-    const lastScroll = p.scroll?.at(-1);
-    const scrollY = Math.min(lastScroll?.y ?? 0, maxScroll(meta));
-    // After the last scroll settles (it ends 12 frames after its cue), inside the beat.
-    const settleCue = lastScroll?.cue ? findCue(words, lastScroll.cue) : -1;
-    const settle = settleCue >= 0 ? Math.round(words[settleCue]!.start * FPS) + 14 : b.cueFrame + 20;
+    const at = (cue: string | undefined, plus: number) => {
+      const i = cue ? findCue(words, cue) : -1;
+      return i >= 0 ? Math.round(words[i]!.start * FPS) + plus : -1;
+    };
+    // Once everything has settled (scroll, zoom, state), inside the beat.
+    const settle = Math.max(b.cueFrame + 20, at(p.scroll?.at(-1)?.cue, 14), at(p.zoom?.cue, 18), at(p.state?.cue, (p.state?.delayFrames ?? 0) + 4));
     const frame = Math.min(settle, b.from + b.durationInFrames - 1);
+    const stateShown = p.state && at(p.state.cue, p.state.delayFrames ?? 0) <= frame ? p.state.name : "default";
+    // The same part of the real page, in CSS px.
+    let region: { x: number; y: number; w: number; h: number };
+    if (b.scene === "PhoneFrame") {
+      const view = finalView(meta, p);
+      const { screen } = phoneLayout(meta);
+      region = { x: view.x, y: view.y, w: view.w, h: (view.w * screen.h) / screen.w };
+    } else {
+      region = cardLayout(meta, p.target!).crop;
+    }
+    const px = (v: number) => Math.round(v * meta.scale);
     const still = path.join(paths.checks, `${id}-beat${b.index + 1}-frame.png`);
     await renderStill({ composition, serveUrl: url, output: still, frame, inputProps, imageFormat: "png" });
-    const { screen, scale } = phoneLayout(meta);
-    const cropH = Math.round((screen.h / scale) * meta.scale);
-    const cropY = Math.round(scrollY * meta.scale);
     const check = path.join(paths.checks, `${id}-beat${b.index + 1}.png`);
     await run(FFMPEG, [
       "-v", "error", "-y",
-      "-i", path.join(ROOT, "public", meta.states.default!),
+      "-i", path.join(ROOT, "public", meta.states[stateShown] ?? meta.states.default!),
       "-i", still,
-      "-filter_complex", `[0:v]crop=iw:${cropH}:0:${cropY},scale=-2:1920,pad=iw+40:1920:0:0:white[a];[a][1:v]hstack=inputs=2`,
+      "-filter_complex", `[0:v]crop=${px(region.w)}:${px(region.h)}:${px(region.x)}:${px(region.y)},scale=1080:-2,pad=1120:1920:0:(1920-ih)/2:white[a];[a][1:v]hstack=inputs=2`,
       check,
     ]);
     checks.push(check);
-    console.log(`✔ check beat ${b.index + 1} (frame ${frame}): real ${meta.route} | video → ${path.relative(process.cwd(), check)}`);
+    console.log(`✔ check beat ${b.index + 1} (${b.scene}, frame ${frame}): real ${meta.route} | video → ${path.relative(process.cwd(), check)}`);
   }
 
   // The file must be what TikTok expects.

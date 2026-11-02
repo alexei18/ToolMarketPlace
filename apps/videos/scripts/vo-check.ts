@@ -2,7 +2,8 @@
  * The gate before rendering. Fails on: pauses over 0.35 s, a first word later than 0.3 s, any beat
  * starting more than 3 frames from its cue word, captions outside 2–4 words or the safe zone or on
  * top of the UI the voice talks about, a scene whose main element is more than 8 px off the center
- * line x = 540 or outside its zone, a script that differs from vo/<ID>.txt or the voice, and
+ * line x = 540 or outside its zone, UI the voice talks about outside the safe zone or with text
+ * under 40 px (names) / 32 px (other text), a script that differs from vo/<ID>.txt or the voice, and
  * missing captures. Writes out/checks/<ID>.vo-check.json and .md; render.ts refuses to run unless
  * the latest report passed and is newer than its inputs.
  */
@@ -11,8 +12,7 @@ import path from "node:path";
 import type { CaptureMeta } from "../src/captures";
 import { captionPages } from "../src/lib/captions";
 import { CAPTION_BOXES, CENTER_X, centerX, DECOR, inside, intersects, MAX_CENTER_OFFSET, SAFE } from "../src/lib/layout";
-import { beatFocus } from "../src/lib/phone";
-import { mainElement, TEXT_BLOCK, type MainElement } from "../src/lib/stage";
+import { beatFocus, mainElement, MIN_TEXT, talkedAbout, TEXT_BLOCK, type MainElement } from "../src/lib/stage";
 import { buildTimeline, FPS } from "../src/lib/timeline";
 import type { Word } from "../src/lib/types";
 import { normalizeWord, scriptWords } from "../src/lib/words";
@@ -36,6 +36,8 @@ export interface CheckReport {
   captions: { from: number; text: string; position: string; ok: boolean; problem?: string }[];
   /** Each scene's main element: centered on x = 540, inside its zone. */
   layout: { beat: string; scene: string; what: string; centerX: number; offset: number; ok: boolean; problem?: string }[];
+  /** The UI the voice talks about: where it lands and how large its smallest text is, video px. */
+  ui: { beat: number; scene: string; target: string; box: string; name?: number; secondary?: number; ok: boolean; problem?: string }[];
 }
 
 export function loadCaptures(): Record<string, CaptureMeta> {
@@ -96,7 +98,7 @@ export async function checkVoice(id: string): Promise<CheckReport> {
 
   const captures = loadCaptures();
   for (const b of spec.beats) {
-    if (b.scene !== "PhoneFrame") continue;
+    if (b.scene !== "PhoneFrame" && b.scene !== "CardCrop") continue;
     const name = (b.props as { capture?: string } | undefined)?.capture;
     const meta = name ? captures[name] : undefined;
     if (!meta) failures.push(`capture "${name}" is missing: run npm run video:capture ${id}`);
@@ -124,11 +126,24 @@ export async function checkVoice(id: string): Promise<CheckReport> {
   });
   layout.push(layoutRow("end", "Endscreen", { what: "text block", rect: TEXT_BLOCK }));
 
-  // Key UI (what the voice talks about) must sit inside TikTok's safe zone.
+  // The UI the voice talks about sits inside the safe zone, its text at least 40 px (names) and
+  // 32 px (other text) once settled.
+  const ui: CheckReport["ui"] = [];
   spec.beats.forEach((b, i) => {
     try {
-      const focus = beatFocus(b, captures);
-      if (focus && !inside(focus, SAFE)) failures.push(`beat ${i + 1}: the UI the voice talks about (${focus.x.toFixed(0)},${focus.y.toFixed(0)} ${focus.w.toFixed(0)}×${focus.h.toFixed(0)}) leaves the safe zone`);
+      const items = b.focus ? [{ target: "focus", box: b.focus }] : talkedAbout(b, captures);
+      for (const u of items) {
+        const r = u.box;
+        const name = "name" in u && u.name !== undefined ? +u.name.toFixed(1) : undefined;
+        const secondary = "secondary" in u && u.secondary !== undefined ? +u.secondary.toFixed(1) : undefined;
+        const problems: string[] = [];
+        if (!inside(r, SAFE)) problems.push("leaves the safe zone");
+        if (name !== undefined && name < MIN_TEXT.name) problems.push(`names are ${name} px (min ${MIN_TEXT.name})`);
+        if (secondary !== undefined && secondary < MIN_TEXT.secondary) problems.push(`text is ${secondary} px (min ${MIN_TEXT.secondary})`);
+        const problem = problems.join(", ") || undefined;
+        if (problem) failures.push(`beat ${i + 1} (${b.scene}): "${u.target}" ${problem}`);
+        ui.push({ beat: i + 1, scene: b.scene, target: u.target, box: `${r.x.toFixed(0)},${r.y.toFixed(0)} ${r.w.toFixed(0)}×${r.h.toFixed(0)}`, name, secondary, ok: !problem, ...(problem ? { problem } : {}) });
+      }
     } catch (e) {
       failures.push(`beat ${i + 1}: ${(e as Error).message}`);
     }
@@ -177,6 +192,7 @@ export async function checkVoice(id: string): Promise<CheckReport> {
     beats,
     captions,
     layout,
+    ui,
   };
   ensureDir(paths.checks);
   writeJson(paths.checkReport(id), report);
@@ -211,6 +227,16 @@ function markdown(r: CheckReport): string {
     "| Beat | Scene | Main element | Center x | Offset (px) | OK |",
     "| --- | --- | --- | --- | --- | --- |",
     ...r.layout.map((l) => `| ${l.beat} | ${l.scene} | ${l.what} | ${l.centerX} | ${l.offset} | ${l.ok ? "yes" : `**no**: ${l.problem}`} |`),
+    "",
+    `## UI the voice talks about (inside the safe zone; text at least ${MIN_TEXT.name} px for names, ${MIN_TEXT.secondary} px otherwise)`,
+    "",
+    ...(r.ui.length
+      ? [
+          "| Beat | Scene | Element | Box (x,y w×h) | Smallest name (px) | Smallest other text (px) | OK |",
+          "| --- | --- | --- | --- | --- | --- | --- |",
+          ...r.ui.map((u) => `| ${u.beat} | ${u.scene} | ${u.target} | ${u.box} | ${u.name ?? "–"} | ${u.secondary ?? "–"} | ${u.ok ? "yes" : `**no**: ${u.problem}`} |`),
+        ]
+      : ["None in this video."]),
     "",
     "## Caption pages",
     "",

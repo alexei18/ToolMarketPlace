@@ -1,6 +1,6 @@
 /* The video spec (specs/<ID>.json) and the aligned words (vo/<ID>.words.json). */
 
-export type SceneName = "KineticText" | "PhoneFrame" | "CardReveal" | "LightSweep" | "CheckDraw" | "StatOrQuote";
+export type SceneName = "KineticText" | "PhoneFrame" | "CardCrop" | "CardReveal" | "LightSweep" | "CheckDraw" | "StatOrQuote";
 
 /** A rectangle in video pixels (1080×1920). */
 export interface Rect {
@@ -48,7 +48,7 @@ export interface VideoSpec {
 export interface CaptureRecipe {
   /** App route, e.g. "/top" (see its page in apps/web/src/pages first). */
   route: string;
-  /** Viewport in CSS px. 1080 wide for full-width scenes; a phone width (390) for PhoneFrame. */
+  /** Viewport in CSS px. A phone width (390) for PhoneFrame; for CardCrop, a width where the element's text reaches 40/32 px at 720 px wide. */
   width: number;
   height: number;
   /** Device scale factor of the PNG. */

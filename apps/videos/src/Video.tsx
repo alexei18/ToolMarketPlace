@@ -11,6 +11,7 @@ import type { VideoSpec, Word } from "./lib/types";
 import { Endscreen } from "./scenes/Endscreen";
 import { SCENES } from "./scenes";
 import { captionPosition } from "./scenes/names";
+import { beatFocus } from "./lib/stage";
 
 export interface VideoProps {
   spec: VideoSpec;
@@ -53,7 +54,7 @@ export const Video: React.FC<VideoProps> = ({ spec, words, captures, debugSafeZo
           <Captions pages={pages} positionOf={captionPos} theme={spec.style.theme} />
         </Sequence>
         <Html5Audio src={staticFile(`vo/${spec.id}.wav`)} />
-        {debugSafeZone && <SafeZoneOverlay focus={current?.focus} />}
+        {debugSafeZone && <SafeZoneOverlay focus={current ? beatFocus(current, captures) : undefined} />}
       </AbsoluteFill>
     </CapturesContext.Provider>
   );

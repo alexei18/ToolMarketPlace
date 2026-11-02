@@ -3,7 +3,7 @@ import { AbsoluteFill, Img, interpolate, staticFile } from "remotion";
 import { COLORS, FONTS, themeColors } from "../brand";
 import { useCapture } from "../captures";
 import { cueFrameOf, useBeat } from "../context";
-import { cameraAt, maxScroll as maxScrollOf, phoneLayout, targetRect, type ZoomSpec } from "../lib/phone";
+import { lerpView, phoneLayout, scrollView, targetBox, toVideo, zoomView, type View, type ZoomSpec } from "../lib/phone";
 import { EASE_IN_OUT, progress } from "../motion";
 import { CursorTap, type CursorStop } from "./CursorTap";
 
@@ -12,7 +12,7 @@ export interface PhoneFrameProps {
   capture: string;
   /** Page scroll (CSS px from the top), each reached on its cue word. The first entry may omit the cue. */
   scroll?: { cue?: string; y: number }[];
-  /** Camera move onto a captured element on its cue word, so small UI is readable on a phone. */
+  /** Zoom inside the screen onto a captured element on its cue word; the phone itself never scales. */
   zoom?: ZoomSpec;
   /** Outline a captured element when its cue word is spoken. */
   highlight?: { cue: string; target: string };
@@ -24,68 +24,70 @@ export interface PhoneFrameProps {
   illustrative?: boolean;
 }
 
+/**
+ * A fixed phone centered on x = 540 showing a real page capture. Scrolling and zooming move the
+ * capture inside the screen; the bezel stays the same size and place. For a detail the voice
+ * talks about, cut to a CardCrop instead of zooming far in.
+ */
 export const PhoneFrame: React.FC<PhoneFrameProps> = ({ capture, scroll = [], zoom, highlight, cursor = [], state, illustrative = true }) => {
   const ctx = useBeat();
   const meta = useCapture(capture);
   const colors = themeColors(ctx.theme);
-  const { outer, screen, scale } = phoneLayout(meta);
+  const { outer, screen } = phoneLayout(meta);
   const f = ctx.absFrame;
 
   // Enter: the phone rises into place on the cue word.
   const enter = progress(f, ctx.cueFrame, 16);
 
   // Scroll between keyframes, each eased over 18 frames ending 12 frames after its cue.
-  const maxScroll = maxScrollOf(meta);
-  let scrollY = Math.min(scroll[0]?.y ?? 0, maxScroll);
+  let scrollY = scroll[0]?.y ?? 0;
   for (let i = 1; i < scroll.length; i++) {
-    const at = cueFrameOf(ctx, ctx.fps, scroll[i]!.cue);
-    const p = progress(f, at - 6, 18, EASE_IN_OUT);
-    if (p > 0) scrollY = interpolate(p, [0, 1], [Math.min(scroll[i - 1]!.y, maxScroll), Math.min(scroll[i]!.y, maxScroll)]);
+    const p = progress(f, cueFrameOf(ctx, ctx.fps, scroll[i]!.cue) - 6, 18, EASE_IN_OUT);
+    if (p > 0) scrollY = interpolate(p, [0, 1], [scroll[i - 1]!.y, scroll[i]!.y]);
   }
-  const finalScroll = Math.min(scroll.at(-1)?.y ?? 0, maxScroll);
-
-  // Camera: eases in over 20 frames from 4 frames before its cue.
+  // Zoom: eases in over 20 frames from 4 frames before its cue.
   const zoomT = zoom ? progress(f, cueFrameOf(ctx, ctx.fps, zoom.cue) - 4, 20, EASE_IN_OUT) : 0;
-  const camera = cameraAt(meta, zoom, finalScroll, zoomT);
+  const view: View = zoom ? lerpView(scrollView(meta, scrollY), zoomView(meta, zoom), zoomT) : scrollView(meta, scrollY);
+  const k = screen.w / view.w;
+  // Positions inside the screen element.
+  const inScreen = (target: string) => {
+    const r = toVideo(meta, view, targetBox(meta, target));
+    return { ...r, x: r.x - screen.x, y: r.y - screen.y };
+  };
 
   const stateName = state && f >= cueFrameOf(ctx, ctx.fps, state.cue) + (state.delayFrames ?? 0) ? state.name : "default";
   const src = meta.states[stateName] ?? meta.states.default!;
 
-  const hl = highlight ? targetRect(meta, highlight.target, scrollY) : null;
+  const hl = highlight ? inScreen(highlight.target) : null;
   const hlIn = highlight ? progress(f, cueFrameOf(ctx, ctx.fps, highlight.cue), 10) : 0;
 
   const stops: CursorStop[] = cursor.map((c, i) => {
-    const r = targetRect(meta, c.target, scrollY);
+    const r = inScreen(c.target);
     return { x: r.x + r.w / 2, y: r.y + r.h / 2, at: cueFrameOf(ctx, ctx.fps, c.cue), tap: c.tap ?? i === cursor.length - 1 };
   });
   // The cursor comes in from below and to the right of its first stop.
-  if (stops.length) stops.unshift({ x: stops[0]!.x + 140, y: stops[0]!.y + 220, at: stops[0]!.at - 16 });
+  if (stops.length) stops.unshift({ x: stops[0]!.x + 120, y: stops[0]!.y + 200, at: stops[0]!.at - 16 });
 
   return (
     <AbsoluteFill style={{ backgroundColor: ctx.theme === "dark" ? COLORS.ink : COLORS.surface, overflow: "hidden" }}>
-      {/* The camera keeps the phone's top edge in place, so the label stays just above it. */}
-      {illustrative && (
-        <div style={{ position: "absolute", left: outer.x, top: outer.y - 42, width: outer.w, textAlign: "center", fontFamily: FONTS.body, fontSize: 26, color: colors.muted, opacity: enter }}>
-          Illustrative
-        </div>
-      )}
       <div style={{ position: "absolute", inset: 0, opacity: enter, transform: `translateY(${(1 - enter) * 140}px)` }}>
-        <div style={{ position: "absolute", inset: 0, transformOrigin: "0 0", transform: camera.transform }}>
-          <div
-            style={{
-              position: "absolute",
-              left: outer.x,
-              top: outer.y,
-              width: outer.w,
-              height: outer.h,
-              borderRadius: 76,
-              background: COLORS.ink,
-              boxShadow: "0 40px 80px rgba(17,17,17,0.22), 0 0 0 2px rgba(255,255,255,0.06) inset",
-            }}
-          />
-          <div style={{ position: "absolute", left: screen.x, top: screen.y, width: screen.w, height: screen.h, borderRadius: 62, overflow: "hidden", background: COLORS.bg }}>
-            <Img src={staticFile(src)} style={{ position: "absolute", left: 0, top: -scrollY * scale, width: screen.w, height: meta.height * scale }} />
-          </div>
+        {illustrative && (
+          <div style={{ position: "absolute", left: outer.x, top: outer.y - 44, width: outer.w, textAlign: "center", fontFamily: FONTS.body, fontSize: 26, color: colors.muted }}>Illustrative</div>
+        )}
+        <div
+          style={{
+            position: "absolute",
+            left: outer.x,
+            top: outer.y,
+            width: outer.w,
+            height: outer.h,
+            borderRadius: 76,
+            background: COLORS.ink,
+            boxShadow: "0 40px 80px rgba(17,17,17,0.22), 0 0 0 2px rgba(255,255,255,0.06) inset",
+          }}
+        />
+        <div style={{ position: "absolute", left: screen.x, top: screen.y, width: screen.w, height: screen.h, borderRadius: 62, overflow: "hidden", background: COLORS.bg }}>
+          <Img src={staticFile(src)} style={{ position: "absolute", left: -view.x * k, top: -view.y * k, width: meta.width * k, height: meta.height * k, maxWidth: "none" }} />
           {hl && (
             <div
               style={{

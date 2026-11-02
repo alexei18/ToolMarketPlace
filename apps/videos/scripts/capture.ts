@@ -74,7 +74,21 @@ async function captureOne(browser: Awaited<ReturnType<typeof chromium.launch>>, 
       const el = document.querySelector(sel);
       if (!el) return null;
       const b = el.getBoundingClientRect();
-      return { x: b.left + window.scrollX, y: b.top + window.scrollY, w: b.width, h: b.height };
+      // The smallest visible text inside: headings (names) and everything else, CSS px (vo-check
+      // turns them into video px and fails under 40 / 32).
+      const text: { name?: number; secondary?: number } = {};
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const parent = n.parentElement;
+        if (!parent || !n.textContent?.trim()) continue;
+        const r = parent.getBoundingClientRect();
+        const cs = getComputedStyle(parent);
+        if (r.width <= 1 || r.height <= 1 || cs.visibility === "hidden" || Number(cs.opacity) === 0) continue;
+        const size = parseFloat(cs.fontSize);
+        const kind = parent.closest("h1,h2,h3,h4,h5,h6") ? "name" : "secondary";
+        text[kind] = Math.min(text[kind] ?? Infinity, size);
+      }
+      return { x: b.left + window.scrollX, y: b.top + window.scrollY, w: b.width, h: b.height, ...(Object.keys(text).length ? { text } : {}) };
     }, selector);
     if (!box) fail(`capture "${name}": target "${t}" (${selector}) not found on ${r.route}`);
     targets[t] = box;

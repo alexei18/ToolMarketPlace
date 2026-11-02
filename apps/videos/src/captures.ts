@@ -13,8 +13,11 @@ export interface CaptureMeta {
   scale: number;
   /** State name → PNG path inside public/ ("default" is always there; e.g. "saved" with the save button pressed). */
   states: Record<string, string>;
-  /** Named elements → their box on the page. */
-  targets: Record<string, { x: number; y: number; w: number; h: number }>;
+  /**
+   * Named elements → their box on the page, and the smallest visible text inside, in CSS px:
+   * `name` for headings (product names), `secondary` for everything else.
+   */
+  targets: Record<string, { x: number; y: number; w: number; h: number; text?: { name?: number; secondary?: number } }>;
 }
 
 export const CapturesContext = createContext<Record<string, CaptureMeta>>({});
