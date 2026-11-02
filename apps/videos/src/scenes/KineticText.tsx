@@ -2,12 +2,12 @@ import React from "react";
 import { AbsoluteFill, interpolate } from "remotion";
 import { FONTS, themeColors } from "../brand";
 import { spokenTimes, useBeat } from "../context";
-import { SAFE } from "../lib/layout";
+import { TEXT_BLOCK } from "../lib/stage";
 import { normalizeWord } from "../lib/words";
-import { progress } from "../motion";
+import { EASE_IN_OUT, progress } from "../motion";
 
 export interface KineticTextProps {
-  /** Lines of on-screen text; each word appears on the frame it is spoken. */
+  /** Lines of on-screen text, centered; each word appears on the frame it is spoken. */
   lines: string[];
   /** slam: words punch in; typewriter: letters type out over the spoken word; highlight: the text is there, highlighted words get a marker as they are said. */
   mode?: "slam" | "typewriter" | "highlight";
@@ -15,17 +15,33 @@ export interface KineticTextProps {
   highlight?: string[];
   /** Font size in px. */
   size?: number;
-  align?: "left" | "center";
-  /** Vertical placement inside the safe zone. */
-  position?: "top" | "center";
 }
 
-export const KineticText: React.FC<KineticTextProps> = ({ lines, mode = "slam", highlight, size = 108, align = "left", position = "center" }) => {
+const LINE_HEIGHT = 1.06;
+
+/*
+ * Center-aligned text, the block centered on x = 540 and on the middle of the safe band (y 840).
+ * In slam and typewriter modes a line appears with its first spoken word and the block eases so
+ * the lines shown so far stay centered: the first word lands in the middle of the frame, not at
+ * the top of an empty block.
+ */
+export const KineticText: React.FC<KineticTextProps> = ({ lines, mode = "slam", highlight, size = 108 }) => {
   const ctx = useBeat();
   const colors = themeColors(ctx.theme);
   const keys = new Set((highlight ?? ctx.keywords).map(normalizeWord));
   const words = lines.map((l) => l.split(/\s+/).filter(Boolean));
   const times = spokenTimes(ctx, ctx.fps, words.flat());
+  const f = ctx.absFrame;
+
+  const lineStarts: number[] = [];
+  let k = 0;
+  for (const line of words) {
+    lineStarts.push(times[k]![0]);
+    k += line.length;
+  }
+  const lineH = size * LINE_HEIGHT;
+  const shown = mode === "highlight" ? lines.length : lineStarts.reduce((n, at) => n + progress(f, at - 2, 8, EASE_IN_OUT), 0);
+  const shift = ((lines.length - shown) * lineH) / 2;
   let n = 0;
 
   return (
@@ -33,30 +49,36 @@ export const KineticText: React.FC<KineticTextProps> = ({ lines, mode = "slam", 
       <div
         style={{
           position: "absolute",
-          left: SAFE.x,
-          width: SAFE.w,
-          top: position === "top" ? SAFE.y + 40 : SAFE.y,
-          height: position === "top" ? undefined : SAFE.h,
+          left: TEXT_BLOCK.x,
+          top: TEXT_BLOCK.y,
+          width: TEXT_BLOCK.w,
+          height: TEXT_BLOCK.h,
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          alignItems: align === "center" ? "center" : "flex-start",
-          textAlign: align,
+          alignItems: "center",
+          textAlign: "center",
           fontFamily: FONTS.display,
           fontWeight: 800,
           fontSize: size,
-          lineHeight: 1.02,
-          letterSpacing: "-0.02em",
+          lineHeight: LINE_HEIGHT,
+          letterSpacing: "-0.01em",
           color: colors.text,
+          transform: `translateY(${shift}px)`,
         }}
       >
         {words.map((line, li) => (
-          <div key={li} style={{ display: "flex", flexWrap: "wrap", gap: `0 ${size * 0.26}px`, justifyContent: align === "center" ? "center" : "flex-start" }}>
+          <div key={li} style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
             {line.map((w, wi) => {
               const [start, end] = times[n++]!;
-              const local = ctx.absFrame;
               const isKey = keys.has(normalizeWord(w));
-              return <KWord key={wi} word={w} mode={mode} isKey={isKey} start={start} end={end} frame={local} accent={colors.accent} size={size} />;
+              // Slam: a word takes its place in the line as it lands, so a half-said line stays centered.
+              const grow = mode === "slam" ? progress(f, start, 5) : 1;
+              return (
+                <span key={wi} style={{ display: "inline-block", whiteSpace: "nowrap", maxWidth: `${grow * w.length * 0.8}em`, marginLeft: wi > 0 ? grow * size * 0.24 : 0 }}>
+                  <KWord word={w} mode={mode} isKey={isKey} start={start} end={end} frame={f} accent={colors.accent} size={size} />
+                </span>
+              );
             })}
           </div>
         ))}
@@ -121,7 +143,7 @@ const KWord: React.FC<{ word: string; mode: NonNullable<KineticTextProps["mode"]
         color,
         opacity: interpolate(frame, [start, start + 2], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         transform: `scale(${interpolate(p, [0, 1], [1.45, 1])})`,
-        transformOrigin: "50% 60%",
+        transformOrigin: "50% 55%",
       }}
     >
       {word}
