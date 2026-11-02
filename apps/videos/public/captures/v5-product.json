@@ -7,5 +7,16 @@
   "states": {
     "default": "captures/v5-product.png"
   },
-  "targets": {}
+  "targets": {
+    "perks": {
+      "x": 16,
+      "y": 801.140625,
+      "w": 358,
+      "h": 145.984375,
+      "text": {
+        "name": 17,
+        "secondary": 13
+      }
+    }
+  }
 }

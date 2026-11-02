@@ -83,6 +83,9 @@ async function captureOne(browser: Awaited<ReturnType<typeof chromium.launch>>, 
   });
 
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  // The screenshot is as wide as the page's content, which can exceed a narrow viewport (the site is
+  // about 320 px wide at least). The metadata must say so, or scenes squeeze the image to fit.
+  const width = await page.evaluate(() => Math.max(window.innerWidth, document.documentElement.scrollWidth));
   const targets: CaptureMeta["targets"] = {};
   for (const [t, selector] of Object.entries(r.targets ?? {})) {
     const box = await page.evaluate((sel) => {
@@ -138,7 +141,7 @@ async function captureOne(browser: Awaited<ReturnType<typeof chromium.launch>>, 
   }
   await page.close();
 
-  const meta: CaptureMeta = { name, route: r.route, width: r.width, height, scale, states, targets };
+  const meta: CaptureMeta = { name, route: r.route, width, height, scale, states, targets };
   writeJson(path.join(paths.captures, `${name}.json`), meta);
   console.log(`✔ capture ${name}: ${WEB}${r.route} at ${r.width}px ×${scale}, ${Object.keys(states).length} state(s), targets ${Object.keys(targets).join(", ") || "none"}`);
   return meta;

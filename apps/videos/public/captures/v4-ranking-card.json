@@ -1,7 +1,7 @@
 {
   "name": "v4-ranking-card",
   "route": "/top",
-  "width": 300,
+  "width": 320,
   "height": 3630,
   "scale": 3,
   "states": {
