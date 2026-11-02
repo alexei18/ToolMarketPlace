@@ -5,19 +5,23 @@ import { TEXT_BLOCK } from "../lib/stage";
 import { progress } from "../motion";
 
 /**
- * The 2-second endscreen: the wordmark file itself (light or dark variant, never redrawn or
- * recolored), "Join the waitlist" and "link in bio" (docs/tiktok-campaign.md).
+ * The endscreen: the wordmark file itself (light, or the white file on dark; never redrawn or
+ * recolored), "Join the waitlist" and "link in bio" (docs/tiktok-campaign.md). In a video it
+ * starts on the spoken "Join" and "link in bio" lands on its spoken word (`linkAt`, frames from
+ * the endscreen's start); without it (gallery, TEST-01) the lines follow each other.
  */
-export const Endscreen: React.FC<{ variant: "light" | "dark" }> = ({ variant }) => {
+export const Endscreen: React.FC<{ variant: "light" | "dark"; linkAt?: number }> = ({ variant, linkAt }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
   const colors = themeColors(variant);
   const logoW = 560;
-  const logoIn = progress(frame, 0, 14);
-  const ctaIn = progress(frame, 6, 14);
-  const bioIn = progress(frame, 11, 14);
+  const spoken = linkAt !== undefined;
+  const logoIn = progress(frame, 0, spoken ? 10 : 14);
+  const ctaIn = progress(frame, spoken ? 0 : 6, spoken ? 8 : 14);
+  const bioAt = spoken ? linkAt : 11;
+  const bioIn = progress(frame, bioAt, spoken ? 8 : 14);
   // The underline keeps drawing until the last frame, so the end never freezes.
-  const underline = interpolate(frame, [14, durationInFrames - 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const underline = interpolate(frame, [bioAt + 3, durationInFrames - 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   return (
     <AbsoluteFill style={{ backgroundColor: colors.bg }}>

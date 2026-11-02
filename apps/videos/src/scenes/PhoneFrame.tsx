@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, interpolate, staticFile } from "remotion";
-import { COLORS, FONTS, themeColors } from "../brand";
+import { COLORS, FONTS, themeColors, uiSceneBg } from "../brand";
 import { useCapture } from "../captures";
 import { cueFrameOf, useBeat } from "../context";
 import { lerpView, phoneLayout, scrollView, targetBox, toVideo, zoomView, type View, type ZoomSpec } from "../lib/phone";
@@ -69,7 +69,7 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({ capture, scroll = [], zo
   if (stops.length) stops.unshift({ x: stops[0]!.x + 120, y: stops[0]!.y + 200, at: stops[0]!.at - 16 });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: ctx.theme === "dark" ? COLORS.ink : COLORS.surface, overflow: "hidden" }}>
+    <AbsoluteFill style={{ backgroundColor: uiSceneBg(ctx.theme), overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, opacity: enter, transform: `translateY(${(1 - enter) * 140}px)` }}>
         {illustrative && (
           <div style={{ position: "absolute", left: outer.x, top: outer.y - 44, width: outer.w, textAlign: "center", fontFamily: FONTS.body, fontSize: 26, color: colors.muted }}>Illustrative</div>

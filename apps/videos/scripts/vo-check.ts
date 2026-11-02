@@ -3,9 +3,13 @@
  * starting more than 3 frames from its cue word, captions outside 2–4 words or one line, outside
  * the video's one band or on top of the UI the voice talks about, a scene whose main element is more than 8 px off the center
  * line x = 540 or outside its zone, UI the voice talks about outside the safe zone or with text
- * under 40 px (names) / 32 px (other text), a script that differs from vo/<ID>.txt or the voice, and
- * missing captures. Writes out/checks/<ID>.vo-check.json and .md; render.ts refuses to run unless
- * the latest report passed and is newer than its inputs.
+ * under 40 px (names) / 32 px (other text), a script that differs from vo/<ID>.txt or the voice,
+ * missing captures, a script that doesn't end with "Join the waitlist, link in bio.", more than
+ * 0.8 s of silence at the end, a batch script outside 75–90 words, colors under 4.5:1 contrast,
+ * a dark video with the light endscreen, and a CardCrop captured under device scale 3.
+ * Warns (doesn't fail) on a pace outside 2.8–3.5 words/s and on any shot that holds longer than
+ * 1.5 s without a meaningful change. Writes out/checks/<ID>.vo-check.json and .md; render.ts
+ * refuses to run unless the latest report passed and is newer than its inputs.
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -13,14 +17,30 @@ import type { CaptureMeta } from "../src/captures";
 import { CAPTION_FONT, captionFontSize, captionPages } from "../src/lib/captions";
 import { CAPTION_BANDS, CENTER_X, centerX, DECOR, inside, intersects, MAX_CENTER_OFFSET, SAFE } from "../src/lib/layout";
 import { beatFocus, mainElement, MIN_TEXT, talkedAbout, TEXT_BLOCK, type MainElement } from "../src/lib/stage";
-import { buildTimeline, FPS } from "../src/lib/timeline";
+import { longHolds, MAX_HOLD_SECONDS, screenEvents } from "../src/lib/events";
+import { captionColors, contrast, over, themeColors, uiSceneBg } from "../src/lib/theme";
+import { buildTimeline, CTA, END_TAIL_SECONDS, FPS } from "../src/lib/timeline";
 import type { Word } from "../src/lib/types";
 import { normalizeWord, scriptWords } from "../src/lib/words";
 import { captionBand, showsCaptions } from "../src/scenes/names";
 import { decodeMono, ensureDir, fail, idArg, loadSpec, mtime, narrationMatchesSpec, paths, ROOT, writeJson } from "./lib/common";
 import { silenceMap } from "./lib/silence";
 
-export const LIMITS = { maxPause: 0.35, maxFirstWord: 0.3, maxBeatOffsetFrames: 3, captionWords: [2, 4] as const, maxCenterOffset: MAX_CENTER_OFFSET };
+export const LIMITS = {
+  maxPause: 0.35,
+  maxFirstWord: 0.3,
+  maxBeatOffsetFrames: 3,
+  captionWords: [2, 4] as const,
+  maxCenterOffset: MAX_CENTER_OFFSET,
+  /** Silence after the last sound until the video ends. */
+  maxEndSilence: 0.8,
+  /** Words per second of the recorded voice (warning outside). */
+  pace: [2.8, 3.5] as const,
+  /** Script length for batch videos. */
+  scriptWords: [75, 90] as const,
+  minContrast: 4.5,
+  cardCropScale: 3,
+};
 
 export interface CheckReport {
   id: string;
@@ -29,7 +49,9 @@ export interface CheckReport {
   /** Inputs and their modification times when checked; render.ts compares them. */
   inputs: Record<string, number>;
   failures: string[];
-  stats: { voiceSeconds: number; videoSeconds: number; words: number; wordsPerSecond: number; firstWordAt: number; longestPause: number; durationInFrames: number; coverFrame: number };
+  /** Worth a look, but don't block the render. */
+  warnings: string[];
+  stats: { voiceSeconds: number; videoSeconds: number; words: number; wordsPerSecond: number; firstWordAt: number; longestPause: number; endSilence: number; longestHold: number; durationInFrames: number; coverFrame: number };
   /** Silences in the cleaned voice (measured in the audio, not from word timestamps). */
   pauses: { between: string; at: number; seconds: number; ok: boolean }[];
   beats: { beat: number; scene: string; cue: string; cueAt: number; cueFrame: number; startFrame: number; offsetFrames: number; ok: boolean }[];
@@ -38,6 +60,10 @@ export interface CheckReport {
   layout: { beat: string; scene: string; what: string; centerX: number; offset: number; ok: boolean; problem?: string }[];
   /** The UI the voice talks about: where it lands and how large its smallest text is, video px. */
   ui: { beat: number; scene: string; target: string; box: string; name?: number; secondary?: number; ok: boolean; problem?: string }[];
+  /** Text and background pairs of the video's theme. */
+  contrast: { what: string; fg: string; bg: string; ratio: number; ok: boolean }[];
+  /** Stretches with no meaningful change (warning above 1.5 s). */
+  holds: { from: number; until: number; seconds: number; beat: number; after: string }[];
 }
 
 export function loadCaptures(): Record<string, CaptureMeta> {
@@ -158,13 +184,14 @@ export async function checkVoice(id: string): Promise<CheckReport> {
   const pages = captionPages(words, tl, spec.style.keywords, FPS);
   const captions = pages.map((p) => {
     const b = tl.beats[p.beat]!;
-    const position = showsCaptions(b) ? band : "none";
+    // The CTA's words are on the endscreen itself, no captions there.
+    const position = p.from >= tl.endscreenFrom ? "endscreen" : showsCaptions(b) ? band : "none";
     const text = p.words.map((w) => w.text).join(" ");
     let problem: string | undefined;
     if (p.words.length < LIMITS.captionWords[0] || p.words.length > LIMITS.captionWords[1]) problem = `${p.words.length} words (2–4 per page)`;
-    else if (position !== "none" && captionFontSize(text, CAPTION_BANDS[band].w) < CAPTION_FONT.min) problem = "too long for one line in the 720 px band";
-    if (position !== "none" && !problem) {
-      const box = CAPTION_BANDS[position];
+    else if (position === band && captionFontSize(text, CAPTION_BANDS[band].w) < CAPTION_FONT.min) problem = "too long for one line in the 720 px band";
+    if (position === band && !problem) {
+      const box = CAPTION_BANDS[band];
       let focus;
       try {
         focus = beatFocus(spec.beats[p.beat]!, captures);
@@ -179,12 +206,66 @@ export async function checkVoice(id: string): Promise<CheckReport> {
   });
 
   const voiceSeconds = +(words[words.length - 1]!.end - first.start).toFixed(2);
+  const warnings: string[] = [];
+
+  // The spoken CTA closes every script; the endscreen starts on its "Join".
+  if (tl.ctaIndex < 0) failures.push(`the script doesn't end with "${CTA}" (the endscreen starts on its "Join")`);
+  // No silent tail: the video ends END_TAIL_SECONDS after the last word.
+  const lastSound = (audio.last + 1) * audio.hop;
+  const endSilence = +(tl.durationInFrames / FPS - Math.min(lastSound, words[words.length - 1]!.end)).toFixed(2);
+  if (endSilence > LIMITS.maxEndSilence) failures.push(`${endSilence} s of silence at the end (max ${LIMITS.maxEndSilence} s; the video ends ${END_TAIL_SECONDS} s after the last word)`);
+
+  // Pace: the recorded tempo is kept, so a slow or rushed read means re-recording.
+  const wps = words.length / voiceSeconds;
+  if (wps < LIMITS.pace[0] || wps > LIMITS.pace[1]) warnings.push(`pace ${wps.toFixed(2)} words/s is outside ${LIMITS.pace[0]}–${LIMITS.pace[1]}; the tempo is not changed, so consider re-recording`);
+  const scriptLength = scriptWords(spec.script).length;
+  if (scriptLength < LIMITS.scriptWords[0] || scriptLength > LIMITS.scriptWords[1]) {
+    const msg = `the script has ${scriptLength} words (batch scripts: ${LIMITS.scriptWords[0]}–${LIMITS.scriptWords[1]})`;
+    if (spec.batch) failures.push(msg);
+    else warnings.push(msg);
+  }
+
+  // Motion: no shot holds longer than 1.5 s without a meaningful change.
+  const holds = longHolds(tl, screenEvents(tl, words, FPS), FPS);
+  for (const h of holds) warnings.push(`${h.beat ? `beat ${h.beat}` : "endscreen"} holds ${h.seconds} s without a change (frames ${h.from}–${h.until}, after ${h.after}); max ${MAX_HOLD_SECONDS} s`);
+
+  // Dark videos: the white wordmark (dark endscreen) and dark captions; every text pair readable.
+  const theme = spec.style.theme;
+  if (theme === "dark" && spec.endscreen !== "dark") failures.push(`a dark video needs the dark endscreen (the white wordmark), not "${spec.endscreen}"`);
+  const t = themeColors(theme);
+  const cap = captionColors(theme);
+  const end = themeColors(spec.endscreen);
+  const usesUi = spec.beats.some((b) => b.scene === "PhoneFrame" || b.scene === "CardCrop");
+  const pairs: [string, string, string][] = [
+    ["scene text", t.text, t.bg],
+    ["scene accent text", t.accent, t.bg],
+    ["captions", cap.text, over(cap.box, usesUi ? uiSceneBg(theme) : t.bg)],
+    ["caption keywords", cap.accent, over(cap.box, usesUi ? uiSceneBg(theme) : t.bg)],
+    ["endscreen \"Join the waitlist\"", end.text, end.bg],
+    ["endscreen \"link in bio\"", end.accent, end.bg],
+    ...(usesUi ? ([["\"Illustrative\" label", t.muted, uiSceneBg(theme)]] as [string, string, string][]) : []),
+  ];
+  const contrastRows = pairs.map(([what, fg, bg]) => {
+    const ratio = +contrast(fg, bg).toFixed(2);
+    const ok = ratio >= LIMITS.minContrast;
+    if (!ok) failures.push(`${what}: contrast ${ratio}:1 (min ${LIMITS.minContrast}:1)`);
+    return { what, fg, bg, ratio, ok };
+  });
+
+  // CardCrop enlarges a capture about 2.7 times: captured at device scale 3 it stays sharp.
+  for (const [i, b] of spec.beats.entries()) {
+    if (b.scene !== "CardCrop") continue;
+    const meta = captures[(b.props as { capture?: string } | undefined)?.capture ?? ""];
+    if (meta && meta.scale < LIMITS.cardCropScale) failures.push(`beat ${i + 1} (CardCrop): capture "${meta.name}" is at device scale ${meta.scale}; CardCrop captures use scale ${LIMITS.cardCropScale}`);
+  }
+
   const report: CheckReport = {
     id,
     pass: failures.length === 0,
     checkedAt: new Date().toISOString(),
     inputs: Object.fromEntries([paths.spec(id), paths.voTxt(id), paths.voRaw(id), paths.voClean(id), wordsFile].map((f) => [path.relative(ROOT, f).split(path.sep).join("/"), mtime(f)])),
     failures,
+    warnings,
     stats: {
       voiceSeconds,
       videoSeconds: +(tl.durationInFrames / FPS).toFixed(2),
@@ -192,6 +273,8 @@ export async function checkVoice(id: string): Promise<CheckReport> {
       wordsPerSecond: +(words.length / voiceSeconds).toFixed(2),
       firstWordAt: first.start,
       longestPause: Math.max(0, ...pauses.map((p) => p.seconds)),
+      endSilence,
+      longestHold: Math.max(0, ...holds.map((h) => h.seconds)),
       durationInFrames: tl.durationInFrames,
       coverFrame: tl.coverFrame,
     },
@@ -200,6 +283,8 @@ export async function checkVoice(id: string): Promise<CheckReport> {
     captions,
     layout,
     ui,
+    contrast: contrastRows,
+    holds,
   };
   ensureDir(paths.checks);
   writeJson(paths.checkReport(id), report);
@@ -212,9 +297,10 @@ function markdown(r: CheckReport): string {
   const lines = [
     `# vo-check ${r.id}: ${r.pass ? "PASS" : "FAIL"}`,
     "",
-    `Checked ${r.checkedAt}. Voice ${s.voiceSeconds} s, video ${s.videoSeconds} s (${s.durationInFrames} frames at ${FPS} fps), ${s.words} words, ${s.wordsPerSecond} words/s, first word at ${s.firstWordAt} s, longest pause ${s.longestPause.toFixed(2)} s, cover frame ${s.coverFrame}.`,
+    `Checked ${r.checkedAt}. Voice ${s.voiceSeconds} s, video ${s.videoSeconds} s (${s.durationInFrames} frames at ${FPS} fps), ${s.words} words, ${s.wordsPerSecond} words/s, first word at ${s.firstWordAt} s, longest pause ${s.longestPause.toFixed(2)} s, silence at the end ${s.endSilence} s, longest hold without a change ${s.longestHold || "under 1.5"} s, cover frame ${s.coverFrame}.`,
     "",
     ...(r.failures.length ? ["## Failures", "", ...r.failures.map((f) => `- ${f}`), ""] : []),
+    ...(r.warnings.length ? ["## Warnings", "", ...r.warnings.map((w) => `- ${w}`), ""] : []),
     "## Beats (start vs cue word)",
     "",
     "| Beat | Scene | Cue | Cue at (s) | Cue frame | Start frame | Offset (frames) | OK |",
@@ -244,6 +330,12 @@ function markdown(r: CheckReport): string {
           ...r.ui.map((u) => `| ${u.beat} | ${u.scene} | ${u.target} | ${u.box} | ${u.name ?? "–"} | ${u.secondary ?? "–"} | ${u.ok ? "yes" : `**no**: ${u.problem}`} |`),
         ]
       : ["None in this video."]),
+    "",
+    `## Contrast (min ${LIMITS.minContrast}:1)`,
+    "",
+    "| Text | Color | On | Ratio | OK |",
+    "| --- | --- | --- | --- | --- |",
+    ...r.contrast.map((c) => `| ${c.what} | ${c.fg} | ${c.bg} | ${c.ratio}:1 | ${c.ok ? "yes" : "**no**"} |`),
     "",
     "## Caption pages",
     "",

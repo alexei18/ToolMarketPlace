@@ -2,9 +2,9 @@
  * npm run video:prepare runs this first. vo/<ID>.wav → public/vo/<ID>.wav:
  * 1. trim the silence before the first and after the last word;
  * 2. shorten every internal pause longer than 0.25 s to 0.18 s;
- * 3. if the speech is slower than 2.6 words/s, speed it up 5–10 % (atempo keeps the pitch);
- * 4. bring the loudness to -14 LUFS with a gain and a -1.5 dBTP limiter, measured with loudnorm.
- * Only silent stretches are removed, keeping 90 ms of silence next to each word, so no word is cut.
+ * 3. bring the loudness to -14 LUFS with a gain and a -1.5 dBTP limiter, measured with loudnorm.
+ * The recorded tempo is kept: a slow or rushed read is re-recorded, not stretched (vo-check warns
+ * outside 2.8–3.5 words/s). Only silent stretches are removed, keeping 90 ms of silence next to each word, so no word is cut.
  * The original file is never changed.
  */
 import { mkdtempSync, rmSync } from "node:fs";
@@ -19,16 +19,14 @@ const MAX_PAUSE = 0.25;
 const KEEP_PAUSE = 0.18;
 const HEAD_KEEP = 0.02;
 const TAIL_KEEP = 0.06;
-const MIN_RATE = 2.6; // words per second
-const TARGET_RATE = 2.75;
 const TARGET_LUFS = -14;
 const TRUE_PEAK = -1.5;
 /** The limiter works on sample peaks; true (inter-sample) peaks land up to ~1 dB higher, so it aims lower. */
 const LIMITER_CEILING = TRUE_PEAK - 1;
 
 /** Integrated loudness and true peak of a file (ffmpeg loudnorm's measurement). */
-export async function measureLoudness(file: string, filter = ""): Promise<{ i: number; tp: number }> {
-  const { stderr } = await run(FFMPEG, ["-hide_banner", "-i", file, "-af", `${filter}loudnorm=print_format=json`, "-f", "null", "-"]);
+export async function measureLoudness(file: string): Promise<{ i: number; tp: number }> {
+  const { stderr } = await run(FFMPEG, ["-hide_banner", "-i", file, "-af", "loudnorm=print_format=json", "-f", "null", "-"]);
   const m = JSON.parse(stderr.slice(stderr.lastIndexOf("{"), stderr.lastIndexOf("}") + 1)) as Record<string, string>;
   return { i: Number(m.input_i), tp: Number(m.input_tp) };
 }
@@ -67,22 +65,20 @@ export async function cleanVoice(id: string) {
 
   const wordCount = scriptWords(spec.script).length;
   const rate = wordCount / (out.length / RATE);
-  const tempo = rate < MIN_RATE ? Math.min(1.1, Math.max(1.05, TARGET_RATE / rate)) : 1;
 
   const tmp = mkdtempSync(path.join(os.tmpdir(), "vo-clean-"));
   try {
     const trimmed = path.join(tmp, "trimmed.wav");
     writeWav(trimmed, out, RATE);
-    const tempoFilter = tempo !== 1 ? `atempo=${tempo.toFixed(3)},` : "";
     const final = paths.voClean(id);
     ensureDir(path.dirname(final));
     // Gain to the target, limited to the true-peak ceiling; again (up to six passes) while the limiter costs loudness.
-    let gain = TARGET_LUFS - (await measureLoudness(trimmed, tempoFilter)).i;
+    let gain = TARGET_LUFS - (await measureLoudness(trimmed)).i;
     let measured = { i: 0, tp: 0 };
     for (let pass = 0; pass < 6; pass++) {
       await run(FFMPEG, [
         "-hide_banner", "-y", "-i", trimmed,
-        "-af", `${tempoFilter}volume=${gain.toFixed(2)}dB,alimiter=limit=${Math.pow(10, LIMITER_CEILING / 20).toFixed(4)}:level=false:attack=1:release=50`,
+        "-af", `volume=${gain.toFixed(2)}dB,alimiter=limit=${Math.pow(10, LIMITER_CEILING / 20).toFixed(4)}:level=false:attack=1:release=50`,
         "-ar", String(RATE), "-ac", "1", "-c:a", "pcm_s16le", final,
       ]);
       measured = await measureLoudness(final);
@@ -100,7 +96,6 @@ export async function cleanVoice(id: string) {
       pausesShortened: cuts.map((c) => ({ at: +(c.from - KEEP_PAUSE / 2).toFixed(2), was: +c.was.toFixed(3), now: KEEP_PAUSE })),
       wordCount,
       wordsPerSecondBefore: +rate.toFixed(2),
-      tempo: +tempo.toFixed(3),
       finalSeconds: +finalSeconds.toFixed(3),
       wordsPerSecondAfter: +(wordCount / finalSeconds).toFixed(2),
       loudnessLufs: measured.i,
@@ -109,7 +104,7 @@ export async function cleanVoice(id: string) {
     writeJson(paths.cleanReport(id), report);
     console.log(
       `✔ vo-clean ${id}: ${report.originalSeconds}s → ${report.finalSeconds}s, ${cuts.length} pause(s) shortened, ` +
-        `${report.wordsPerSecondBefore} → ${report.wordsPerSecondAfter} words/s${tempo !== 1 ? ` (atempo ${report.tempo})` : ""}, ${report.loudnessLufs} LUFS, ${report.truePeakDb} dBTP`,
+        `${report.wordsPerSecondBefore} → ${report.wordsPerSecondAfter} words/s, ${report.loudnessLufs} LUFS, ${report.truePeakDb} dBTP`,
     );
     return report;
   } finally {

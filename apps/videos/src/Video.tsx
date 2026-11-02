@@ -49,7 +49,7 @@ export const Video: React.FC<VideoProps> = ({ spec, words, captures, debugSafeZo
           );
         })}
         <Sequence from={tl.endscreenFrom} durationInFrames={tl.endscreenFrames} name="Endscreen">
-          <Endscreen variant={spec.endscreen} />
+          <Endscreen variant={spec.endscreen} linkAt={tl.linkFrame} />
         </Sequence>
         <Sequence from={0} durationInFrames={tl.voiceEndFrame} name="Captions">
           <Captions pages={pages} band={band} shown={shown} theme={spec.style.theme} />

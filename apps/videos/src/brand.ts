@@ -33,7 +33,4 @@ for (const [family, weight, url] of [
   loadFont({ family, url, weight, format: "woff2" });
 }
 
-export const themeColors = (theme: "light" | "dark") =>
-  theme === "dark"
-    ? { bg: COLORS.ink, text: "#FFFFFF", muted: "#A3A3A0", accent: COLORS.accentOnDark }
-    : { bg: COLORS.bg, text: COLORS.ink, muted: COLORS.text2, accent: COLORS.accent };
+export { themeColors, uiSceneBg } from "./lib/theme";

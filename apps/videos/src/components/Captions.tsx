@@ -1,8 +1,9 @@
 import React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
-import { COLORS, FONTS, themeColors } from "../brand";
+import { FONTS } from "../brand";
 import { captionFontSize, CAPTION_FONT, type CaptionPage } from "../lib/captions";
 import { CAPTION_BANDS } from "../lib/layout";
+import { captionColors } from "../lib/theme";
 
 /**
  * Burned-in captions: one page of 2–4 words at a time on one line, each word lighting up as it is
@@ -14,7 +15,7 @@ export const Captions: React.FC<{ pages: CaptionPage[]; band: "top" | "bottom"; 
   const page = pages.find((p) => frame >= p.from && frame < p.until);
   if (!page || !shown(page.beat)) return null;
   const box = CAPTION_BANDS[band];
-  const colors = themeColors(theme);
+  const colors = captionColors(theme);
   const pop = interpolate(frame, [page.from, page.from + 4], [0.94, 1], { extrapolateRight: "clamp" });
   const size = captionFontSize(page.words.map((w) => w.text).join(" "), box.w);
 
@@ -24,8 +25,8 @@ export const Captions: React.FC<{ pages: CaptionPage[]; band: "top" | "bottom"; 
         style={{
           padding: `10px ${CAPTION_FONT.padX}px 14px`,
           borderRadius: 26,
-          background: theme === "dark" ? "rgba(17,17,17,0.86)" : "rgba(255,255,255,0.94)",
-          boxShadow: theme === "dark" ? "none" : `0 10px 30px rgba(17,17,17,0.12), 0 0 0 1px ${COLORS.border}`,
+          background: colors.box,
+          boxShadow: colors.shadow,
           whiteSpace: "nowrap",
           fontFamily: FONTS.display,
           fontWeight: 600,
