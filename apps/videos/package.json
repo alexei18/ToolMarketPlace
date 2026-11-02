@@ -12,6 +12,7 @@
     "video:prepare": "tsx scripts/prepare.ts",
     "video:render": "tsx scripts/render.ts",
     "video:batch": "tsx scripts/batch.ts",
+    "video:sheet": "tsx scripts/contact-sheet.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

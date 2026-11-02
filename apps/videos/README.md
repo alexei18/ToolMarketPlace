@@ -13,7 +13,7 @@ workspace): `cd apps/videos && npm install` once. Needs ffmpeg/ffprobe on PATH (
 5. `npm run video:prepare <ID>`: vo-clean → vo-align → vo-check. Report in `out/checks/<ID>.vo-check.md`.
 6. `npm run video:render <ID>`: blocked until the latest vo-check passed. Writes `out/[<batch>/]<ID>.mp4`, `<ID>.cover.png` (the cover frame) and `out/checks/<ID>-beat<N>.png` (real page | video frame) for every UI scene.
 
-`npm run video:batch <BATCH>` prepares and renders every spec of a batch. `npm run studio` opens Remotion Studio (the `SceneGallery` composition previews all scenes; set `debugSafeZone` to see the layout zones, the center line, caption boxes and focus areas).
+`npm run video:batch <BATCH>` prepares and renders every spec of a batch. `npm run video:sheet [scene…]` renders a contact sheet of the gallery scenes at their key frames (`src/lib/gallery.ts`) with the layout overlay to `out/checks/scene-gallery.png`. `npm run studio` opens Remotion Studio (the `SceneGallery` composition previews all scenes; set `debugSafeZone` to see the layout zones, the center line, caption boxes and focus areas).
 
 ## Rules the pipeline enforces
 

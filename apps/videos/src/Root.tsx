@@ -1,7 +1,8 @@
 import React from "react";
 import { Composition } from "remotion";
 import type { CaptureMeta } from "./captures";
-import { Gallery, GALLERY_FRAMES } from "./Gallery";
+import { Gallery } from "./Gallery";
+import { GALLERY_FRAMES } from "./lib/gallery";
 import { buildTimeline, FPS, HEIGHT, WIDTH } from "./lib/timeline";
 import type { VideoSpec, Word } from "./lib/types";
 import { Video } from "./Video";
@@ -42,6 +43,6 @@ export const Root: React.FC = () => (
         defaultProps={{ spec, words, captures, debugSafeZone: false }}
       />
     ))}
-    <Composition id="SceneGallery" component={Gallery} fps={FPS} width={WIDTH} height={HEIGHT} durationInFrames={GALLERY_FRAMES} defaultProps={{ debugSafeZone: true }} />
+    <Composition id="SceneGallery" component={Gallery} fps={FPS} width={WIDTH} height={HEIGHT} durationInFrames={GALLERY_FRAMES} defaultProps={{ debugSafeZone: true, captures }} />
   </>
 );

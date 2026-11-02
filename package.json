@@ -25,7 +25,8 @@
     "video:capture": "npm --prefix apps/videos run video:capture --",
     "video:prepare": "npm --prefix apps/videos run video:prepare --",
     "video:render": "npm --prefix apps/videos run video:render --",
-    "video:batch": "npm --prefix apps/videos run video:batch --"
+    "video:batch": "npm --prefix apps/videos run video:batch --",
+    "video:sheet": "npm --prefix apps/videos run video:sheet --"
   },
   "devDependencies": {
     "@types/bun": "latest",
