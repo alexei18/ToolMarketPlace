@@ -29,6 +29,8 @@ export const CardReveal: React.FC<CardRevealProps> = ({ front, back, flipCue }) 
     display: "flex",
     flexDirection: "column",
     justifyContent: "flex-end",
+    alignItems: "center",
+    textAlign: "center",
     gap: 18,
     background: side === "front" ? (ctx.theme === "dark" ? "#1C1C1B" : COLORS.surface) : COLORS.accentSoft,
     border: `2px solid ${side === "front" ? COLORS.border : COLORS.accent}`,

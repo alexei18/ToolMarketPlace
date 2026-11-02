@@ -1,9 +1,9 @@
 import React from "react";
 import { AbsoluteFill, interpolate } from "remotion";
-import { FONTS, themeColors } from "../brand";
+import { COLORS, FONTS, themeColors } from "../brand";
 import { cueFrameOf, useBeat } from "../context";
 import { TEXT_BLOCK } from "../lib/stage";
-import { EASE_IN_OUT, progress } from "../motion";
+import { progress } from "../motion";
 
 export interface LightSweepProps {
   /** Headline the light passes over. */
@@ -18,9 +18,11 @@ export const LightSweep: React.FC<LightSweepProps> = ({ text, sweepCue }) => {
   const colors = themeColors(ctx.theme);
   const textIn = progress(ctx.absFrame, ctx.cueFrame, 12);
   const at = cueFrameOf(ctx, ctx.fps, sweepCue);
-  const sweep = progress(ctx.absFrame, at, 24, EASE_IN_OUT);
-  const x = interpolate(sweep, [0, 1], [-60, 160]);
-  const shine = ctx.theme === "dark" ? "rgba(255,255,255,0.95)" : "rgba(14,122,79,0.9)";
+  // A steady pass over about a second: an eased one crosses the letters in a few frames and is missed.
+  const sweep = progress(ctx.absFrame, at - 4, 30, (t) => t);
+  const x = interpolate(sweep, [0, 1], [-20, 120]);
+  // A band of the accent color crosses the text (white light over white text would not show).
+  const shine = ctx.theme === "dark" ? COLORS.accentOnDark : COLORS.accent;
 
   return (
     <AbsoluteFill style={{ backgroundColor: colors.bg }}>
@@ -32,13 +34,13 @@ export const LightSweep: React.FC<LightSweepProps> = ({ text, sweepCue }) => {
             fontSize: 112,
             lineHeight: 1.02,
             letterSpacing: "-0.02em",
-            color: colors.text,
+            // The text itself is transparent: its letters show the gradient behind them (background-clip: text).
+            color: "transparent",
             opacity: textIn,
             transform: `translateY(${(1 - textIn) * 30}px)`,
             backgroundImage: `linear-gradient(105deg, ${colors.text} ${x - 12}%, ${shine} ${x}%, ${colors.text} ${x + 12}%)`,
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
-            WebkitTextFillColor: "transparent",
           }}
         >
           {text}

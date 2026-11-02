@@ -34,18 +34,20 @@ export const CheckDraw: React.FC<CheckDrawProps> = ({ secondCue, text }) => {
   const inkCheck = ctx.theme === "dark" ? "#FFFFFF" : COLORS.ink;
   const greenCheck = ctx.theme === "dark" ? COLORS.accentOnDark : COLORS.accent;
   const width = 520;
-  const [, , vw, vh] = LOGO_CHECKS.viewBox.split(" ").map(Number) as [number, number, number, number];
+  const [vx, vy, vw, vh] = LOGO_CHECKS.viewBox.split(" ").map(Number) as [number, number, number, number];
+  // The mask region must cover the checks: by default it is a percentage of the viewport, not of the viewBox.
+  const region = { x: vx - 200, y: vy - 200, width: vw + 400, height: vh + 400 };
 
   return (
     <AbsoluteFill style={{ backgroundColor: colors.bg }}>
       <div style={{ position: "absolute", left: TEXT_BLOCK.x, top: TEXT_BLOCK.y, width: TEXT_BLOCK.w, height: TEXT_BLOCK.h, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         <svg viewBox={LOGO_CHECKS.viewBox} width={width} height={(width * vh) / vw} overflow="visible">
           <defs>
-            <mask id="cd-first" maskUnits="userSpaceOnUse">
-              <path d={FIRST} stroke="#fff" strokeWidth={STROKE} fill="none" strokeLinecap="square" strokeLinejoin="miter" strokeDasharray={LENGTH} strokeDashoffset={LENGTH * (1 - first)} />
+            <mask id="cd-first" maskUnits="userSpaceOnUse" {...region}>
+              {first > 0 && <path d={FIRST} stroke="#fff" strokeWidth={STROKE} fill="none" strokeLinecap="square" strokeLinejoin="miter" strokeDasharray={LENGTH} strokeDashoffset={LENGTH * (1 - first)} />}
             </mask>
-            <mask id="cd-second" maskUnits="userSpaceOnUse">
-              <path d={SECOND} stroke="#fff" strokeWidth={STROKE} fill="none" strokeLinecap="square" strokeLinejoin="miter" strokeDasharray={LENGTH} strokeDashoffset={LENGTH * (1 - second)} />
+            <mask id="cd-second" maskUnits="userSpaceOnUse" {...region}>
+              {second > 0 && <path d={SECOND} stroke="#fff" strokeWidth={STROKE} fill="none" strokeLinecap="square" strokeLinejoin="miter" strokeDasharray={LENGTH} strokeDashoffset={LENGTH * (1 - second)} />}
             </mask>
           </defs>
           <path d={LOGO_CHECKS.first} fill={inkCheck} mask="url(#cd-first)" />
