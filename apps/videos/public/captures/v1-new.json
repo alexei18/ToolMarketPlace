@@ -1,0 +1,11 @@
+{
+  "name": "v1-new",
+  "route": "/new",
+  "width": 390,
+  "height": 3025,
+  "scale": 2,
+  "states": {
+    "default": "captures/v1-new.png"
+  },
+  "targets": {}
+}

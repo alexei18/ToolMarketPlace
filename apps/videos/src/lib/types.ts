@@ -26,6 +26,8 @@ export interface VideoSpec {
   /** Batch prefix, e.g. "TW-B01" (video:batch). */
   batch?: string;
   concept: string;
+  /** The creative attributes of the concept, for the tracking sheet (docs/tiktok-campaign.md). */
+  meta?: { title: string; audience: string; message: string; hookType: string; hookText: string; visualStyle: string; animationStyle: string; coverText: string };
   /** The exact narration; must match vo/<ID>.txt word for word. */
   script: string;
   beats: BeatSpec[];

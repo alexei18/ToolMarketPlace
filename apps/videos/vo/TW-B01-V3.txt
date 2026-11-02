@@ -1,0 +1,5 @@
+STYLE (Google AI Studio): Read this like a friendly tech creator on TikTok: upbeat, quick and conversational, natural rhythm, no long pauses between sentences.
+VOICE: Google AI Studio (Gemini TTS), the same voice as TEST-01
+SAVE AS: vo/TW-B01-V3.wav
+---
+Built something with AI this weekend? Nobody's going to find it. Unless you launch it where people actually try new apps. On Tryworthy, makers get in a week early. Verify your domain, paste your link, and you're live on launch day. List it as Pre-launch and find your first testers. They send feedback straight to you and vote on your roadmap. Offer a perk people can only claim here. Listing your product on Tryworthy is free. Join the waitlist, link in bio.

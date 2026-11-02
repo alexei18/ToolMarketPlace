@@ -1,0 +1,11 @@
+{
+  "name": "v5-product",
+  "route": "/p/formorchard",
+  "width": 390,
+  "height": 1645,
+  "scale": 2,
+  "states": {
+    "default": "captures/v5-product.png"
+  },
+  "targets": {}
+}
