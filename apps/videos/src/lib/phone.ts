@@ -1,13 +1,13 @@
 /* Where the PhoneFrame sits, its camera, and where captured elements land in the video. Pure, used by scenes and vo-check. */
 import type { CaptureMeta } from "../captures";
-import { SAFE } from "./layout";
+import { CENTER_X, SAFE } from "./layout";
 import type { BeatSpec, Rect } from "./types";
 
 export const PHONE_WIDTH = 640;
 
 export function phoneLayout(meta: Pick<CaptureMeta, "width">) {
   // Below the top caption box (140 px) and the "Illustrative" label, down to the bottom of the safe zone.
-  const outer: Rect = { x: SAFE.x + (SAFE.w - PHONE_WIDTH) / 2, y: SAFE.y + 200, w: PHONE_WIDTH, h: SAFE.h - 200 };
+  const outer: Rect = { x: CENTER_X - PHONE_WIDTH / 2, y: SAFE.y + 200, w: PHONE_WIDTH, h: SAFE.h - 200 };
   const bezel = 14;
   const screen: Rect = { x: outer.x + bezel, y: outer.y + bezel, w: outer.w - bezel * 2, h: outer.h - bezel * 2 };
   return { outer, screen, scale: screen.w / meta.width };
@@ -52,7 +52,7 @@ export function cameraAt(meta: CaptureMeta, zoom: ZoomSpec | undefined, scrollY:
   const r = targetRect(meta, zoom.target, scrollY);
   const T = { x: r.x + r.w / 2, y: r.y + r.h / 2 };
   const top = phoneLayout(meta).outer.y;
-  const C = zoom.center ?? { x: SAFE.x + SAFE.w / 2, y: top + zoom.scale * (T.y - top) };
+  const C = zoom.center ?? { x: CENTER_X, y: top + zoom.scale * (T.y - top) };
   const s = 1 + (zoom.scale - 1) * t;
   const A = { x: T.x + (C.x - T.x) * t, y: T.y + (C.y - T.y) * t };
   return {

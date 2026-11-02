@@ -2,7 +2,7 @@ import React from "react";
 import { AbsoluteFill } from "remotion";
 import { COLORS, FONTS, LOGO_CHECKS, themeColors } from "../brand";
 import { cueFrameOf, useBeat } from "../context";
-import { SAFE } from "../lib/layout";
+import { TEXT_BLOCK } from "../lib/stage";
 import { progress } from "../motion";
 
 export interface CheckDrawProps {
@@ -38,7 +38,7 @@ export const CheckDraw: React.FC<CheckDrawProps> = ({ secondCue, text }) => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: colors.bg }}>
-      <div style={{ position: "absolute", left: SAFE.x, top: SAFE.y, width: SAFE.w, height: SAFE.h, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "absolute", left: TEXT_BLOCK.x, top: TEXT_BLOCK.y, width: TEXT_BLOCK.w, height: TEXT_BLOCK.h, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         <svg viewBox={LOGO_CHECKS.viewBox} width={width} height={(width * vh) / vw} overflow="visible">
           <defs>
             <mask id="cd-first" maskUnits="userSpaceOnUse">

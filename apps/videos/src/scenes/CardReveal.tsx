@@ -2,7 +2,7 @@ import React from "react";
 import { AbsoluteFill, interpolate, spring } from "remotion";
 import { COLORS, FONTS, themeColors } from "../brand";
 import { cueFrameOf, useBeat } from "../context";
-import { SAFE } from "../lib/layout";
+import { CARD_REVEAL } from "../lib/stage";
 import { SPRING_SETTLE } from "../motion";
 
 export interface CardRevealProps {
@@ -20,8 +20,6 @@ export const CardReveal: React.FC<CardRevealProps> = ({ front, back, flipCue }) 
   const s = spring({ frame: ctx.absFrame - at, fps: ctx.fps, config: SPRING_SETTLE });
   const angle = interpolate(s, [0, 1], [0, 180]);
   const lift = Math.sin((angle / 180) * Math.PI);
-  const w = 620;
-  const h = 780;
   const face = (side: "front" | "back"): React.CSSProperties => ({
     position: "absolute",
     inset: 0,
@@ -41,7 +39,7 @@ export const CardReveal: React.FC<CardRevealProps> = ({ front, back, flipCue }) 
 
   return (
     <AbsoluteFill style={{ backgroundColor: colors.bg }}>
-      <div style={{ position: "absolute", left: SAFE.x + (SAFE.w - w) / 2, top: SAFE.y + (SAFE.h - h) / 2, width: w, height: h, perspective: 2200 }}>
+      <div style={{ position: "absolute", left: CARD_REVEAL.x, top: CARD_REVEAL.y, width: CARD_REVEAL.w, height: CARD_REVEAL.h, perspective: 2200 }}>
         <div style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transform: `rotateY(${angle}deg) scale(${1 + lift * 0.06})` }}>
           <div style={{ ...face("front"), color: colors.text }}>
             <p style={title}>{front.title}</p>

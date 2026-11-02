@@ -13,14 +13,15 @@ workspace): `cd apps/videos && npm install` once. Needs ffmpeg/ffprobe on PATH (
 5. `npm run video:prepare <ID>`: vo-clean → vo-align → vo-check. Report in `out/checks/<ID>.vo-check.md`.
 6. `npm run video:render <ID>`: blocked until the latest vo-check passed. Writes `out/[<batch>/]<ID>.mp4`, `<ID>.cover.png` (the cover frame) and `out/checks/<ID>-beat<N>.png` (real page | video frame) for every UI scene.
 
-`npm run video:batch <BATCH>` prepares and renders every spec of a batch. `npm run studio` opens Remotion Studio (the `SceneGallery` composition previews all scenes; set `debugSafeZone` to see the TikTok safe zone, caption boxes and focus areas).
+`npm run video:batch <BATCH>` prepares and renders every spec of a batch. `npm run studio` opens Remotion Studio (the `SceneGallery` composition previews all scenes; set `debugSafeZone` to see the layout zones, the center line, caption boxes and focus areas).
 
 ## Rules the pipeline enforces
 
 - The voice is the clock: beats start on their cue words, the video ends 0.15 s after the last word plus the 2 s endscreen. No hard-coded durations.
 - vo-clean: trims the ends, cuts pauses over 0.25 s to 0.18 s (only inside silence), atempo 1.05–1.10 below 2.6 words/s, -14 LUFS, -1.5 dBTP.
 - vo-align: Whisper (whisper.cpp in `.whisper/`, model `WHISPER_MODEL`, default `small.en`) one word per segment, boundaries snapped to the audio; any word that differs from the script fails.
-- vo-check: pauses over 0.35 s (measured in the audio), first word after 0.3 s, a beat more than 3 frames from its cue, caption pages outside 2–4 words, captions on top of the UI the voice talks about, key UI outside the safe zone (x 120–860, y 260–1420), script and narration file out of sync, missing captures.
+- Layout: every element is centered on the frame's center line x = 540 (never on a zone's middle). Critical text and the UI the voice talks about stay inside x 180–900 × y 260–1420; decoration (phone bezel, shadows) may reach x 100–980 × y 200–1500; nothing important in the bottom 500 px. Scenes place their main element with `src/lib/stage.ts`, which vo-check reads too.
+- vo-check: pauses over 0.35 s (measured in the audio), first word after 0.3 s, a beat more than 3 frames from its cue, a scene's main element more than 8 px off x = 540 or outside its zone, caption pages outside 2–4 words, captions on top of the UI the voice talks about, key UI outside the safe zone, script and narration file out of sync, missing captures.
 - Real UI only: PhoneFrame shows Playwright captures of the real pages (`captures` recipes keep only listed demo products and can hide counts), marked "Illustrative". No invented numbers (StatOrQuote refuses digits), no real company names or logos, no music.
 
 ## Captures and waitlist mode

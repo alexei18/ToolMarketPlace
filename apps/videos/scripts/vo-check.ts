@@ -1,7 +1,8 @@
 /*
  * The gate before rendering. Fails on: pauses over 0.35 s, a first word later than 0.3 s, any beat
  * starting more than 3 frames from its cue word, captions outside 2–4 words or the safe zone or on
- * top of the UI the voice talks about, a script that differs from vo/<ID>.txt or the voice, and
+ * top of the UI the voice talks about, a scene whose main element is more than 8 px off the center
+ * line x = 540 or outside its zone, a script that differs from vo/<ID>.txt or the voice, and
  * missing captures. Writes out/checks/<ID>.vo-check.json and .md; render.ts refuses to run unless
  * the latest report passed and is newer than its inputs.
  */
@@ -9,8 +10,9 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { CaptureMeta } from "../src/captures";
 import { captionPages } from "../src/lib/captions";
-import { CAPTION_BOXES, inside, intersects, SAFE } from "../src/lib/layout";
+import { CAPTION_BOXES, CENTER_X, centerX, DECOR, inside, intersects, MAX_CENTER_OFFSET, SAFE } from "../src/lib/layout";
 import { beatFocus } from "../src/lib/phone";
+import { mainElement, TEXT_BLOCK, type MainElement } from "../src/lib/stage";
 import { buildTimeline, FPS } from "../src/lib/timeline";
 import type { Word } from "../src/lib/types";
 import { normalizeWord, scriptWords } from "../src/lib/words";
@@ -18,7 +20,7 @@ import { captionPosition } from "../src/scenes/names";
 import { decodeMono, ensureDir, fail, idArg, loadSpec, mtime, narrationMatchesSpec, paths, ROOT, writeJson } from "./lib/common";
 import { silenceMap } from "./lib/silence";
 
-export const LIMITS = { maxPause: 0.35, maxFirstWord: 0.3, maxBeatOffsetFrames: 3, captionWords: [2, 4] as const };
+export const LIMITS = { maxPause: 0.35, maxFirstWord: 0.3, maxBeatOffsetFrames: 3, captionWords: [2, 4] as const, maxCenterOffset: MAX_CENTER_OFFSET };
 
 export interface CheckReport {
   id: string;
@@ -32,6 +34,8 @@ export interface CheckReport {
   pauses: { between: string; at: number; seconds: number; ok: boolean }[];
   beats: { beat: number; scene: string; cue: string; cueAt: number; cueFrame: number; startFrame: number; offsetFrames: number; ok: boolean }[];
   captions: { from: number; text: string; position: string; ok: boolean; problem?: string }[];
+  /** Each scene's main element: centered on x = 540, inside its zone. */
+  layout: { beat: string; scene: string; what: string; centerX: number; offset: number; ok: boolean; problem?: string }[];
 }
 
 export function loadCaptures(): Record<string, CaptureMeta> {
@@ -99,6 +103,27 @@ export async function checkVoice(id: string): Promise<CheckReport> {
     else for (const file of Object.values(meta.states)) if (!existsSync(path.join(paths.captures, "..", file))) failures.push(`capture file ${file} is missing`);
   }
 
+  // Every scene's main element is centered on x = 540: critical content inside the safe zone,
+  // decorative frames (the phone) inside the decoration zone.
+  const layoutRow = (beat: string, scene: string, m: MainElement) => {
+    const offset = +(centerX(m.rect) - CENTER_X).toFixed(1);
+    const zone = m.what === "phone" ? DECOR : SAFE;
+    let problem: string | undefined;
+    if (Math.abs(offset) > LIMITS.maxCenterOffset) problem = `${m.what} is ${offset} px off the center line x = ${CENTER_X} (max ${LIMITS.maxCenterOffset})`;
+    else if (!inside(m.rect, zone)) problem = `${m.what} (${m.rect.x.toFixed(0)},${m.rect.y.toFixed(0)} ${m.rect.w.toFixed(0)}×${m.rect.h.toFixed(0)}) leaves the ${zone === DECOR ? "decoration" : "safe"} zone`;
+    if (problem) failures.push(`${beat === "end" ? "endscreen" : `beat ${beat}`} (${scene}): ${problem}`);
+    return { beat, scene, what: m.what, centerX: +centerX(m.rect).toFixed(1), offset, ok: !problem, ...(problem ? { problem } : {}) };
+  };
+  const layout: CheckReport["layout"] = [];
+  spec.beats.forEach((b, i) => {
+    try {
+      layout.push(layoutRow(String(i + 1), b.scene, mainElement(b, captures)));
+    } catch (e) {
+      failures.push(`beat ${i + 1}: ${(e as Error).message}`);
+    }
+  });
+  layout.push(layoutRow("end", "Endscreen", { what: "text block", rect: TEXT_BLOCK }));
+
   // Key UI (what the voice talks about) must sit inside TikTok's safe zone.
   spec.beats.forEach((b, i) => {
     try {
@@ -151,6 +176,7 @@ export async function checkVoice(id: string): Promise<CheckReport> {
     pauses,
     beats,
     captions,
+    layout,
   };
   ensureDir(paths.checks);
   writeJson(paths.checkReport(id), report);
@@ -179,6 +205,12 @@ function markdown(r: CheckReport): string {
     "| Between | At (s) | Pause (s) | OK |",
     "| --- | --- | --- | --- |",
     ...r.pauses.map((p) => `| ${p.between} | ${p.at} | ${p.seconds.toFixed(2)} | ${p.ok ? "yes" : "**no**"} |`),
+    "",
+    `## Layout (main element centered on x = ${CENTER_X}, max ${LIMITS.maxCenterOffset} px off)`,
+    "",
+    "| Beat | Scene | Main element | Center x | Offset (px) | OK |",
+    "| --- | --- | --- | --- | --- | --- |",
+    ...r.layout.map((l) => `| ${l.beat} | ${l.scene} | ${l.what} | ${l.centerX} | ${l.offset} | ${l.ok ? "yes" : `**no**: ${l.problem}`} |`),
     "",
     "## Caption pages",
     "",

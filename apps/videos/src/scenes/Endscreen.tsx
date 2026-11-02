@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Img, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { FONTS, WORDMARK, WORDMARK_RATIO, themeColors } from "../brand";
-import { SAFE } from "../lib/layout";
+import { TEXT_BLOCK } from "../lib/stage";
 import { progress } from "../motion";
 
 /**
@@ -21,7 +21,7 @@ export const Endscreen: React.FC<{ variant: "light" | "dark" }> = ({ variant }) 
 
   return (
     <AbsoluteFill style={{ backgroundColor: colors.bg }}>
-      <div style={{ position: "absolute", left: SAFE.x, top: SAFE.y, width: SAFE.w, height: SAFE.h, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "absolute", left: TEXT_BLOCK.x, top: TEXT_BLOCK.y, width: TEXT_BLOCK.w, height: TEXT_BLOCK.h, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         <Img
           src={WORDMARK[variant]}
           alt="Tryworthy"

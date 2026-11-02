@@ -2,7 +2,7 @@ import React from "react";
 import { AbsoluteFill, interpolate } from "remotion";
 import { FONTS, themeColors } from "../brand";
 import { cueFrameOf, useBeat } from "../context";
-import { SAFE } from "../lib/layout";
+import { TEXT_BLOCK } from "../lib/stage";
 import { EASE_IN_OUT, progress } from "../motion";
 
 export interface LightSweepProps {
@@ -24,14 +24,14 @@ export const LightSweep: React.FC<LightSweepProps> = ({ text, sweepCue }) => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: colors.bg }}>
-      <div style={{ position: "absolute", left: SAFE.x, top: SAFE.y, width: SAFE.w, height: SAFE.h, display: "flex", alignItems: "center" }}>
+      <div style={{ position: "absolute", left: TEXT_BLOCK.x, top: TEXT_BLOCK.y, width: TEXT_BLOCK.w, height: TEXT_BLOCK.h, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
         <div
           style={{
             fontFamily: FONTS.display,
             fontWeight: 800,
             fontSize: 112,
             lineHeight: 1.02,
-            letterSpacing: "-0.035em",
+            letterSpacing: "-0.02em",
             color: colors.text,
             opacity: textIn,
             transform: `translateY(${(1 - textIn) * 30}px)`,

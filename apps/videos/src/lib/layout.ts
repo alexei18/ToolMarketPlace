@@ -1,16 +1,34 @@
 import type { Rect } from "./types";
 
-/**
- * TikTok safe zone on 1080×1920: text, logos and key UI stay inside it. The bottom 500 px
- * (caption, music, buttons) and the right 220 px (like, comment, share) are covered by the app.
+/*
+ * Layout rule (docs/tiktok-campaign.md). Everything is centered on the frame's center line
+ * x = 540, never on the middle of a zone. TikTok covers the bottom 500 px (caption, music) and
+ * the right edge (like, comment, share), so:
+ * - SAFE: critical text and the UI the voice talks about, x 180–900 (720 px, symmetric) × y 260–1420.
+ * - DECOR: decorative parts (phone bezel, shadows) may reach x 100–980; nothing important below 1420.
  */
-export const SAFE: Rect = { x: 120, y: 260, w: 740, h: 1160 };
+export const CENTER_X = 540;
+export const SAFE: Rect = { x: 180, y: 260, w: 720, h: 1160 };
+export const DECOR: Rect = { x: 100, y: 200, w: 880, h: 1300 };
+/** The vertical middle of the safe band (y 260–1420). */
+export const CENTER_Y = SAFE.y + SAFE.h / 2;
+/** How far a scene's main element may sit from x = 540 (vo-check). */
+export const MAX_CENTER_OFFSET = 8;
 
 /** Caption block positions inside the safe zone. */
 export const CAPTION_BOXES: Record<"top" | "bottom", Rect> = {
   top: { x: SAFE.x, y: SAFE.y, w: SAFE.w, h: 140 },
   bottom: { x: SAFE.x, y: SAFE.y + SAFE.h - 210, w: SAFE.w, h: 210 },
 };
+
+/** A box of the given size centered on x = 540 (and on `cy`, the middle of the safe band by default). */
+export function centered(w: number, h: number, cy = CENTER_Y): Rect {
+  return { x: CENTER_X - w / 2, y: cy - h / 2, w, h };
+}
+
+export function centerX(r: Rect): number {
+  return r.x + r.w / 2;
+}
 
 export function intersects(a: Rect, b: Rect): boolean {
   return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;

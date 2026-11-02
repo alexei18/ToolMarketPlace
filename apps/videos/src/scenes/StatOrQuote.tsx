@@ -2,7 +2,7 @@ import React from "react";
 import { AbsoluteFill } from "remotion";
 import { FONTS, themeColors } from "../brand";
 import { spokenTimes, useBeat } from "../context";
-import { SAFE } from "../lib/layout";
+import { TEXT_BLOCK } from "../lib/stage";
 import { normalizeWord } from "../lib/words";
 import { progress } from "../motion";
 
@@ -24,10 +24,13 @@ export const StatOrQuote: React.FC<StatOrQuoteProps> = ({ text, label }) => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: colors.bg }}>
-      <div style={{ position: "absolute", left: SAFE.x, top: SAFE.y, width: SAFE.w, height: SAFE.h, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        {label && <div style={{ fontFamily: FONTS.body, fontWeight: 600, fontSize: 34, color: colors.accent, opacity: labelIn, marginBottom: 28 }}>{label}</div>}
-        <div style={{ position: "relative", paddingLeft: 36, borderLeft: `8px solid ${colors.accent}` }}>
-          <p style={{ margin: 0, fontFamily: FONTS.display, fontWeight: 700, fontSize: 70, lineHeight: 1.12, letterSpacing: "-0.025em", color: colors.text }}>
+      <div
+        style={{ position: "absolute", left: TEXT_BLOCK.x, top: TEXT_BLOCK.y, width: TEXT_BLOCK.w, height: TEXT_BLOCK.h, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}
+      >
+        {label && <div style={{ fontFamily: FONTS.body, fontWeight: 600, fontSize: 34, color: colors.accent, opacity: labelIn }}>{label}</div>}
+        <div style={{ width: 96 * labelIn, height: 8, borderRadius: 4, background: colors.accent, margin: "28px 0 36px" }} />
+        <div>
+          <p style={{ margin: 0, fontFamily: FONTS.display, fontWeight: 700, fontSize: 70, lineHeight: 1.12, letterSpacing: "-0.02em", color: colors.text }}>
             {words.map((w, i) => {
               const p = progress(ctx.absFrame, times[i]![0], 6);
               return (
