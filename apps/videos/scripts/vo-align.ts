@@ -14,7 +14,18 @@ import { silenceMap } from "./lib/silence";
 
 const WHISPER_DIR = path.join(ROOT, ".whisper");
 const WHISPER_VERSION = "1.5.5";
+// small.en gives the timings (medium.en's drift: its last words landed after the audio ended). When
+// small.en's words differ from the script, medium.en listens too, only for the words: if it hears the
+// script, those words are accepted with small.en's timings and listed in the alignment report.
 const MODEL = (process.env.WHISPER_MODEL ?? "small.en") as WhisperModel;
+const CHECK_MODEL = (process.env.WHISPER_CHECK_MODEL ?? "medium.en") as WhisperModel;
+/** Brand and campaign words, so Whisper spells them the way the script does. Vocabulary only: no sentences. */
+const VOCABULARY = "Tryworthy, waitlist, Pre-launch, link in bio.";
+
+/** Compared without apostrophes: "maker's" and "makers'" sound the same, so a read can't tell them apart. */
+const sound = (w: string) => normalizeWord(w).replace(/'/g, "");
+/** Informal spoken forms that stand for script words; each use is listed in the alignment report. */
+const SPOKEN_FORMS: Record<string, string[]> = { gonna: ["going", "to"], wanna: ["want", "to"], gotta: ["got", "to"] };
 
 interface Heard {
   text: string;
@@ -40,7 +51,7 @@ function heardWords(json: Awaited<ReturnType<typeof transcribe<false>>>): Heard[
 /** How each script word was found in what Whisper heard, for the alignment report. */
 interface MatchInfo {
   heard: string;
-  kind: "exact" | "split" | "merged";
+  kind: "exact" | "split" | "merged" | "spoken form";
   whisperStart: number;
   whisperEnd: number;
   p: number;
@@ -91,27 +102,27 @@ function snapToAudio(words: Word[], samples: Float32Array, rate: number): Word[]
  * Matches heard words to script words, allowing a word heard in pieces ("try" + "worthy") or two
  * script words heard as one. Returns null and prints the differences when they don't match.
  */
-function match(script: string[], heard: Heard[], info: MatchInfo[] = []): Word[] | null {
+function match(script: string[], heard: Heard[], info: MatchInfo[] = [], quiet = false): Word[] | null {
   const out: Word[] = [];
   let h = 0;
   const problems: string[] = [];
   for (let s = 0; s < script.length; s++) {
-    const want = normalizeWord(script[s]!);
+    const want = sound(script[s]!);
     const got = heard[h];
     if (!got) {
       problems.push(`  script word ${s + 1} "${script[s]}": nothing heard`);
       break;
     }
-    if (normalizeWord(got.text) === want) {
+    if (sound(got.text) === want) {
       out.push({ word: script[s]!, start: got.start, end: got.end });
       info.push({ heard: got.text, kind: "exact", whisperStart: got.start, whisperEnd: got.end, p: got.p });
       h++;
       continue;
     }
     // One script word heard as several pieces.
-    let joined = normalizeWord(got.text);
+    let joined = sound(got.text);
     let k = h + 1;
-    while (k < heard.length && joined.length < want.length && want.startsWith(joined)) joined += normalizeWord(heard[k++]!.text);
+    while (k < heard.length && joined.length < want.length && want.startsWith(joined)) joined += sound(heard[k++]!.text);
     if (joined === want) {
       out.push({ word: script[s]!, start: got.start, end: heard[k - 1]!.end });
       const pieces = heard.slice(h, k);
@@ -119,11 +130,24 @@ function match(script: string[], heard: Heard[], info: MatchInfo[] = []): Word[]
       h = k;
       continue;
     }
+    // An informal spoken form for several script words ("gonna" for "going to"): share its time evenly.
+    const form = SPOKEN_FORMS[sound(got.text)];
+    if (form && form.every((w, q) => sound(script[s + q] ?? "") === w)) {
+      const n = form.length;
+      for (let q = 0; q < n; q++) {
+        const w = { word: script[s + q]!, start: got.start + ((got.end - got.start) * q) / n, end: got.start + ((got.end - got.start) * (q + 1)) / n };
+        out.push(w);
+        info.push({ heard: got.text, kind: "spoken form", whisperStart: w.start, whisperEnd: w.end, p: got.p });
+      }
+      s += n - 1;
+      h++;
+      continue;
+    }
     // Several script words heard as one: share its time evenly.
     let parts = want;
     let j = s + 1;
-    while (j < script.length && parts.length < normalizeWord(got.text).length) parts += normalizeWord(script[j++]!);
-    if (parts === normalizeWord(got.text)) {
+    while (j < script.length && parts.length < sound(got.text).length) parts += sound(script[j++]!);
+    if (parts === sound(got.text)) {
       const n = j - s;
       for (let q = 0; q < n; q++) {
         const w = { word: script[s + q]!, start: got.start + ((got.end - got.start) * q) / n, end: got.start + ((got.end - got.start) * (q + 1)) / n };
@@ -139,7 +163,7 @@ function match(script: string[], heard: Heard[], info: MatchInfo[] = []): Word[]
   }
   if (problems.length === 0 && h < heard.length) problems.push(`  extra words heard after the script ends: "${heard.slice(h).map((w) => w.text).join(" ")}"`);
   if (problems.length) {
-    console.error(`\nScript:  ${script.join(" ")}\nHeard:   ${heard.map((w) => w.text).join(" ")}\n${problems.join("\n")}`);
+    if (!quiet) console.error(`\nScript:  ${script.join(" ")}\nHeard:   ${heard.map((w) => w.text).join(" ")}\n${problems.join("\n")}`);
     return null;
   }
   return out;
@@ -159,14 +183,9 @@ function tidy(out: Word[]): Word[] {
   return out;
 }
 
-export async function alignVoice(id: string): Promise<Word[]> {
-  const spec = loadSpec(id);
-  const clean = paths.voClean(id);
-  if (!existsSync(clean)) fail(`No cleaned voice at ${clean}: run vo-clean first`);
-
-  await installWhisperCpp({ to: WHISPER_DIR, version: WHISPER_VERSION, printOutput: false });
-  await downloadWhisperModel({ model: MODEL, folder: WHISPER_DIR, printOutput: false });
-
+/** What one Whisper model hears in the cleaned voice: words with their times. */
+async function hear(id: string, clean: string, model: WhisperModel): Promise<Heard[]> {
+  await downloadWhisperModel({ model, folder: WHISPER_DIR, printOutput: false });
   // whisper.cpp reads 16 kHz mono WAV.
   const tmpDir = path.join(WHISPER_DIR, "tmp");
   mkdirSync(tmpDir, { recursive: true });
@@ -176,26 +195,59 @@ export async function alignVoice(id: string): Promise<Word[]> {
     inputPath: input,
     whisperPath: WHISPER_DIR,
     whisperCppVersion: WHISPER_VERSION,
-    model: MODEL,
+    model,
     modelFolder: WHISPER_DIR,
     tokenLevelTimestamps: false,
     tokensPerItem: 1,
     splitOnWord: true,
     language: "en",
     printOutput: false,
-    // The brand name, so Whisper spells it the way the script does.
-    additionalArgs: ["--prompt", "Tryworthy."],
+    // Brand and campaign vocabulary, so Whisper spells them the way the script does.
+    additionalArgs: ["--prompt", VOCABULARY],
   });
   rmSync(input, { force: true });
+  return heardWords(json);
+}
 
+export async function alignVoice(id: string): Promise<Word[]> {
+  const spec = loadSpec(id);
+  const clean = paths.voClean(id);
+  if (!existsSync(clean)) fail(`No cleaned voice at ${clean}: run vo-clean first`);
+  await installWhisperCpp({ to: WHISPER_DIR, version: WHISPER_VERSION, printOutput: false });
+
+  const script = scriptWords(spec.script);
+  const small = await hear(id, clean, MODEL);
   const info: MatchInfo[] = [];
-  const matched = match(scriptWords(spec.script), heardWords(json), info);
-  if (!matched) fail(`vo-align ${id}: the voice doesn't match the script. Re-record, or fix the script and vo/${id}.txt.`);
-  const words = tidy(snapToAudio(matched.map((w) => ({ ...w })), await decodeMono(clean, 48000), 48000));
+  const corrections: string[] = [];
+  let matched = match(script, small, info, true);
+  if (!matched) {
+    // Second opinion on the words: does the voice say the script?
+    const large = await hear(id, clean, CHECK_MODEL);
+    if (!match(script, large, [], true)) {
+      console.error(`(${MODEL} and ${CHECK_MODEL} both disagree with the script:)`);
+      match(script, large);
+      fail(`vo-align ${id}: the voice doesn't match the script. Re-record, or fix the script and vo/${id}.txt.`);
+    }
+    if (large.length !== small.length) fail(`vo-align ${id}: ${MODEL} heard ${small.length} words and ${CHECK_MODEL} ${large.length}; can't combine their timings. Check the recording.`);
+    // The larger model's words with the smaller one's timings.
+    const heard = small.map((w, i) => {
+      if (sound(w.text) !== sound(large[i]!.text)) corrections.push(`${MODEL} heard "${w.text}", ${CHECK_MODEL} heard "${large[i]!.text}" at ${w.start.toFixed(2)} s`);
+      return { ...w, text: large[i]!.text };
+    });
+    info.length = 0;
+    matched = match(script, heard, info);
+    if (!matched) fail(`vo-align ${id}: the voice doesn't match the script. Re-record, or fix the script and vo/${id}.txt.`);
+  }
+  const samples = await decodeMono(clean, 48000);
+  const words = tidy(snapToAudio(matched.map((w) => ({ ...w })), samples, 48000));
+  // The last word can't end after the sound does (Whisper's final end often runs a little past it).
+  const soundEnd = (silenceMap(samples, 48000).last + 1) * 0.01;
+  const lastWord = words[words.length - 1]!;
+  lastWord.end = Math.round(Math.max(lastWord.start + 0.04, Math.min(lastWord.end, soundEnd)) * 1000) / 1000;
   writeJson(paths.words(id), words);
-  const q = alignReport(id, words, info);
+  const q = alignReport(id, words, info, corrections);
   console.log(
-    `✔ vo-align ${id}: ${words.length} words matched (${q.exact} exact, ${q.split} split, ${q.merged} merged), Whisper confidence ${q.meanP} mean / ${q.minP} lowest, boundaries moved ${q.meanShiftMs} ms on average (max ${q.maxShiftMs} ms) → ${path.relative(process.cwd(), paths.words(id))} (whisper ${MODEL})`,
+    `✔ vo-align ${id}: ${words.length} words matched (${q.exact} exact, ${q.split} split, ${q.merged} merged, ${q.spoken} spoken form${corrections.length ? `, ${corrections.length} confirmed by ${CHECK_MODEL}` : ""}), Whisper confidence ${q.meanP} mean / ${q.minP} lowest, boundaries moved ${q.meanShiftMs} ms on average (max ${q.maxShiftMs} ms) → ${path.relative(process.cwd(), paths.words(id))} (whisper ${MODEL})`,
   );
   return words;
 }
@@ -204,7 +256,7 @@ export async function alignVoice(id: string): Promise<Word[]> {
  * The alignment report (out/checks/<ID>.align.json and .md): per word, what Whisper heard, how it
  * matched the script, Whisper's confidence, and how far snapping to the audio moved its start and end.
  */
-function alignReport(id: string, words: Word[], info: MatchInfo[]) {
+function alignReport(id: string, words: Word[], info: MatchInfo[], corrections: string[]) {
   const rows = words.map((w, i) => {
     const m = info[i]!;
     return {
@@ -224,6 +276,7 @@ function alignReport(id: string, words: Word[], info: MatchInfo[]) {
     exact: rows.filter((r) => r.kind === "exact").length,
     split: rows.filter((r) => r.kind === "split").length,
     merged: rows.filter((r) => r.kind === "merged").length,
+    spoken: rows.filter((r) => r.kind === "spoken form").length,
     meanP: +(rows.reduce((a, r) => a + r.p, 0) / rows.length).toFixed(2),
     minP: Math.min(...rows.map((r) => r.p)),
     lowConfidence: rows.filter((r) => r.p < 0.6).map((r) => r.word),
@@ -232,11 +285,12 @@ function alignReport(id: string, words: Word[], info: MatchInfo[]) {
   };
   ensureDir(paths.checks);
   const file = path.join(paths.checks, `${id}.align.json`);
-  writeJson(file, { id, model: MODEL, summary, rows });
+  writeJson(file, { id, model: MODEL, secondOpinion: corrections.length ? CHECK_MODEL : null, corrections, summary, rows });
   const md = [
     `# vo-align ${id}`,
     "",
-    `Whisper ${MODEL}, one word per segment, boundaries snapped to the audio (up to ${SNAP * 1000} ms). ${summary.words} words: ${summary.exact} heard exactly, ${summary.split} heard in pieces, ${summary.merged} heard merged with a neighbour. Whisper's confidence: ${summary.meanP} on average, lowest ${summary.minP}${summary.lowConfidence.length ? ` (under 0.6: ${summary.lowConfidence.join(", ")})` : ""}. Snapping moved word boundaries ${summary.meanShiftMs} ms on average, at most ${summary.maxShiftMs} ms.`,
+    `Whisper ${MODEL}, one word per segment, boundaries snapped to the audio (up to ${SNAP * 1000} ms). ${summary.words} words: ${summary.exact} heard exactly, ${summary.split} heard in pieces, ${summary.merged} heard merged with a neighbour, ${summary.spoken} an informal spoken form of the script words (${rows.filter((r) => r.kind === "spoken form").map((r) => `"${r.heard}" for "${r.word}"`).join(", ") || "none"}). Whisper's confidence: ${summary.meanP} on average, lowest ${summary.minP}${summary.lowConfidence.length ? ` (under 0.6: ${summary.lowConfidence.join(", ")})` : ""}. Snapping moved word boundaries ${summary.meanShiftMs} ms on average, at most ${summary.maxShiftMs} ms.`,
+    ...(corrections.length ? ["", `Words the larger model corrected (it hears the script; their times are ${MODEL}'s): ${corrections.join("; ")}.`] : []),
     "",
     "| # | Word | Heard | Match | Confidence | Whisper (s) | Final (s) | Start moved (ms) | End moved (ms) |",
     "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
