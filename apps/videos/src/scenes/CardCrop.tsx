@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, interpolate, staticFile } from "remotion";
-import { COLORS, FONTS, themeColors } from "../brand";
+import { COLORS, FONTS, themeColors, uiSceneBg } from "../brand";
 import { useCapture } from "../captures";
 import { cueFrameOf, useBeat } from "../context";
 import { cardLayout, cardToVideo } from "../lib/cardcrop";
@@ -9,7 +9,7 @@ import { progress } from "../motion";
 import { CursorTap, type CursorStop } from "./CursorTap";
 
 export interface CardCropProps {
-  /** Capture name (public/captures/<name>.json). Capture at device scale 2, at a page width where the element's text reaches 40/32 px at 720 px wide (vo-check). */
+  /** Capture name (public/captures/<name>.json). Capture at device scale 3, at a page width where the element's text reaches 40/32 px at 720 px wide (vo-check). */
   capture: string;
   /** The captured element shown: the one card or row the voice talks about. */
   target: string;
@@ -17,6 +17,10 @@ export interface CardCropProps {
   cursor?: { cue: string; target: string; tap?: boolean }[];
   /** Switch to another captured state on a cue (e.g. "saved" right after the tap). */
   state?: { cue: string; name: string; delayFrames?: number };
+  /** Outline a captured element inside the card when its cue word is spoken. */
+  highlight?: { cue: string; target: string };
+  /** One band of light crossing the card on its cue (dark, cinematic scenes). */
+  sweep?: { cue: string };
   /** Small "Illustrative" label: demo products are fictional. On unless set to false. */
   illustrative?: boolean;
 }
@@ -26,7 +30,7 @@ export interface CardCropProps {
  * 720 px wide, centered on x = 540 and on the middle of the safe band. Not rebuilt: the pixels
  * are the page's own.
  */
-export const CardCrop: React.FC<CardCropProps> = ({ capture, target, cursor = [], state, illustrative = true }) => {
+export const CardCrop: React.FC<CardCropProps> = ({ capture, target, cursor = [], state, highlight, sweep, illustrative = true }) => {
   const ctx = useBeat();
   const meta = useCapture(capture);
   const colors = themeColors(ctx.theme);
@@ -37,6 +41,11 @@ export const CardCrop: React.FC<CardCropProps> = ({ capture, target, cursor = []
   const stateName = state && f >= cueFrameOf(ctx, ctx.fps, state.cue) + (state.delayFrames ?? 0) ? state.name : "default";
   const src = meta.states[stateName] ?? meta.states.default!;
 
+  const hl = highlight ? cardToVideo(l, targetBox(meta, highlight.target)) : null;
+  const hlIn = highlight ? progress(f, cueFrameOf(ctx, ctx.fps, highlight.cue), 10) : 0;
+  // The light crosses the card at a steady pace over about a second.
+  const sweepX = sweep ? interpolate(progress(f, cueFrameOf(ctx, ctx.fps, sweep.cue) - 4, 32, (t) => t), [0, 1], [-40, 140]) : null;
+
   const stops: CursorStop[] = cursor.map((c, i) => {
     const r = cardToVideo(l, targetBox(meta, c.target));
     return { x: r.x + r.w / 2, y: r.y + r.h / 2, at: cueFrameOf(ctx, ctx.fps, c.cue), tap: c.tap ?? i === cursor.length - 1 };
@@ -44,7 +53,7 @@ export const CardCrop: React.FC<CardCropProps> = ({ capture, target, cursor = []
   if (stops.length) stops.unshift({ x: stops[0]!.x + 140, y: stops[0]!.y + 240, at: stops[0]!.at - 16 });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: ctx.theme === "dark" ? COLORS.ink : COLORS.surface, overflow: "hidden" }}>
+    <AbsoluteFill style={{ backgroundColor: uiSceneBg(ctx.theme), overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, opacity: enter, transform: `translateY(${(1 - enter) * 60}px) scale(${interpolate(enter, [0, 1], [0.96, 1])})`, transformOrigin: "540px 840px" }}>
         {illustrative && (
           <div style={{ position: "absolute", left: l.card.x, top: l.card.y - 48, width: l.card.w, textAlign: "center", fontFamily: FONTS.body, fontSize: 26, color: colors.muted }}>Illustrative</div>
@@ -67,6 +76,37 @@ export const CardCrop: React.FC<CardCropProps> = ({ capture, target, cursor = []
             style={{ position: "absolute", left: -l.crop.x * l.scale, top: -l.crop.y * l.scale, width: meta.width * l.scale, height: meta.height * l.scale, maxWidth: "none" }}
           />
         </div>
+        {sweepX !== null && sweepX > -40 && sweepX < 140 && (
+          <div
+            style={{
+              position: "absolute",
+              left: l.card.x,
+              top: l.card.y,
+              width: l.card.w,
+              height: l.card.h,
+              borderRadius: 32,
+              pointerEvents: "none",
+              mixBlendMode: "multiply",
+              background: `linear-gradient(105deg, transparent ${sweepX - 14}%, ${COLORS.accentSoft} ${sweepX - 4}%, rgba(14,122,79,0.16) ${sweepX}%, ${COLORS.accentSoft} ${sweepX + 4}%, transparent ${sweepX + 14}%)`,
+            }}
+          />
+        )}
+        {hl && (
+          <div
+            style={{
+              position: "absolute",
+              left: hl.x - 10,
+              top: hl.y - 10,
+              width: hl.w + 20,
+              height: hl.h + 20,
+              borderRadius: 16,
+              border: `5px solid ${COLORS.accent}`,
+              boxShadow: `0 0 0 10px ${COLORS.accentSoft}`,
+              opacity: hlIn,
+              transform: `scale(${interpolate(hlIn, [0, 1], [1.05, 1])})`,
+            }}
+          />
+        )}
         <CursorTap stops={stops} frame={f} size={64} />
       </div>
     </AbsoluteFill>
