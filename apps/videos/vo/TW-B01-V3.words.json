@@ -1,0 +1,412 @@
+[
+  {
+    "word": "Built",
+    "start": 0.015,
+    "end": 0.28
+  },
+  {
+    "word": "something",
+    "start": 0.28,
+    "end": 0.7
+  },
+  {
+    "word": "with",
+    "start": 0.7,
+    "end": 0.9
+  },
+  {
+    "word": "AI",
+    "start": 0.9,
+    "end": 0.99
+  },
+  {
+    "word": "this",
+    "start": 0.99,
+    "end": 1.2
+  },
+  {
+    "word": "weekend?",
+    "start": 1.2,
+    "end": 1.7
+  },
+  {
+    "word": "Nobody's",
+    "start": 1.7,
+    "end": 2.19
+  },
+  {
+    "word": "going",
+    "start": 2.225,
+    "end": 2.265
+  },
+  {
+    "word": "to",
+    "start": 2.245,
+    "end": 2.42
+  },
+  {
+    "word": "find",
+    "start": 2.42,
+    "end": 2.6
+  },
+  {
+    "word": "it.",
+    "start": 2.6,
+    "end": 2.88
+  },
+  {
+    "word": "Unless",
+    "start": 2.885,
+    "end": 3.17
+  },
+  {
+    "word": "you",
+    "start": 3.17,
+    "end": 3.31
+  },
+  {
+    "word": "launch",
+    "start": 3.31,
+    "end": 3.6
+  },
+  {
+    "word": "it",
+    "start": 3.6,
+    "end": 3.735
+  },
+  {
+    "word": "where",
+    "start": 3.775,
+    "end": 4.015
+  },
+  {
+    "word": "people",
+    "start": 4.13,
+    "end": 4.45
+  },
+  {
+    "word": "actually",
+    "start": 4.45,
+    "end": 4.98
+  },
+  {
+    "word": "try",
+    "start": 4.98,
+    "end": 5.18
+  },
+  {
+    "word": "new",
+    "start": 5.27,
+    "end": 5.4
+  },
+  {
+    "word": "apps.",
+    "start": 5.46,
+    "end": 5.88
+  },
+  {
+    "word": "On",
+    "start": 5.915,
+    "end": 5.955
+  },
+  {
+    "word": "Tryworthy,",
+    "start": 5.935,
+    "end": 6.81
+  },
+  {
+    "word": "makers",
+    "start": 6.81,
+    "end": 7.265
+  },
+  {
+    "word": "get",
+    "start": 7.3,
+    "end": 7.42
+  },
+  {
+    "word": "in",
+    "start": 7.42,
+    "end": 7.56
+  },
+  {
+    "word": "a",
+    "start": 7.56,
+    "end": 7.63
+  },
+  {
+    "word": "week",
+    "start": 7.63,
+    "end": 7.905
+  },
+  {
+    "word": "early.",
+    "start": 7.995,
+    "end": 8.48
+  },
+  {
+    "word": "Verify",
+    "start": 8.515,
+    "end": 8.84
+  },
+  {
+    "word": "your",
+    "start": 8.84,
+    "end": 9.08
+  },
+  {
+    "word": "domain,",
+    "start": 9.08,
+    "end": 9.48
+  },
+  {
+    "word": "paste",
+    "start": 9.59,
+    "end": 9.81
+  },
+  {
+    "word": "your",
+    "start": 9.81,
+    "end": 9.99
+  },
+  {
+    "word": "link,",
+    "start": 9.99,
+    "end": 10.085
+  },
+  {
+    "word": "and",
+    "start": 10.2,
+    "end": 10.39
+  },
+  {
+    "word": "you're",
+    "start": 10.39,
+    "end": 10.78
+  },
+  {
+    "word": "live",
+    "start": 10.78,
+    "end": 11.09
+  },
+  {
+    "word": "on",
+    "start": 11.09,
+    "end": 11.22
+  },
+  {
+    "word": "launch",
+    "start": 11.22,
+    "end": 11.77
+  },
+  {
+    "word": "day.",
+    "start": 11.77,
+    "end": 11.945
+  },
+  {
+    "word": "List",
+    "start": 12.06,
+    "end": 12.31
+  },
+  {
+    "word": "it",
+    "start": 12.31,
+    "end": 12.43
+  },
+  {
+    "word": "as",
+    "start": 12.43,
+    "end": 12.73
+  },
+  {
+    "word": "Pre-launch",
+    "start": 12.73,
+    "end": 13.28
+  },
+  {
+    "word": "and",
+    "start": 13.28,
+    "end": 13.43
+  },
+  {
+    "word": "find",
+    "start": 13.43,
+    "end": 13.59
+  },
+  {
+    "word": "your",
+    "start": 13.59,
+    "end": 13.77
+  },
+  {
+    "word": "first",
+    "start": 13.77,
+    "end": 14.075
+  },
+  {
+    "word": "testers.",
+    "start": 14.105,
+    "end": 14.48
+  },
+  {
+    "word": "They",
+    "start": 14.51,
+    "end": 14.69
+  },
+  {
+    "word": "send",
+    "start": 14.69,
+    "end": 14.9
+  },
+  {
+    "word": "feedback",
+    "start": 14.9,
+    "end": 15.345
+  },
+  {
+    "word": "straight",
+    "start": 15.39,
+    "end": 15.66
+  },
+  {
+    "word": "to",
+    "start": 15.66,
+    "end": 15.84
+  },
+  {
+    "word": "you",
+    "start": 15.84,
+    "end": 16.055
+  },
+  {
+    "word": "and",
+    "start": 16.095,
+    "end": 16.135
+  },
+  {
+    "word": "vote",
+    "start": 16.115,
+    "end": 16.43
+  },
+  {
+    "word": "on",
+    "start": 16.43,
+    "end": 16.54
+  },
+  {
+    "word": "your",
+    "start": 16.54,
+    "end": 16.76
+  },
+  {
+    "word": "roadmap.",
+    "start": 16.76,
+    "end": 17.36
+  },
+  {
+    "word": "Offer",
+    "start": 17.365,
+    "end": 17.675
+  },
+  {
+    "word": "a",
+    "start": 17.74,
+    "end": 17.78
+  },
+  {
+    "word": "perk",
+    "start": 17.76,
+    "end": 17.88
+  },
+  {
+    "word": "people",
+    "start": 17.975,
+    "end": 18.255
+  },
+  {
+    "word": "can",
+    "start": 18.255,
+    "end": 18.53
+  },
+  {
+    "word": "only",
+    "start": 18.535,
+    "end": 18.78
+  },
+  {
+    "word": "claim",
+    "start": 18.78,
+    "end": 19.09
+  },
+  {
+    "word": "here.",
+    "start": 19.09,
+    "end": 19.56
+  },
+  {
+    "word": "Listing",
+    "start": 19.575,
+    "end": 19.96
+  },
+  {
+    "word": "your",
+    "start": 20.005,
+    "end": 20.15
+  },
+  {
+    "word": "product",
+    "start": 20.15,
+    "end": 20.51
+  },
+  {
+    "word": "on",
+    "start": 20.51,
+    "end": 20.61
+  },
+  {
+    "word": "Tryworthy",
+    "start": 20.61,
+    "end": 21.19
+  },
+  {
+    "word": "is",
+    "start": 21.19,
+    "end": 21.23
+  },
+  {
+    "word": "free.",
+    "start": 21.23,
+    "end": 21.6
+  },
+  {
+    "word": "Join",
+    "start": 21.605,
+    "end": 21.82
+  },
+  {
+    "word": "the",
+    "start": 21.82,
+    "end": 22.04
+  },
+  {
+    "word": "waitlist,",
+    "start": 22.08,
+    "end": 22.435
+  },
+  {
+    "word": "link",
+    "start": 22.435,
+    "end": 22.75
+  },
+  {
+    "word": "in",
+    "start": 22.75,
+    "end": 22.85
+  },
+  {
+    "word": "bio.",
+    "start": 22.85,
+    "end": 22.99
+  }
+]

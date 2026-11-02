@@ -1,0 +1,402 @@
+[
+  {
+    "word": "Hot",
+    "start": 0.02,
+    "end": 0.255
+  },
+  {
+    "word": "take,",
+    "start": 0.305,
+    "end": 0.56
+  },
+  {
+    "word": "launch",
+    "start": 0.56,
+    "end": 0.94
+  },
+  {
+    "word": "leaderboards",
+    "start": 0.94,
+    "end": 1.7
+  },
+  {
+    "word": "are",
+    "start": 1.7,
+    "end": 1.925
+  },
+  {
+    "word": "a",
+    "start": 1.985,
+    "end": 2.025
+  },
+  {
+    "word": "popularity",
+    "start": 2.005,
+    "end": 2.59
+  },
+  {
+    "word": "contest.",
+    "start": 2.59,
+    "end": 3.3
+  },
+  {
+    "word": "Whoever",
+    "start": 3.335,
+    "end": 3.71
+  },
+  {
+    "word": "brings",
+    "start": 3.71,
+    "end": 4.06
+  },
+  {
+    "word": "the",
+    "start": 4.06,
+    "end": 4.29
+  },
+  {
+    "word": "most",
+    "start": 4.29,
+    "end": 4.46
+  },
+  {
+    "word": "votes",
+    "start": 4.46,
+    "end": 4.75
+  },
+  {
+    "word": "on",
+    "start": 4.75,
+    "end": 4.86
+  },
+  {
+    "word": "day",
+    "start": 4.86,
+    "end": 5.03
+  },
+  {
+    "word": "one",
+    "start": 5.03,
+    "end": 5.19
+  },
+  {
+    "word": "wins.",
+    "start": 5.19,
+    "end": 5.71
+  },
+  {
+    "word": "That",
+    "start": 5.71,
+    "end": 5.78
+  },
+  {
+    "word": "tells",
+    "start": 5.815,
+    "end": 6.12
+  },
+  {
+    "word": "you",
+    "start": 6.12,
+    "end": 6.27
+  },
+  {
+    "word": "who",
+    "start": 6.27,
+    "end": 6.42
+  },
+  {
+    "word": "has",
+    "start": 6.42,
+    "end": 6.57
+  },
+  {
+    "word": "the",
+    "start": 6.57,
+    "end": 6.72
+  },
+  {
+    "word": "biggest",
+    "start": 6.72,
+    "end": 7.06
+  },
+  {
+    "word": "audience,",
+    "start": 7.06,
+    "end": 7.48
+  },
+  {
+    "word": "not",
+    "start": 7.48,
+    "end": 7.65
+  },
+  {
+    "word": "which",
+    "start": 7.65,
+    "end": 7.935
+  },
+  {
+    "word": "app",
+    "start": 7.985,
+    "end": 8.16
+  },
+  {
+    "word": "is",
+    "start": 8.16,
+    "end": 8.21
+  },
+  {
+    "word": "good.",
+    "start": 8.21,
+    "end": 8.64
+  },
+  {
+    "word": "So",
+    "start": 8.65,
+    "end": 8.69
+  },
+  {
+    "word": "we",
+    "start": 8.67,
+    "end": 8.8
+  },
+  {
+    "word": "built",
+    "start": 8.8,
+    "end": 9.01
+  },
+  {
+    "word": "the",
+    "start": 9.045,
+    "end": 9.145
+  },
+  {
+    "word": "opposite",
+    "start": 9.19,
+    "end": 9.41
+  },
+  {
+    "word": "of",
+    "start": 9.41,
+    "end": 9.58
+  },
+  {
+    "word": "that.",
+    "start": 9.58,
+    "end": 9.92
+  },
+  {
+    "word": "Tryworthy",
+    "start": 9.965,
+    "end": 10.58
+  },
+  {
+    "word": "ranks",
+    "start": 10.58,
+    "end": 10.995
+  },
+  {
+    "word": "every",
+    "start": 11.025,
+    "end": 11.3
+  },
+  {
+    "word": "new",
+    "start": 11.3,
+    "end": 11.52
+  },
+  {
+    "word": "launch",
+    "start": 11.52,
+    "end": 11.945
+  },
+  {
+    "word": "by",
+    "start": 11.995,
+    "end": 12.035
+  },
+  {
+    "word": "what",
+    "start": 12.015,
+    "end": 12.375
+  },
+  {
+    "word": "people",
+    "start": 12.415,
+    "end": 12.56
+  },
+  {
+    "word": "did",
+    "start": 12.595,
+    "end": 12.8
+  },
+  {
+    "word": "with",
+    "start": 12.8,
+    "end": 12.95
+  },
+  {
+    "word": "it",
+    "start": 13.03,
+    "end": 13.18
+  },
+  {
+    "word": "this",
+    "start": 13.215,
+    "end": 13.39
+  },
+  {
+    "word": "week.",
+    "start": 13.395,
+    "end": 13.76
+  },
+  {
+    "word": "Saves,",
+    "start": 13.775,
+    "end": 14.39
+  },
+  {
+    "word": "perk",
+    "start": 14.39,
+    "end": 14.715
+  },
+  {
+    "word": "claims",
+    "start": 14.8,
+    "end": 15.5
+  },
+  {
+    "word": "and",
+    "start": 15.5,
+    "end": 15.54
+  },
+  {
+    "word": "feedback",
+    "start": 15.52,
+    "end": 15.835
+  },
+  {
+    "word": "from",
+    "start": 15.835,
+    "end": 16.09
+  },
+  {
+    "word": "verified",
+    "start": 16.09,
+    "end": 16.54
+  },
+  {
+    "word": "accounts.",
+    "start": 16.54,
+    "end": 17.06
+  },
+  {
+    "word": "Each",
+    "start": 17.145,
+    "end": 17.325
+  },
+  {
+    "word": "person",
+    "start": 17.36,
+    "end": 17.85
+  },
+  {
+    "word": "counts",
+    "start": 17.85,
+    "end": 18.29
+  },
+  {
+    "word": "once,",
+    "start": 18.29,
+    "end": 18.57
+  },
+  {
+    "word": "and",
+    "start": 18.635,
+    "end": 18.77
+  },
+  {
+    "word": "makers'",
+    "start": 18.77,
+    "end": 19.16
+  },
+  {
+    "word": "own",
+    "start": 19.16,
+    "end": 19.33
+  },
+  {
+    "word": "activity",
+    "start": 19.33,
+    "end": 19.79
+  },
+  {
+    "word": "doesn't",
+    "start": 19.79,
+    "end": 20.18
+  },
+  {
+    "word": "count.",
+    "start": 20.18,
+    "end": 20.68
+  },
+  {
+    "word": "Nobody",
+    "start": 20.73,
+    "end": 21.01
+  },
+  {
+    "word": "can",
+    "start": 21.04,
+    "end": 21.18
+  },
+  {
+    "word": "pay",
+    "start": 21.18,
+    "end": 21.33
+  },
+  {
+    "word": "to",
+    "start": 21.33,
+    "end": 21.44
+  },
+  {
+    "word": "rank",
+    "start": 21.44,
+    "end": 21.66
+  },
+  {
+    "word": "higher.",
+    "start": 21.66,
+    "end": 22.18
+  },
+  {
+    "word": "Join",
+    "start": 22.18,
+    "end": 22.41
+  },
+  {
+    "word": "the",
+    "start": 22.41,
+    "end": 22.59
+  },
+  {
+    "word": "waitlist,",
+    "start": 22.59,
+    "end": 23.075
+  },
+  {
+    "word": "link",
+    "start": 23.075,
+    "end": 23.38
+  },
+  {
+    "word": "in",
+    "start": 23.38,
+    "end": 23.49
+  },
+  {
+    "word": "bio.",
+    "start": 23.49,
+    "end": 23.66
+  }
+]

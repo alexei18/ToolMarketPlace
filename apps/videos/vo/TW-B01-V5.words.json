@@ -1,0 +1,387 @@
+[
+  {
+    "word": "What",
+    "start": 0.02,
+    "end": 0.27
+  },
+  {
+    "word": "if",
+    "start": 0.27,
+    "end": 0.41
+  },
+  {
+    "word": "new",
+    "start": 0.41,
+    "end": 0.63
+  },
+  {
+    "word": "apps",
+    "start": 0.63,
+    "end": 0.785
+  },
+  {
+    "word": "gave",
+    "start": 0.815,
+    "end": 1.14
+  },
+  {
+    "word": "you",
+    "start": 1.14,
+    "end": 1.4
+  },
+  {
+    "word": "a",
+    "start": 1.4,
+    "end": 1.44
+  },
+  {
+    "word": "free",
+    "start": 1.42,
+    "end": 1.67
+  },
+  {
+    "word": "month",
+    "start": 1.67,
+    "end": 2.08
+  },
+  {
+    "word": "just",
+    "start": 2.1,
+    "end": 2.29
+  },
+  {
+    "word": "for",
+    "start": 2.29,
+    "end": 2.44
+  },
+  {
+    "word": "trying",
+    "start": 2.44,
+    "end": 2.75
+  },
+  {
+    "word": "them",
+    "start": 2.75,
+    "end": 2.96
+  },
+  {
+    "word": "first?",
+    "start": 2.96,
+    "end": 3.4
+  },
+  {
+    "word": "On",
+    "start": 3.415,
+    "end": 3.58
+  },
+  {
+    "word": "Tryworthy,",
+    "start": 3.58,
+    "end": 4.53
+  },
+  {
+    "word": "makers",
+    "start": 4.615,
+    "end": 4.98
+  },
+  {
+    "word": "offer",
+    "start": 4.98,
+    "end": 5.32
+  },
+  {
+    "word": "perks",
+    "start": 5.375,
+    "end": 5.715
+  },
+  {
+    "word": "you",
+    "start": 5.745,
+    "end": 5.785
+  },
+  {
+    "word": "can't",
+    "start": 5.765,
+    "end": 6.32
+  },
+  {
+    "word": "get",
+    "start": 6.335,
+    "end": 6.375
+  },
+  {
+    "word": "anywhere",
+    "start": 6.355,
+    "end": 6.79
+  },
+  {
+    "word": "else.",
+    "start": 6.79,
+    "end": 7.18
+  },
+  {
+    "word": "An",
+    "start": 7.205,
+    "end": 7.31
+  },
+  {
+    "word": "extended",
+    "start": 7.345,
+    "end": 7.84
+  },
+  {
+    "word": "trial,",
+    "start": 7.84,
+    "end": 8.355
+  },
+  {
+    "word": "a",
+    "start": 8.385,
+    "end": 8.425
+  },
+  {
+    "word": "discount,",
+    "start": 8.405,
+    "end": 9.06
+  },
+  {
+    "word": "or",
+    "start": 9.11,
+    "end": 9.15
+  },
+  {
+    "word": "a",
+    "start": 9.13,
+    "end": 9.265
+  },
+  {
+    "word": "code",
+    "start": 9.325,
+    "end": 9.55
+  },
+  {
+    "word": "that",
+    "start": 9.55,
+    "end": 9.95
+  },
+  {
+    "word": "only",
+    "start": 9.95,
+    "end": 10.11
+  },
+  {
+    "word": "works",
+    "start": 10.11,
+    "end": 10.455
+  },
+  {
+    "word": "here.",
+    "start": 10.485,
+    "end": 11
+  },
+  {
+    "word": "You",
+    "start": 11.025,
+    "end": 11.22
+  },
+  {
+    "word": "find",
+    "start": 11.22,
+    "end": 11.38
+  },
+  {
+    "word": "them",
+    "start": 11.38,
+    "end": 11.645
+  },
+  {
+    "word": "right",
+    "start": 11.69,
+    "end": 11.92
+  },
+  {
+    "word": "on",
+    "start": 11.92,
+    "end": 11.96
+  },
+  {
+    "word": "the",
+    "start": 11.94,
+    "end": 12.18
+  },
+  {
+    "word": "product",
+    "start": 12.18,
+    "end": 12.52
+  },
+  {
+    "word": "page,",
+    "start": 12.52,
+    "end": 12.75
+  },
+  {
+    "word": "marked",
+    "start": 12.79,
+    "end": 13.28
+  },
+  {
+    "word": "Only",
+    "start": 13.28,
+    "end": 13.63
+  },
+  {
+    "word": "on",
+    "start": 13.66,
+    "end": 13.83
+  },
+  {
+    "word": "Tryworthy.",
+    "start": 13.83,
+    "end": 14.92
+  },
+  {
+    "word": "Sign",
+    "start": 14.955,
+    "end": 15.23
+  },
+  {
+    "word": "in,",
+    "start": 15.23,
+    "end": 15.7
+  },
+  {
+    "word": "claim",
+    "start": 15.7,
+    "end": 15.91
+  },
+  {
+    "word": "the",
+    "start": 15.91,
+    "end": 16.06
+  },
+  {
+    "word": "perk,",
+    "start": 16.115,
+    "end": 16.405
+  },
+  {
+    "word": "and",
+    "start": 16.505,
+    "end": 16.71
+  },
+  {
+    "word": "try",
+    "start": 16.71,
+    "end": 16.84
+  },
+  {
+    "word": "the",
+    "start": 16.84,
+    "end": 17.02
+  },
+  {
+    "word": "app",
+    "start": 17.02,
+    "end": 17.105
+  },
+  {
+    "word": "before",
+    "start": 17.15,
+    "end": 17.56
+  },
+  {
+    "word": "everyone",
+    "start": 17.56,
+    "end": 18.04
+  },
+  {
+    "word": "else.",
+    "start": 18.04,
+    "end": 18.5
+  },
+  {
+    "word": "The",
+    "start": 18.515,
+    "end": 18.72
+  },
+  {
+    "word": "maker",
+    "start": 18.72,
+    "end": 19.09
+  },
+  {
+    "word": "gets",
+    "start": 19.09,
+    "end": 19.39
+  },
+  {
+    "word": "a",
+    "start": 19.39,
+    "end": 19.46
+  },
+  {
+    "word": "real",
+    "start": 19.46,
+    "end": 19.76
+  },
+  {
+    "word": "user,",
+    "start": 19.76,
+    "end": 20.06
+  },
+  {
+    "word": "and",
+    "start": 20.12,
+    "end": 20.27
+  },
+  {
+    "word": "you",
+    "start": 20.27,
+    "end": 20.46
+  },
+  {
+    "word": "get",
+    "start": 20.46,
+    "end": 20.65
+  },
+  {
+    "word": "the",
+    "start": 20.65,
+    "end": 20.825
+  },
+  {
+    "word": "deal.",
+    "start": 20.865,
+    "end": 21.3
+  },
+  {
+    "word": "Join",
+    "start": 21.325,
+    "end": 21.52
+  },
+  {
+    "word": "the",
+    "start": 21.52,
+    "end": 21.68
+  },
+  {
+    "word": "waitlist,",
+    "start": 21.68,
+    "end": 22.125
+  },
+  {
+    "word": "link",
+    "start": 22.125,
+    "end": 22.45
+  },
+  {
+    "word": "in",
+    "start": 22.45,
+    "end": 22.56
+  },
+  {
+    "word": "bio.",
+    "start": 22.56,
+    "end": 22.71
+  }
+]
