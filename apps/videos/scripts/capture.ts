@@ -6,7 +6,7 @@
  * real elements and vo-check can measure the text.
  * Always from the video-capture stack (seed/stack.ts, VIDEO_WEB_URL), whose database holds only
  * the fictional catalog of seed/products.ts; the capture refuses any other site. The page markup
- * is the app's own; the capture hides every number (save counts, dates, ranks) and fails if a
+ * is the app's own; the capture hides every number (save counts, dates, ranks, filter counts) and fails if a
  * digit is still visible in the page content.
  */
 import path from "node:path";
@@ -55,8 +55,15 @@ async function captureOne(browser: Awaited<ReturnType<typeof chromium.launch>>, 
           if (!slug || !keep.includes(slug)) li.remove();
         }
       }
-      // No numbers in a video: save counts, dates and ranks are hidden.
-      for (const el of document.querySelectorAll<HTMLElement>("[data-save-count], time, .rank")) el.style.display = "none";
+      // No numbers in a video: save counts, dates, ranks and filter counts are hidden, and so is any
+      // fact (dt/dd pair) whose value has a digit, such as the launch date on a product page.
+      for (const el of document.querySelectorAll<HTMLElement>("[data-save-count], time, .rank, .filter-count")) el.style.display = "none";
+      for (const dd of document.querySelectorAll<HTMLElement>("dl dd")) {
+        if (!/\d/.test(dd.textContent ?? "")) continue;
+        dd.style.display = "none";
+        const dt = dd.previousElementSibling as HTMLElement | null;
+        if (dt?.tagName === "DT") dt.style.display = "none";
+      }
       // No caret, no hover state.
       (document.activeElement as HTMLElement | null)?.blur();
       const main = document.querySelector("main") ?? document.body;
