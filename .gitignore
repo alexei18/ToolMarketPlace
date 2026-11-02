@@ -12,3 +12,8 @@ dist/
 .DS_Store
 coverage/
 worker-configuration.d.ts
+
+# Videos (apps/videos): whisper.cpp and its model, renders and checks, the cleaned voices (made by video:prepare)
+apps/videos/.whisper/
+apps/videos/out/
+apps/videos/public/vo/

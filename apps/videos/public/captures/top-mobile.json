@@ -1,0 +1,25 @@
+{
+  "name": "top-mobile",
+  "route": "/top",
+  "width": 390,
+  "height": 1470,
+  "scale": 2,
+  "states": {
+    "default": "captures/top-mobile.png",
+    "saved": "captures/top-mobile-saved.png"
+  },
+  "targets": {
+    "row1": {
+      "x": 16,
+      "y": 343.46875,
+      "w": 358,
+      "h": 191.0625
+    },
+    "save1": {
+      "x": 142,
+      "y": 485.53125,
+      "w": 37,
+      "h": 32
+    }
+  }
+}
