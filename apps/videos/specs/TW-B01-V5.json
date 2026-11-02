@@ -106,13 +106,19 @@
       "props": {
         "capture": "v5-perk-card",
         "target": "perks",
-        "highlight": {
-          "cue": "only#2",
-          "target": "badge"
-        },
-        "cursor": [
+        "highlight": [
+          {
+            "cue": "only#2",
+            "target": "badge"
+          },
           {
             "cue": "sign",
+            "target": "claim"
+          }
+        ],
+        "cursor": [
+          {
+            "cue": "tryworthy#2",
             "target": "claim",
             "tap": false
           },

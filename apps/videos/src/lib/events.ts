@@ -66,8 +66,8 @@ export function screenEvents(tl: Timeline, words: Word[], fps: number): ScreenEv
         if (p.state) add(at(p.state.cue, b.cueFrame) + (p.state.delayFrames ?? 0), `state "${p.state.name}"`);
         break;
       case "CardCrop":
-        if (p.highlight) add(at(p.highlight.cue, b.cueFrame), "highlight");
-        if (p.sweep) add(at(p.sweep.cue, b.cueFrame), "light sweep");
+        for (const h of (Array.isArray(p.highlight) ? p.highlight : p.highlight ? [p.highlight] : []) as { cue: string }[]) add(at(h.cue, b.cueFrame), "highlight");
+        for (const s of (Array.isArray(p.sweep) ? p.sweep : p.sweep ? [p.sweep] : []) as { cue: string }[]) add(at(s.cue, b.cueFrame), "light sweep");
         for (const c of (p.cursor as { cue: string; tap?: boolean }[]) ?? []) add(at(c.cue, b.cueFrame), c.tap === false ? "cursor moves" : "cursor tap");
         if (p.state) add(at(p.state.cue, b.cueFrame) + (p.state.delayFrames ?? 0), `state "${p.state.name}"`);
         break;

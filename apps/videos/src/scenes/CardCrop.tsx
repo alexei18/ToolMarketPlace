@@ -17,10 +17,10 @@ export interface CardCropProps {
   cursor?: { cue: string; target: string; tap?: boolean }[];
   /** Switch to another captured state on a cue (e.g. "saved" right after the tap). */
   state?: { cue: string; name: string; delayFrames?: number };
-  /** Outline a captured element inside the card when its cue word is spoken. */
-  highlight?: { cue: string; target: string };
-  /** One band of light crossing the card on its cue (dark, cinematic scenes). */
-  sweep?: { cue: string };
+  /** Outline a captured element inside the card when its cue word is spoken; a list outlines one after the other. */
+  highlight?: { cue: string; target: string } | { cue: string; target: string }[];
+  /** Bands of light crossing the card, each on its cue (dark, cinematic scenes). */
+  sweep?: { cue: string } | { cue: string }[];
   /** Small "Illustrative" label: demo products are fictional. On unless set to false. */
   illustrative?: boolean;
 }
@@ -41,10 +41,13 @@ export const CardCrop: React.FC<CardCropProps> = ({ capture, target, cursor = []
   const stateName = state && f >= cueFrameOf(ctx, ctx.fps, state.cue) + (state.delayFrames ?? 0) ? state.name : "default";
   const src = meta.states[stateName] ?? meta.states.default!;
 
-  const hl = highlight ? cardToVideo(l, targetBox(meta, highlight.target)) : null;
-  const hlIn = highlight ? progress(f, cueFrameOf(ctx, ctx.fps, highlight.cue), 10) : 0;
-  // The light crosses the card at a steady pace over about a second.
-  const sweepX = sweep ? interpolate(progress(f, cueFrameOf(ctx, ctx.fps, sweep.cue) - 4, 32, (t) => t), [0, 1], [-40, 140]) : null;
+  // One outline at a time: each leaves when the next one's cue is spoken.
+  const highlights = (Array.isArray(highlight) ? highlight : highlight ? [highlight] : [])
+    .map((h) => ({ box: cardToVideo(l, targetBox(meta, h.target)), at: cueFrameOf(ctx, ctx.fps, h.cue) }))
+    .sort((a, b) => a.at - b.at)
+    .map((h, i, all) => ({ ...h, show: progress(f, h.at, 10) * (all[i + 1] ? 1 - progress(f, all[i + 1]!.at, 6) : 1) }));
+  // Each band of light crosses the card at a steady pace over about a second.
+  const sweepXs = (Array.isArray(sweep) ? sweep : sweep ? [sweep] : []).map((s) => interpolate(progress(f, cueFrameOf(ctx, ctx.fps, s.cue) - 4, 32, (t) => t), [0, 1], [-40, 140]));
 
   const stops: CursorStop[] = cursor.map((c, i) => {
     const r = cardToVideo(l, targetBox(meta, c.target));
@@ -76,8 +79,9 @@ export const CardCrop: React.FC<CardCropProps> = ({ capture, target, cursor = []
             style={{ position: "absolute", left: -l.crop.x * l.scale, top: -l.crop.y * l.scale, width: meta.width * l.scale, height: meta.height * l.scale, maxWidth: "none" }}
           />
         </div>
-        {sweepX !== null && sweepX > -40 && sweepX < 140 && (
+        {sweepXs.filter((x) => x > -40 && x < 140).map((sweepX, i) => (
           <div
+            key={i}
             style={{
               position: "absolute",
               left: l.card.x,
@@ -90,23 +94,24 @@ export const CardCrop: React.FC<CardCropProps> = ({ capture, target, cursor = []
               background: `linear-gradient(105deg, transparent ${sweepX - 14}%, ${COLORS.accentSoft} ${sweepX - 4}%, rgba(14,122,79,0.16) ${sweepX}%, ${COLORS.accentSoft} ${sweepX + 4}%, transparent ${sweepX + 14}%)`,
             }}
           />
-        )}
-        {hl && (
+        ))}
+        {highlights.filter((h) => h.show > 0).map((h, i) => (
           <div
+            key={i}
             style={{
               position: "absolute",
-              left: hl.x - 10,
-              top: hl.y - 10,
-              width: hl.w + 20,
-              height: hl.h + 20,
+              left: h.box.x - 10,
+              top: h.box.y - 10,
+              width: h.box.w + 20,
+              height: h.box.h + 20,
               borderRadius: 16,
               border: `5px solid ${COLORS.accent}`,
               boxShadow: `0 0 0 10px ${COLORS.accentSoft}`,
-              opacity: hlIn,
-              transform: `scale(${interpolate(hlIn, [0, 1], [1.05, 1])})`,
+              opacity: h.show,
+              transform: `scale(${interpolate(h.show, [0, 1], [1.05, 1])})`,
             }}
           />
-        )}
+        ))}
         <CursorTap stops={stops} frame={f} size={64} />
       </div>
     </AbsoluteFill>

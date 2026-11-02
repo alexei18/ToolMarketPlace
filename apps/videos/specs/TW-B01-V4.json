@@ -103,6 +103,14 @@
       "props": {
         "capture": "v4-ranking-card",
         "target": "line",
+        "sweep": [
+          {
+            "cue": "claims"
+          },
+          {
+            "cue": "verified"
+          }
+        ],
         "highlight": {
           "cue": "feedback",
           "target": "line"
