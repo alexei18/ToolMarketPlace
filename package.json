@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "apps/*",
+    "apps/api",
+    "apps/web",
     "packages/*"
   ],
   "scripts": {
@@ -18,7 +19,12 @@
     "db:migrate:remote": "bun run --cwd apps/api db:migrate:remote",
     "seed": "bun run apps/api/scripts/seed-dev.ts",
     "vapid": "bun run apps/api/scripts/vapid.ts",
-    "deploy": "bun run --cwd apps/api deploy && bun run --cwd apps/web deploy"
+    "deploy": "bun run --cwd apps/api deploy && bun run --cwd apps/web deploy",
+    "video:voice": "npm --prefix apps/videos run video:voice --",
+    "video:capture": "npm --prefix apps/videos run video:capture --",
+    "video:prepare": "npm --prefix apps/videos run video:prepare --",
+    "video:render": "npm --prefix apps/videos run video:render --",
+    "video:batch": "npm --prefix apps/videos run video:batch --"
   },
   "devDependencies": {
     "@types/bun": "latest",

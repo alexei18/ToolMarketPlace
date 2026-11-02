@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./brand": "./src/brand.ts",
     "./copy": "./src/copy/en.ts",
     "./enums": "./src/enums.ts",
     "./limits": "./src/limits.ts",
