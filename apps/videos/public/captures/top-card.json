@@ -1,0 +1,29 @@
+{
+  "name": "top-card",
+  "route": "/top",
+  "width": 300,
+  "height": 3630,
+  "scale": 2,
+  "states": {
+    "default": "captures/top-card.png",
+    "saved": "captures/top-card-saved.png"
+  },
+  "targets": {
+    "row1": {
+      "x": 16,
+      "y": 343.46875,
+      "w": 268,
+      "h": 215.203125,
+      "text": {
+        "name": 15,
+        "secondary": 13
+      }
+    },
+    "save1": {
+      "x": 142,
+      "y": 509.671875,
+      "w": 37,
+      "h": 32
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "name": "top-mobile",
   "route": "/top",
   "width": 390,
-  "height": 1470,
+  "height": 3073,
   "scale": 2,
   "states": {
     "default": "captures/top-mobile.png",
@@ -13,7 +13,11 @@
       "x": 16,
       "y": 343.46875,
       "w": 358,
-      "h": 191.0625
+      "h": 191.0625,
+      "text": {
+        "name": 15,
+        "secondary": 13
+      }
     },
     "save1": {
       "x": 142,

@@ -21,6 +21,7 @@
     "vapid": "bun run apps/api/scripts/vapid.ts",
     "deploy": "bun run --cwd apps/api deploy && bun run --cwd apps/web deploy",
     "video:voice": "npm --prefix apps/videos run video:voice --",
+    "video:seed": "npm --prefix apps/videos run video:seed --",
     "video:capture": "npm --prefix apps/videos run video:capture --",
     "video:prepare": "npm --prefix apps/videos run video:prepare --",
     "video:render": "npm --prefix apps/videos run video:render --",

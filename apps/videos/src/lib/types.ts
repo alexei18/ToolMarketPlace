@@ -44,8 +44,9 @@ export interface VideoSpec {
 }
 
 /**
- * How to capture a real page from the local site with Playwright. The page is not rebuilt: the
- * capture only keeps the listed demo products and can hide counts, so nothing invented shows.
+ * How to capture a real page from the video-capture stack (seeded fictional catalog) with
+ * Playwright. The page is not rebuilt: the capture can keep only some products and always hides
+ * numbers (counts, dates, ranks), so nothing invented shows.
  */
 export interface CaptureRecipe {
   /** App route, e.g. "/top" (see its page in apps/web/src/pages first). */
@@ -55,10 +56,8 @@ export interface CaptureRecipe {
   height: number;
   /** Device scale factor of the PNG. */
   scale?: number;
-  /** Product slugs to keep in lists (fictional demo products); other product rows are removed. */
+  /** Product slugs to keep in lists (seed/products.ts); other product rows are removed. Optional: every product in the seed is fictional. */
   keepProducts?: string[];
-  /** Hide save counts (test-database activity is not real usage). */
-  hideCounts?: boolean;
   /** Named elements (CSS selectors, evaluated after the clean-up) whose boxes the scenes use. */
   targets?: Record<string, string>;
   /** Extra PNGs of the same page with attributes changed, e.g. { "saved": [{ "selector": "...", "attributes": { "aria-pressed": "true" } }] }. */

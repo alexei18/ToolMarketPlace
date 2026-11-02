@@ -78,12 +78,26 @@
       "width": 390,
       "height": 844,
       "scale": 2,
-      "keepProducts": [
-        "pixelpress",
-        "murmur",
-        "ledgerly"
-      ],
-      "hideCounts": true,
+      "targets": {
+        "row1": "li.product-row:nth-of-type(1)",
+        "save1": "li.product-row:nth-of-type(1) [data-save]"
+      },
+      "states": {
+        "saved": [
+          {
+            "selector": "li.product-row:nth-of-type(1) [data-save]",
+            "attributes": {
+              "aria-pressed": "true"
+            }
+          }
+        ]
+      }
+    },
+    "top-card": {
+      "route": "/top",
+      "width": 300,
+      "height": 700,
+      "scale": 2,
       "targets": {
         "row1": "li.product-row:nth-of-type(1)",
         "save1": "li.product-row:nth-of-type(1) [data-save]"

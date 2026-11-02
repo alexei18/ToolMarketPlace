@@ -1,19 +1,22 @@
 /*
  * npm run video:capture <ID>
- * Captures the real pages a video shows, from the running site (VIDEO_WEB_URL, default
- * http://localhost:4321) with Playwright, per the spec's "captures" recipes:
- * public/captures/<name>.png (+ <name>-<state>.png) and <name>.json with the page size and the
- * boxes of named elements, so scenes place the cursor and highlights on the real elements.
- * The page markup is the app's own; the capture only removes product rows outside the demo list
- * and can hide counts.
+ * Captures the real pages a video shows with Playwright, per the spec's "captures" recipes:
+ * public/captures/<name>.png (+ <name>-<state>.png) and <name>.json with the page size, the boxes
+ * of named elements and their smallest text, so scenes place the cursor and highlights on the
+ * real elements and vo-check can measure the text.
+ * Always from the video-capture stack (seed/stack.ts, VIDEO_WEB_URL), whose database holds only
+ * the fictional catalog of seed/products.ts; the capture refuses any other site. The page markup
+ * is the app's own; the capture hides every number (save counts, dates, ranks) and fails if a
+ * digit is still visible in the page content.
  */
 import path from "node:path";
 import { chromium } from "playwright";
 import type { CaptureMeta } from "../src/captures";
 import type { CaptureRecipe } from "../src/lib/types";
+import { assertSeededSite, VIDEO_STACK } from "../seed/stack";
 import { ensureDir, fail, idArg, loadSpec, paths, writeJson } from "./lib/common";
 
-const WEB = (process.env.VIDEO_WEB_URL ?? "http://localhost:4321").replace(/\/$/, "");
+const WEB = VIDEO_STACK.web;
 
 export async function capturePages(id: string): Promise<CaptureMeta[]> {
   const spec = loadSpec(id);
@@ -22,6 +25,7 @@ export async function capturePages(id: string): Promise<CaptureMeta[]> {
     console.log(`${id}: no captures in the spec`);
     return [];
   }
+  await assertSeededSite(WEB).catch((e: Error) => fail(e.message));
   ensureDir(paths.captures);
   const browser = await chromium.launch();
   const metas: CaptureMeta[] = [];
@@ -40,23 +44,27 @@ async function captureOne(browser: Awaited<ReturnType<typeof chromium.launch>>, 
   if (!res || !res.ok()) fail(`${WEB}${r.route} answered ${res?.status()}`);
   const landed = new URL(page.url()).pathname;
   if (landed !== r.route.split("?")[0]) {
-    fail(`${r.route} redirected to ${landed}. Is the site in waitlist mode? For captures, mark the local database launched:\n  UPDATE site_state SET launched_at = 1 WHERE id = 1   (set it back to NULL afterwards)`);
+    fail(`${r.route} redirected to ${landed}. The video-capture stack runs launched (WAITLIST=false); is ${WEB} that stack?`);
   }
 
-  await page.evaluate(
-    ({ keep, hideCounts }) => {
+  const digits = await page.evaluate(
+    ({ keep }) => {
       if (keep) {
         for (const li of document.querySelectorAll("li.product-row, li.product-tile")) {
           const slug = li.querySelector('a[href^="/p/"]')?.getAttribute("href")?.split("/")[2];
           if (!slug || !keep.includes(slug)) li.remove();
         }
       }
-      if (hideCounts) for (const el of document.querySelectorAll<HTMLElement>("[data-save-count]")) el.style.display = "none";
+      // No numbers in a video: save counts, dates and ranks are hidden.
+      for (const el of document.querySelectorAll<HTMLElement>("[data-save-count], time, .rank")) el.style.display = "none";
       // No caret, no hover state.
       (document.activeElement as HTMLElement | null)?.blur();
+      const main = document.querySelector("main") ?? document.body;
+      return (main.innerText.match(/[^\n]*\d[^\n]*/g) ?? []).slice(0, 5);
     },
-    { keep: r.keepProducts ?? null, hideCounts: !!r.hideCounts },
+    { keep: r.keepProducts ?? null },
   );
+  if (digits.length) fail(`capture "${name}": numbers are still visible on ${r.route}: ${digits.map((d) => JSON.stringify(d.trim())).join(", ")}`);
   // Load every image (lazy ones too) before the shot.
   await page.evaluate(async () => {
     for (const img of document.querySelectorAll("img")) img.loading = "eager";

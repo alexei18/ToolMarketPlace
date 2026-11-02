@@ -1,0 +1,210 @@
+/*
+ * The video-capture demo catalog: 16 fictional products across 17 categories. Names were checked
+ * against web search (no product or company by these names, no brand inside a name); URLs live
+ * under example.com, the domain reserved for documentation. No numbers in any text, so nothing
+ * countable can show in a capture. Listed in /top order (newest first, nobody has saved anything).
+ */
+import type { ThumbLayout } from "./thumbnails";
+
+export interface SeedProduct {
+  title: string;
+  /** What the API derives from the title (checked after seeding). */
+  slug: string;
+  tagline: string;
+  description: string;
+  categories: string[];
+  stage: "beta" | "launched";
+  pricing: "free" | "freemium" | "paid";
+  hasAi?: boolean;
+  maker: string;
+  perk?: { type: "free_trial" | "extended_trial" | "discount" | "coupon"; title: string; details?: string; sharedCode?: string };
+  thumb: { layout: ThumbLayout; accent: string };
+}
+
+export const SEED_PRODUCTS: SeedProduct[] = [
+  {
+    title: "Tallowbook",
+    slug: "tallowbook",
+    tagline: "Split shared costs and settle up in one tap",
+    description: "Tallowbook keeps a running tab for flatmates, trips and couples. Add a cost in seconds, see who owes whom, and settle up with one tap when you are ready.",
+    categories: ["finance"],
+    stage: "launched",
+    pricing: "freemium",
+    maker: "Ines Calloway",
+    perk: { type: "extended_trial", title: "Three months of Plus, free", details: "Unlimited groups and receipts." },
+    thumb: { layout: "list", accent: "#5B7F6E" },
+  },
+  {
+    title: "Quillcrest",
+    slug: "quillcrest",
+    tagline: "A calm editor that flags filler words as you write",
+    description: "Quillcrest is a distraction-free editor that quietly underlines filler words, long sentences and repeated phrases, so your drafts get shorter without losing your voice.",
+    categories: ["writing"],
+    stage: "launched",
+    pricing: "free",
+    maker: "Theo Marchetti",
+    thumb: { layout: "editor", accent: "#5A6B85" },
+  },
+  {
+    title: "Clipharbor",
+    slug: "clipharbor",
+    tagline: "Cut long recordings into short vertical clips",
+    description: "Drop in a webinar or a podcast recording and Clipharbor suggests the moments worth sharing, reframes them for vertical screens and adds captions you can edit.",
+    categories: ["video", "ai"],
+    stage: "beta",
+    pricing: "freemium",
+    hasAi: true,
+    maker: "Noor Halvorsen",
+    perk: { type: "free_trial", title: "Free trial, no card needed" },
+    thumb: { layout: "timeline", accent: "#9A6B55" },
+  },
+  {
+    title: "Tintwell",
+    slug: "tintwell",
+    tagline: "Build color palettes that pass contrast checks",
+    description: "Pick a base color and Tintwell builds a full palette of tints and shades, then shows which text and background pairs are readable before you hand them to developers.",
+    categories: ["design"],
+    stage: "launched",
+    pricing: "free",
+    maker: "Mila Osterberg",
+    thumb: { layout: "swatches", accent: "#7A6A8C" },
+  },
+  {
+    title: "Stackwhistle",
+    slug: "stackwhistle",
+    tagline: "Readable alerts from your server logs, not noise",
+    description: "Stackwhistle watches your logs, groups repeated errors into one alert and explains each one in plain words, so the team hears about real problems and nothing else.",
+    categories: ["developer-tools"],
+    stage: "launched",
+    pricing: "freemium",
+    maker: "Ravi Lindqvist",
+    perk: { type: "discount", title: "Half off the first year", sharedCode: "WHISTLEHALF" },
+    thumb: { layout: "code", accent: "#4F7F84" },
+  },
+  {
+    title: "Graphmoss",
+    slug: "graphmoss",
+    tagline: "Simple site stats without cookies or banners",
+    description: "Graphmoss shows visits, referrers and goals on one calm page. It sets no cookies, so there is no consent banner to add, and the script stays tiny.",
+    categories: ["analytics"],
+    stage: "launched",
+    pricing: "paid",
+    maker: "Clara Westbrook",
+    thumb: { layout: "chart", accent: "#6F7A50" },
+  },
+  {
+    title: "Huddlewick",
+    slug: "huddlewick",
+    tagline: "Async check-ins your team actually answers",
+    description: "Huddlewick asks short check-in questions at a good time in each time zone and collects the answers into one tidy summary, so the morning meeting becomes optional.",
+    categories: ["collaboration", "productivity"],
+    stage: "launched",
+    pricing: "freemium",
+    maker: "Jonah Abernethy",
+    thumb: { layout: "chat", accent: "#93646E" },
+  },
+  {
+    title: "Replyfern",
+    slug: "replyfern",
+    tagline: "Draft support replies from your own help docs",
+    description: "Replyfern reads your help center and past answers and drafts a reply for each new ticket. Your team edits and sends; nothing goes out without a person approving it.",
+    categories: ["customer-support", "ai"],
+    stage: "beta",
+    pricing: "paid",
+    hasAi: true,
+    maker: "Sana Okafor",
+    perk: { type: "extended_trial", title: "Two extra months on any plan" },
+    thumb: { layout: "inbox", accent: "#5B7F6E" },
+  },
+  {
+    title: "Shelfmoth",
+    slug: "shelfmoth",
+    tagline: "Sell digital downloads from one tidy page",
+    description: "Shelfmoth turns your templates, presets or ebooks into a clean storefront page with checkout and instant delivery, without setting up a whole online shop.",
+    categories: ["ecommerce"],
+    stage: "launched",
+    pricing: "freemium",
+    maker: "Elodie Brandt",
+    thumb: { layout: "grid", accent: "#A08A4E" },
+  },
+  {
+    title: "Vaultpebble",
+    slug: "vaultpebble",
+    tagline: "Share a password once, then it disappears",
+    description: "Vaultpebble turns a password or a key into an encrypted link that can be opened once. After it is read, it is gone, and the person receiving it needs no account.",
+    categories: ["security"],
+    stage: "launched",
+    pricing: "free",
+    maker: "Marek Delacroix",
+    thumb: { layout: "lock", accent: "#5A6B85" },
+  },
+  {
+    title: "Burrowlight",
+    slug: "burrowlight",
+    tagline: "A small puzzle game for a coffee break",
+    description: "Guide a lantern through quiet underground rooms by sliding tiles into place. Each puzzle takes a few minutes, and it plays in the browser and on phones.",
+    categories: ["games"],
+    stage: "launched",
+    pricing: "free",
+    maker: "Yuki Fairbanks",
+    thumb: { layout: "tiles", accent: "#9A6B55" },
+  },
+  {
+    title: "Formorchard",
+    slug: "formorchard",
+    tagline: "Forms that fill a simple database for you",
+    description: "Build a form by dragging fields into place and every answer lands in a tidy table you can filter, share and export. No spreadsheet formulas, no code.",
+    categories: ["no-code", "productivity"],
+    stage: "beta",
+    pricing: "freemium",
+    maker: "Petra Valdés",
+    perk: { type: "coupon", title: "Pro plan, first month free", sharedCode: "ORCHARDPRO" },
+    thumb: { layout: "form", accent: "#4F7F84" },
+  },
+  {
+    title: "Stridenest",
+    slug: "stridenest",
+    tagline: "Short daily walks planned around your calendar",
+    description: "Stridenest finds the gaps in your day and suggests a short walk at the right moment, with a gentle reminder and a weekly view of how often you got outside.",
+    categories: ["health"],
+    stage: "launched",
+    pricing: "freemium",
+    maker: "Owen Castellano",
+    thumb: { layout: "rings", accent: "#6F7A50" },
+  },
+  {
+    title: "Briefloom",
+    slug: "briefloom",
+    tagline: "Turn long meetings into clear next steps",
+    description: "Briefloom listens to a recorded meeting and writes a short summary with decisions, owners and next steps, ready to paste into your team chat or your notes.",
+    categories: ["ai", "productivity"],
+    stage: "launched",
+    pricing: "freemium",
+    hasAi: true,
+    maker: "Leah Winterbourne",
+    thumb: { layout: "chat", accent: "#7A6A8C" },
+  },
+  {
+    title: "Mailmeadow",
+    slug: "mailmeadow",
+    tagline: "Plain newsletters your readers look forward to",
+    description: "Mailmeadow is a writing-first newsletter tool: a clean editor, a simple sign-up page and emails that look like a letter from a person rather than a brochure.",
+    categories: ["marketing", "writing"],
+    stage: "beta",
+    pricing: "free",
+    maker: "Felix Ambrose",
+    thumb: { layout: "editor", accent: "#93646E" },
+  },
+  {
+    title: "Echofold",
+    slug: "echofold",
+    tagline: "Turn voice memos into tidy, searchable notes",
+    description: "Record a thought on your phone and Echofold transcribes it, removes the filler words and files it as a structured note with action items you can search later.",
+    categories: ["audio", "ai", "productivity"],
+    stage: "launched",
+    pricing: "freemium",
+    hasAi: true,
+    maker: "Ama Brightwater",
+    thumb: { layout: "wave", accent: "#A08A4E" },
+  },
+];
