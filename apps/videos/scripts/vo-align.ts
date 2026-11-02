@@ -4,12 +4,12 @@
  * Any word that doesn't match the script stops the pipeline with a table of the differences.
  * The words are stored as written in the script, with Whisper's timings.
  */
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { downloadWhisperModel, installWhisperCpp, transcribe, type WhisperModel } from "@remotion/install-whisper-cpp";
 import type { Word } from "../src/lib/types";
 import { normalizeWord, scriptWords } from "../src/lib/words";
-import { decodeMono, FFMPEG, fail, idArg, loadSpec, paths, ROOT, run, writeJson } from "./lib/common";
+import { decodeMono, ensureDir, FFMPEG, fail, idArg, loadSpec, paths, ROOT, run, writeJson } from "./lib/common";
 import { silenceMap } from "./lib/silence";
 
 const WHISPER_DIR = path.join(ROOT, ".whisper");
@@ -20,13 +20,30 @@ interface Heard {
   text: string;
   start: number;
   end: number;
+  /** Whisper's confidence in the word: the mean probability of its text tokens (0–1). */
+  p: number;
 }
 
 /** Whisper in one-word-per-segment mode: each item is a word with its start and end. */
 function heardWords(json: Awaited<ReturnType<typeof transcribe<false>>>): Heard[] {
   return json.transcription
-    .map((item) => ({ text: item.text.trim(), start: item.offsets.from / 1000, end: item.offsets.to / 1000 }))
+    .map((item) => {
+      // whisper.cpp always writes the full JSON (-ojf), tokens included, though the type only lists them with DTW.
+      const all = (item as { tokens?: { text: string; p: number }[] }).tokens ?? [];
+      const tokens = all.filter((t) => !/^\[_|^<\|/.test(t.text) && t.text.trim() !== "");
+      const p = tokens.length ? tokens.reduce((a, t) => a + t.p, 0) / tokens.length : 0;
+      return { text: item.text.trim(), start: item.offsets.from / 1000, end: item.offsets.to / 1000, p };
+    })
     .filter((w) => normalizeWord(w.text) !== "");
+}
+
+/** How each script word was found in what Whisper heard, for the alignment report. */
+interface MatchInfo {
+  heard: string;
+  kind: "exact" | "split" | "merged";
+  whisperStart: number;
+  whisperEnd: number;
+  p: number;
 }
 
 const SNAP = 0.12; // s: how far a word boundary may move to meet the audio
@@ -74,7 +91,7 @@ function snapToAudio(words: Word[], samples: Float32Array, rate: number): Word[]
  * Matches heard words to script words, allowing a word heard in pieces ("try" + "worthy") or two
  * script words heard as one. Returns null and prints the differences when they don't match.
  */
-function match(script: string[], heard: Heard[]): Word[] | null {
+function match(script: string[], heard: Heard[], info: MatchInfo[] = []): Word[] | null {
   const out: Word[] = [];
   let h = 0;
   const problems: string[] = [];
@@ -87,6 +104,7 @@ function match(script: string[], heard: Heard[]): Word[] | null {
     }
     if (normalizeWord(got.text) === want) {
       out.push({ word: script[s]!, start: got.start, end: got.end });
+      info.push({ heard: got.text, kind: "exact", whisperStart: got.start, whisperEnd: got.end, p: got.p });
       h++;
       continue;
     }
@@ -96,6 +114,8 @@ function match(script: string[], heard: Heard[]): Word[] | null {
     while (k < heard.length && joined.length < want.length && want.startsWith(joined)) joined += normalizeWord(heard[k++]!.text);
     if (joined === want) {
       out.push({ word: script[s]!, start: got.start, end: heard[k - 1]!.end });
+      const pieces = heard.slice(h, k);
+      info.push({ heard: pieces.map((x) => x.text).join(" + "), kind: "split", whisperStart: got.start, whisperEnd: heard[k - 1]!.end, p: Math.min(...pieces.map((x) => x.p)) });
       h = k;
       continue;
     }
@@ -105,7 +125,11 @@ function match(script: string[], heard: Heard[]): Word[] | null {
     while (j < script.length && parts.length < normalizeWord(got.text).length) parts += normalizeWord(script[j++]!);
     if (parts === normalizeWord(got.text)) {
       const n = j - s;
-      for (let q = 0; q < n; q++) out.push({ word: script[s + q]!, start: got.start + ((got.end - got.start) * q) / n, end: got.start + ((got.end - got.start) * (q + 1)) / n });
+      for (let q = 0; q < n; q++) {
+        const w = { word: script[s + q]!, start: got.start + ((got.end - got.start) * q) / n, end: got.start + ((got.end - got.start) * (q + 1)) / n };
+        out.push(w);
+        info.push({ heard: got.text, kind: "merged", whisperStart: w.start, whisperEnd: w.end, p: got.p });
+      }
       s = j - 1;
       h++;
       continue;
@@ -164,12 +188,63 @@ export async function alignVoice(id: string): Promise<Word[]> {
   });
   rmSync(input, { force: true });
 
-  const matched = match(scriptWords(spec.script), heardWords(json));
+  const info: MatchInfo[] = [];
+  const matched = match(scriptWords(spec.script), heardWords(json), info);
   if (!matched) fail(`vo-align ${id}: the voice doesn't match the script. Re-record, or fix the script and vo/${id}.txt.`);
-  const words = tidy(snapToAudio(matched, await decodeMono(clean, 48000), 48000));
+  const words = tidy(snapToAudio(matched.map((w) => ({ ...w })), await decodeMono(clean, 48000), 48000));
   writeJson(paths.words(id), words);
-  console.log(`✔ vo-align ${id}: ${words.length} words matched → ${path.relative(process.cwd(), paths.words(id))} (whisper ${MODEL})`);
+  const q = alignReport(id, words, info);
+  console.log(
+    `✔ vo-align ${id}: ${words.length} words matched (${q.exact} exact, ${q.split} split, ${q.merged} merged), Whisper confidence ${q.meanP} mean / ${q.minP} lowest, boundaries moved ${q.meanShiftMs} ms on average (max ${q.maxShiftMs} ms) → ${path.relative(process.cwd(), paths.words(id))} (whisper ${MODEL})`,
+  );
   return words;
+}
+
+/**
+ * The alignment report (out/checks/<ID>.align.json and .md): per word, what Whisper heard, how it
+ * matched the script, Whisper's confidence, and how far snapping to the audio moved its start and end.
+ */
+function alignReport(id: string, words: Word[], info: MatchInfo[]) {
+  const rows = words.map((w, i) => {
+    const m = info[i]!;
+    return {
+      word: w.word,
+      heard: m.heard,
+      kind: m.kind,
+      p: +m.p.toFixed(2),
+      whisper: [+m.whisperStart.toFixed(3), +m.whisperEnd.toFixed(3)],
+      final: [w.start, w.end],
+      startShiftMs: Math.round((w.start - m.whisperStart) * 1000),
+      endShiftMs: Math.round((w.end - m.whisperEnd) * 1000),
+    };
+  });
+  const shifts = rows.flatMap((r) => [Math.abs(r.startShiftMs), Math.abs(r.endShiftMs)]);
+  const summary = {
+    words: rows.length,
+    exact: rows.filter((r) => r.kind === "exact").length,
+    split: rows.filter((r) => r.kind === "split").length,
+    merged: rows.filter((r) => r.kind === "merged").length,
+    meanP: +(rows.reduce((a, r) => a + r.p, 0) / rows.length).toFixed(2),
+    minP: Math.min(...rows.map((r) => r.p)),
+    lowConfidence: rows.filter((r) => r.p < 0.6).map((r) => r.word),
+    meanShiftMs: Math.round(shifts.reduce((a, b) => a + b, 0) / shifts.length),
+    maxShiftMs: Math.max(...shifts),
+  };
+  ensureDir(paths.checks);
+  const file = path.join(paths.checks, `${id}.align.json`);
+  writeJson(file, { id, model: MODEL, summary, rows });
+  const md = [
+    `# vo-align ${id}`,
+    "",
+    `Whisper ${MODEL}, one word per segment, boundaries snapped to the audio (up to ${SNAP * 1000} ms). ${summary.words} words: ${summary.exact} heard exactly, ${summary.split} heard in pieces, ${summary.merged} heard merged with a neighbour. Whisper's confidence: ${summary.meanP} on average, lowest ${summary.minP}${summary.lowConfidence.length ? ` (under 0.6: ${summary.lowConfidence.join(", ")})` : ""}. Snapping moved word boundaries ${summary.meanShiftMs} ms on average, at most ${summary.maxShiftMs} ms.`,
+    "",
+    "| # | Word | Heard | Match | Confidence | Whisper (s) | Final (s) | Start moved (ms) | End moved (ms) |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...rows.map((r, i) => `| ${i + 1} | ${r.word} | ${r.heard} | ${r.kind} | ${r.p} | ${r.whisper[0]}–${r.whisper[1]} | ${r.final[0]}–${r.final[1]} | ${r.startShiftMs} | ${r.endShiftMs} |`),
+    "",
+  ];
+  writeFileSync(file.replace(/\.json$/, ".md"), md.join("\n"));
+  return summary;
 }
 
 if (process.argv[1]?.endsWith("vo-align.ts")) {

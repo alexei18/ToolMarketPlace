@@ -76,10 +76,10 @@ export async function cleanVoice(id: string) {
     const tempoFilter = tempo !== 1 ? `atempo=${tempo.toFixed(3)},` : "";
     const final = paths.voClean(id);
     ensureDir(path.dirname(final));
-    // Gain to the target, limited to the true-peak ceiling; once more if the limiter cost loudness.
+    // Gain to the target, limited to the true-peak ceiling; again (up to six passes) while the limiter costs loudness.
     let gain = TARGET_LUFS - (await measureLoudness(trimmed, tempoFilter)).i;
     let measured = { i: 0, tp: 0 };
-    for (let pass = 0; pass < 3; pass++) {
+    for (let pass = 0; pass < 6; pass++) {
       await run(FFMPEG, [
         "-hide_banner", "-y", "-i", trimmed,
         "-af", `${tempoFilter}volume=${gain.toFixed(2)}dB,alimiter=limit=${Math.pow(10, LIMITER_CEILING / 20).toFixed(4)}:level=false:attack=1:release=50`,

@@ -1,0 +1,22 @@
+{
+  "source": "vo\\TEST-01.wav",
+  "output": "public\\vo\\TEST-01.wav",
+  "originalSeconds": 7.76,
+  "trimmedHead": 0.26,
+  "trimmedTail": 0.16,
+  "silenceThresholdDb": -46.7,
+  "pausesShortened": [
+    {
+      "at": 1.43,
+      "was": 0.38,
+      "now": 0.18
+    }
+  ],
+  "wordCount": 24,
+  "wordsPerSecondBefore": 3.36,
+  "tempo": 1,
+  "finalSeconds": 7.135,
+  "wordsPerSecondAfter": 3.36,
+  "loudnessLufs": -14.25,
+  "truePeakDb": -2.35
+}

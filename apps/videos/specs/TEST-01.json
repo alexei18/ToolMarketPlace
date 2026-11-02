@@ -1,6 +1,6 @@
 {
   "id": "TEST-01",
-  "concept": "Pipeline test: a word-synced kinetic hook, one real UI capture of Top this week with a cursor tap on Save, then the endscreen.",
+  "concept": "Pipeline test: a word-synced kinetic hook, the real Top this week page in a phone, a cut to the first row as a CardCrop with a tap on Save, then the endscreen.",
   "script": "New apps launch every day. Here are the ones worth trying, ranked by what real people save and try. Find them before everyone else.",
   "beats": [
     {
@@ -31,18 +31,17 @@
           },
           {
             "cue": "worth",
-            "y": 100
+            "y": 240
           }
-        ],
-        "zoom": {
-          "cue": "worth",
-          "target": "row1",
-          "scale": 1.3
-        },
-        "highlight": {
-          "cue": "worth",
-          "target": "row1"
-        },
+        ]
+      }
+    },
+    {
+      "cue": "ranked",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "top-card",
+        "target": "row1",
         "cursor": [
           {
             "cue": "save",

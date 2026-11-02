@@ -1,4 +1,4 @@
 STYLE (Google AI Studio): Read this like a friendly tech creator on TikTok: upbeat, quick and conversational, natural rhythm, no long pauses between sentences.
-VOICE: test only, Kokoro af_heart
+VOICE: Google AI Studio (Gemini TTS)
 ---
 New apps launch every day. Here are the ones worth trying, ranked by what real people save and try. Find them before everyone else.
