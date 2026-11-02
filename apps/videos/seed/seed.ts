@@ -3,8 +3,9 @@
  * Fills the video-capture database (its own stack, see stack.ts) with the fictional catalog in
  * products.ts: one maker per product, a generated thumbnail, perks and pre-launch products. It
  * goes through the real API (sign-up, upload, publish, perks) and uses SQL only for what can't be
- * done offline: confirming emails, verifying the example.com domains, the publish order and the
- * quality flag the ranking job would set. Nobody saves or claims anything, so no count exists.
+ * done offline: confirming emails, verifying the example.com domains, the publish order, the
+ * quality flag the ranking job would set and a fixed Trending order. Nobody saves or claims
+ * anything, so no count exists.
  *
  * Deterministic: it only runs on an empty database (recreate the stack to seed again) and /top
  * always lists the products in the order of products.ts.
@@ -12,7 +13,7 @@
 import { chromium } from "playwright";
 import { TERMS_VERSION } from "../../../packages/shared/src/legal";
 import { fail } from "../scripts/lib/common";
-import { SEED_PRODUCTS } from "./products";
+import { SEED_PRODUCTS, TRENDING } from "./products";
 import { assertSeededSite, assertVideoContainer, UP_COMMAND, VIDEO_STACK, videoSql } from "./stack";
 import { thumbnailPng } from "./thumbnails";
 
@@ -112,6 +113,7 @@ async function main() {
   await videoSql(
     [
       ...ids.map((id, i) => `UPDATE products SET published_at = ${base - i * 3600}, updated_at = ${base - i * 3600}, quality_ok = 1 WHERE id = ${q(id)}`),
+      ...TRENDING.map((slug, i) => `UPDATE products SET score_trending = ${TRENDING.length - i} WHERE id = ${q(ids[SEED_PRODUCTS.findIndex((p) => p.slug === slug)]!)}`),
       `DELETE FROM waitlist WHERE id LIKE 'vseed-%'`,
     ].join("; "),
   );
@@ -128,7 +130,10 @@ async function main() {
     await new Promise((r) => setTimeout(r, 2000));
   }
   if (order.join() !== expected.slice(0, order.length).join() || order.length === 0) fail(`/top lists ${order.join(", ")}; expected ${expected.join(", ")}`);
-  console.log(`\nDone: ${ids.length} products; /top starts with ${order.slice(0, 3).join(", ")}. Captures read ${WEB}.`);
+  const trendingHtml = await fetch(`${WEB}/trending`).then((r) => r.text());
+  const trending = [...new Set([...trendingHtml.matchAll(/class="product-row"[\s\S]*?href="\/p\/([a-z0-9-]+)"/g)].map((m) => m[1]!))];
+  if (trending.join() !== TRENDING.join()) fail(`/trending lists ${trending.join(", ")}; expected ${TRENDING.join(", ")}`);
+  console.log(`\nDone: ${ids.length} products; /top starts with ${order.slice(0, 3).join(", ")}, /trending with ${trending.slice(0, 3).join(", ")}. Captures read ${WEB}.`);
 }
 
 main().catch((err) => fail(String(err instanceof Error ? err.message : err)));

@@ -3,6 +3,7 @@
  * against web search (no product or company by these names, no brand inside a name); URLs live
  * under example.com, the domain reserved for documentation. No numbers in any text, so nothing
  * countable can show in a capture. Listed in /top order (newest first, nobody has saved anything).
+ * Trending has a fixed order (TRENDING) so the tab isn't empty; nothing countable is behind it.
  */
 import type { ThumbLayout } from "./thumbnails";
 
@@ -20,6 +21,9 @@ export interface SeedProduct {
   perk?: { type: "free_trial" | "extended_trial" | "discount" | "coupon"; title: string; details?: string; sharedCode?: string };
   thumb: { layout: ThumbLayout; accent: string };
 }
+
+/** /trending, top first: the ranking job's stored trending score, set directly (the demo has no activity). */
+export const TRENDING = ["clipharbor", "echofold", "tintwell", "briefloom", "burrowlight", "stackwhistle"];
 
 export const SEED_PRODUCTS: SeedProduct[] = [
   {
