@@ -13,6 +13,7 @@ import type { HeadlineSlamProps } from "./HeadlineSlam";
 import type { HudFrameProps } from "./HudFrame";
 import { counterTicks, typeEvents } from "./lib";
 import type { LightSweepProps } from "./LightSweep";
+import type { ListCascadeProps } from "./ListCascade";
 import type { MatchCutProps } from "./MatchCut";
 import type { StageShotProps } from "./StageShot";
 import type { TypeBackspaceProps } from "./TypeBackspace";
@@ -28,6 +29,7 @@ export interface KitProps {
   HeadlineSlam: HeadlineSlamProps;
   HudFrame: HudFrameProps;
   LightSweep: LightSweepProps;
+  ListCascade: ListCascadeProps;
   MatchCut: MatchCutProps;
   Stage: StageShotProps;
   TypeBackspace: TypeBackspaceProps;
@@ -52,6 +54,7 @@ export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
   HeadlineSlam: (p) => p.wordFrames.map((frame) => ({ frame, type: "clickDry" as const })),
   HudFrame: (p) => (p.over ? kitCues(p.over, p.durationInFrames) : []),
   LightSweep: (p) => [...kitCues(p.over, p.durationInFrames), { frame: p.at, type: "shimmer" }],
+  ListCascade: (p) => p.rowFrames.map((frame) => ({ frame, type: "whooshShort" as const })),
   MatchCut: (p) => [{ frame: p.at - 14, type: "whooshShort" }, { frame: p.at, type: "impact" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
   Stage: () => [],
   TypeBackspace: (p) => typeEvents(p.steps).map((e) => ({ frame: e.frame, type: "key" as const, ...(e.kind === "erase" ? { gainDb: -4 } : {}) })),

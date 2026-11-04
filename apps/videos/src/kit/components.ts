@@ -9,6 +9,7 @@ import { FocusPull } from "./FocusPull";
 import { HeadlineSlam } from "./HeadlineSlam";
 import { HudFrame } from "./HudFrame";
 import { LightSweep } from "./LightSweep";
+import { ListCascade } from "./ListCascade";
 import { MatchCut } from "./MatchCut";
 import type { KitProps, KitScene } from "./scenes";
 import { StageShot } from "./StageShot";
@@ -25,6 +26,7 @@ export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
   HeadlineSlam,
   HudFrame,
   LightSweep,
+  ListCascade,
   MatchCut,
   Stage: StageShot,
   TypeBackspace,
