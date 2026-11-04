@@ -1,0 +1,4 @@
+STYLE (Google AI Studio): Read this like a calm, confident narrator in a short film trailer: low, close to the microphone, unhurried, slight tension, never salesy. Pause only where the script says [beat].
+VOICE: Kokoro, for this internal test only
+---
+Somewhere, right now, someone just shipped the app you've been looking for. [beat 0.6] It took them a weekend. [beat 0.5] Tonight it has one visitor. [beat 0.4] Them. [beat 0.8] The good ones don't go viral. They go quiet. [beat 0.6] Unless someone's watching. Join the waitlist. Link in bio.

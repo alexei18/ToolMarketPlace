@@ -1,0 +1,45 @@
+{
+  "id": "TEST-KIT",
+  "concept": "Internal end-to-end test of the motion kit: Kokoro voice, generated music. Not a video to post.",
+  "script": "Somewhere, right now, someone just shipped the app you've been looking for. [beat 0.6] It took them a weekend. [beat 0.5] Tonight it has one visitor. [beat 0.4] Them. [beat 0.8] The good ones don't go viral. They go quiet. [beat 0.6] Unless someone's watching. Join the waitlist. Link in bio.",
+  "beats": [],
+  "style": { "theme": "dark" },
+  "endscreen": "dark",
+  "kit": {
+    "twist": { "cue": "watching" },
+    "music": "fixtures/test-drop.wav",
+    "act2Beats": 24,
+    "cta": "Join the waitlist. Link in bio.",
+    "beats": [
+      { "at": { "cue": "Somewhere" }, "scene": "Stage", "props": {}, "caption": true },
+      { "at": { "cue": "It" }, "scene": "HeadlineSlam", "props": { "lines": ["It took them", "a weekend."], "wordFrames": { "$words": "It took them a weekend." } } },
+      { "at": { "cue": "Tonight" }, "scene": "HeadlineSlam", "props": { "lines": ["Tonight it", "has one", "visitor."], "wordFrames": { "$words": "Tonight it has one visitor." } } },
+      { "at": { "cue": "Them#2" }, "scene": "HeadlineSlam", "props": { "lines": ["Them."], "wordFrames": { "$words": "Them#2" }, "accent": "Them" } },
+      {
+        "at": { "cue": "The#2" },
+        "scene": "HudFrame",
+        "props": {
+          "labels": { "topLeft": "Top this week", "bottomLeft": "Illustrative" },
+          "timecode": true,
+          "over": { "scene": "HeadlineSlam", "props": { "lines": ["The good", "ones don't", "go viral."], "wordFrames": { "$words": "The#2 good ones don't go viral." }, "layout": "editorial" } }
+        }
+      },
+      { "at": { "cue": "They" }, "scene": "ChromeMark", "props": { "camera": "macroGlide" }, "stage": { "drift": false }, "caption": true, "sfx": "whooshSoft" },
+      { "at": { "cue": "Unless" }, "scene": "Stage", "props": {}, "caption": true, "sfx": "whooshSoft" },
+      { "at": { "cue": "watching" }, "scene": "ChromeMark", "props": { "camera": "revealSpin" }, "stage": { "drift": false } },
+      { "at": { "musicBeat": 8 }, "scene": "FloatCard", "props": { "capture": "kit-feed", "target": "row1" } },
+      { "at": { "musicBeat": 12 }, "scene": "ListCascade", "props": { "capture": "kit-feed", "boxes": "rows", "count": 3, "rowFrames": [{ "$musicBeat": 12 }, { "$musicBeat": 13 }, { "$musicBeat": 14 }] } },
+      {
+        "at": { "musicBeat": 18 },
+        "scene": "GridPopulate",
+        "props": {
+          "items": ["AI", "Developer Tools", "Productivity", "Design", "Marketing", "Writing", "Video", "Finance"],
+          "keep": 2,
+          "stagger": 3,
+          "fadeAt": { "$musicBeat": 22 }
+        }
+      },
+      { "at": { "musicBeat": 24 }, "scene": "ChromeWordmark", "props": { "sweepAt": 12, "cta": "Join the waitlist", "sub": "Link in bio", "textAt": 6 }, "stage": { "drift": false } }
+    ]
+  }
+}
