@@ -67,6 +67,7 @@ export const GALLERY: GalleryItem[] = [
       over: { scene: "HeadlineSlam", props: { lines: ["Every day,", "new apps", "launch."], wordFrames: [10, 20, 28, 36, 46], layout: "editorial" } },
     },
   },
+  { name: "CounterRoll", frames: 150, scene: "CounterRoll", props: { fact: "products", label: "Products", settleAt: 60, ledAt: 96 } },
   { name: "FloatCard", frames: 120, scene: "FloatCard", props: { capture: "kit-feed", target: "row1" } },
 ];
 

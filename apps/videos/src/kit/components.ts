@@ -2,6 +2,7 @@
 import type React from "react";
 import { ChromeMark } from "./ChromeMark";
 import { ChromeWordmark } from "./ChromeWordmark";
+import { CounterRoll } from "./CounterRoll";
 import { FloatCard } from "./FloatCard";
 import { FocusPull } from "./FocusPull";
 import { HeadlineSlam } from "./HeadlineSlam";
@@ -16,6 +17,7 @@ import { WireframeCollapse } from "./WireframeCollapse";
 export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
   ChromeMark,
   ChromeWordmark,
+  CounterRoll,
   FloatCard,
   FocusPull,
   HeadlineSlam,
