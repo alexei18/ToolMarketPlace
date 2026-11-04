@@ -17,3 +17,10 @@ worker-configuration.d.ts
 apps/videos/.whisper/
 apps/videos/out/
 apps/videos/public/vo/
+# Reference videos: study only, never in a render. Music: licenses restrict redistribution (analysis JSON and license proof stay tracked).
+apps/videos/refs/
+apps/videos/public/music/*.mp3
+apps/videos/public/music/*.wav
+apps/videos/public/music/*.flac
+apps/videos/public/music/*.m4a
+apps/videos/public/fixtures/
