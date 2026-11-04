@@ -5,12 +5,14 @@
 import type { ChromeMarkProps } from "./ChromeMark";
 import type { ChromeWordmarkProps } from "./ChromeWordmark";
 import { shiftCues, type Cue } from "./cues";
+import type { FloatCardProps } from "./FloatCard";
 import { counterTicks, typeEvents } from "./lib";
 import type { StageShotProps } from "./StageShot";
 
 export interface KitProps {
   ChromeMark: ChromeMarkProps;
   ChromeWordmark: ChromeWordmarkProps;
+  FloatCard: FloatCardProps;
   Stage: StageShotProps;
 }
 export type KitScene = keyof KitProps;
@@ -25,6 +27,7 @@ export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
     { frame: 0, type: "impact" },
     { frame: p.sweepAt ?? 12, type: "shimmer" },
   ],
+  FloatCard: () => [{ frame: 0, type: "swoosh" }],
   Stage: () => [],
 };
 
