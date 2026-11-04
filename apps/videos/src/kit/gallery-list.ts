@@ -43,6 +43,7 @@ export const GALLERY: GalleryItem[] = [
       b: { scene: "ChromeMark", props: { camera: "pushIn", sweepAt: 40 } },
     },
   },
+  { name: "WireframeCollapse", frames: 150, scene: "WireframeCollapse", props: { capture: "kit-feed", boxes: "skeleton", breakAt: 24, collapseAt: 100 } },
   { name: "HeadlineSlam", frames: 120, scene: "HeadlineSlam", props: { lines: ["We're not", "letting", "you in."], wordFrames: [6, 16, 28, 40, 50], accent: "in" } },
   { name: "FloatCard", frames: 120, scene: "FloatCard", props: { capture: "kit-feed", target: "row1" } },
 ];
