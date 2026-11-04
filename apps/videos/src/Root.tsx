@@ -2,9 +2,11 @@ import React from "react";
 import { Composition } from "remotion";
 import type { CaptureMeta } from "./captures";
 import { Gallery } from "./Gallery";
+import { GALLERY_TOTAL } from "./kit/gallery-list";
 import { GALLERY_FRAMES } from "./lib/gallery";
 import { buildTimeline, FPS, HEIGHT, WIDTH } from "./lib/timeline";
 import type { VideoSpec, Word } from "./lib/types";
+import { StyleGallery } from "./StyleGallery";
 import { Video } from "./Video";
 
 // Specs, aligned words and capture metadata, found at bundle time. A spec shows up once
@@ -44,5 +46,6 @@ export const Root: React.FC = () => (
       />
     ))}
     <Composition id="SceneGallery" component={Gallery} fps={FPS} width={WIDTH} height={HEIGHT} durationInFrames={GALLERY_FRAMES} defaultProps={{ debugSafeZone: true, captures }} />
+    <Composition id="StyleGallery" component={StyleGallery} fps={FPS} width={WIDTH} height={HEIGHT} durationInFrames={GALLERY_TOTAL} />
   </>
 );

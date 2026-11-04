@@ -15,6 +15,7 @@
     "video:sheet": "tsx scripts/contact-sheet.ts",
     "video:tracker": "tsx scripts/tracker.ts",
     "video:relayout": "tsx scripts/relayout.ts",
+    "video:kit-stills": "tsx scripts/kit-stills.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
