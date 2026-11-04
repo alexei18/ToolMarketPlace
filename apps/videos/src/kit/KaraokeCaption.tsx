@@ -30,7 +30,7 @@ export const KaraokeCaption: React.FC<KaraokeCaptionProps> = ({ words, maxWords 
   if (!page) return null;
   return (
     <AbsoluteFill>
-      <div style={{ ...TYPE.caption, position: "absolute", left: LAYOUT.safe.x, width: 888, top: LAYOUT.captionY - 30, textAlign: "center", whiteSpace: "pre" }}>
+      <div style={{ ...TYPE.caption, position: "absolute", left: LAYOUT.safe.x, width: 888, top: LAYOUT.captionY - 30, textAlign: "center", whiteSpace: "pre", textShadow: "0 0 22px rgba(0,0,0,0.85), 0 2px 6px rgba(0,0,0,0.6)" }}>
         {page.map((t, i) => (
           <span key={i} style={{ color: ms >= t.fromMs ? KIT.text : KIT.unspoken }}>
             {t.text}
