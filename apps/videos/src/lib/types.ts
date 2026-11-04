@@ -1,4 +1,5 @@
 /* The video spec (specs/<ID>.json) and the aligned words (vo/<ID>.words.json). */
+import type { KitSpec } from "./kit-timeline";
 
 export type SceneName = "KineticText" | "PhoneFrame" | "CardCrop" | "CardReveal" | "LightSweep" | "CheckDraw" | "StatOrQuote";
 
@@ -17,7 +18,7 @@ export interface BeatSpec {
   props?: Record<string, unknown>;
   /** Captions during this beat: "none" hides them (default for scenes that show their own words). The band is per video (style.captions). */
   captions?: "show" | "none";
-  /** The UI area the voice talks about during this beat, in video pixels. Captions must not cover it (vo-check). */
+  /** The UI area the voice talks about during this beat, in video pixels. Captions must not cover it (video-check). */
   focus?: Rect;
 }
 
@@ -55,6 +56,8 @@ export interface VideoSpec {
     captions?: "top" | "bottom";
   };
   endscreen: "light" | "dark";
+  /** A motion-kit video (docs/video-motion-bible.md): its beats, twist and music. Without it, a TW-B01 style video. */
+  kit?: KitSpec;
   /** Real-UI captures this video uses (scripts/capture.ts), by name. */
   captures?: Record<string, CaptureRecipe>;
   /** The TikTok cover still: the frame `offsetFrames` after this cue word ends. */

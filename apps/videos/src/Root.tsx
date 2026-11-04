@@ -4,8 +4,10 @@ import type { CaptureMeta } from "./captures";
 import { Gallery } from "./Gallery";
 import { GALLERY_TOTAL } from "./kit/gallery-list";
 import { GALLERY_FRAMES } from "./lib/gallery";
+import { buildKitTimeline, type MusicAnalysis } from "./lib/kit-timeline";
 import { buildTimeline, FPS, HEIGHT, WIDTH } from "./lib/timeline";
 import type { VideoSpec, Word } from "./lib/types";
+import { KitVideo } from "./KitVideo";
 import { StyleGallery } from "./StyleGallery";
 import { Video } from "./Video";
 
@@ -15,6 +17,7 @@ declare const require: { context(dir: string, deep: boolean, re: RegExp): { keys
 const specs = require.context("../specs", false, /\.json$/);
 const wordFiles = require.context("../vo", false, /\.words\.json$/);
 const captureFiles = require.context("../public/captures", false, /\.json$/);
+const musicFiles = require.context("../public", true, /\.analysis\.json$/);
 
 const captures: Record<string, CaptureMeta> = Object.fromEntries(
   captureFiles.keys().map((k) => {
@@ -33,7 +36,25 @@ const videos = specs
 
 export const Root: React.FC = () => (
   <>
-    {videos.map(({ spec, words }) => (
+    {videos.flatMap(({ spec, words }) => {
+      if (!spec.kit) return [];
+      const key = `./${spec.kit.music.replace(/\.[^.]+$/, "")}.analysis.json`;
+      if (!musicFiles.keys().includes(key)) return [];
+      const music = musicFiles(key) as MusicAnalysis;
+      return [
+        <Composition
+          key={spec.id}
+          id={spec.id}
+          component={KitVideo}
+          fps={FPS}
+          width={WIDTH}
+          height={HEIGHT}
+          durationInFrames={buildKitTimeline(spec.id, spec.kit, words, music, FPS).durationInFrames}
+          defaultProps={{ spec, words, music, captures }}
+        />,
+      ];
+    })}
+    {videos.filter(({ spec }) => !spec.kit).map(({ spec, words }) => (
       <Composition
         key={spec.id}
         id={spec.id}
