@@ -25,6 +25,8 @@ export interface Fixture {
   dropGain?: number;
   /** Bass and a kick already in the intro, as most real tracks have: the jump at the drop is small. */
   busyIntro?: boolean;
+  /** Starts at full energy, breaks down, then drops: the start of the track must not count as the drop. */
+  startsLoud?: boolean;
 }
 
 export const FIXTURES: Fixture[] = [
@@ -33,6 +35,7 @@ export const FIXTURES: Fixture[] = [
   { name: "test-fast", bpm: 148, introBeats: 32, totalBeats: 140, gap: true, jitter: 0.008 },
   { name: "test-subtle", bpm: 110, introBeats: 16, totalBeats: 80, dropGain: 0.55 },
   { name: "test-busy", bpm: 128, introBeats: 32, totalBeats: 128, busyIntro: true, gap: true },
+  { name: "test-loudstart", bpm: 142, introBeats: 96, totalBeats: 190, startsLoud: true, gap: true },
 ];
 
 export function dropSeconds(f: Fixture): number {
@@ -60,7 +63,7 @@ export function makeTrack(f: Fixture): { samples: Float32Array; beats: number[] 
     const jitter = f.jitter ? (r() - 0.5) * 2 * f.jitter : 0;
     const t = b * beat + jitter;
     beats.push(t);
-    const after = b >= f.introBeats;
+    const after = b >= f.introBeats || (f.startsLoud && b < 48);
     if (after) {
       // Kick, bass and a hat: what a drop brings.
       add(t, 0.35, (s) => gain * 0.9 * Math.sin(2 * Math.PI * (48 + 90 * Math.exp(-s * 34)) * s) * Math.exp(-s * 9));

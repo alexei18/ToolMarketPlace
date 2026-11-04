@@ -3,8 +3,9 @@
  * For each track in public/music (or the folder given): the beats, the drop and the loudness, written
  * next to it as <track>.analysis.json. The compositions place the track so its drop lands on the twist.
  *
- * The drop is where the bass and the overall energy jump the most and stay up. A weak jump is
- * reported as not found rather than guessed: then write <track>.drop.json with { "seconds": n } after
+ * The drop is where the bass and the overall energy jump the most and stay up, compared over several
+ * seconds on each side, so a track simply starting doesn't count. A weak jump is reported as not found
+ * rather than guessed: then write <track>.drop.json with { "seconds": n } after
  * listening. The beats are one steady grid (tempo and phase fitted over the section after the drop),
  * each beat then moved to the real onset within 30 ms, so a slightly loose track still lines up.
  */
@@ -19,7 +20,7 @@ const HOP = 128;
 const HOP_S = HOP / RATE;
 const TRACK = /\.(mp3|wav|flac|m4a)$/i;
 /** Below this jump in dB the drop isn't trusted. */
-const MIN_JUMP = 6;
+const MIN_JUMP = 8;
 
 function envelopes(x: Float32Array) {
   const n = Math.floor(x.length / HOP);
@@ -56,12 +57,19 @@ const mean = (a: Float32Array, from: number, to: number) => {
   return s / Math.max(1, end - Math.max(0, from));
 };
 
+/** The middle value of a stretch: a single hit or a short dip doesn't move it, unlike a mean. */
+function median(a: Float32Array, from: number, to: number): number {
+  const part = Array.from(a.subarray(Math.max(0, from), Math.min(to, a.length))).sort((x, y) => x - y);
+  return part[part.length >> 1] ?? -90;
+}
+
 export function findDrop(low: Float32Array, all: Float32Array, flux: Float32Array): { at: number; jump: number } {
-  const win = Math.round(4 / HOP_S);
-  const step = Math.round(0.05 / HOP_S);
+  const win = Math.round(6 / HOP_S);
+  const step = Math.round(0.1 / HOP_S);
   let best = { f: 0, jump: -Infinity };
-  for (let f = Math.round(1.5 / HOP_S); f < low.length - win / 2; f += step) {
-    const jump = mean(low, f, f + win) - mean(low, f - win, f) + 0.5 * (mean(all, f, f + win) - mean(all, f - win, f));
+  // A full window on both sides: the energy at the very start of a track isn't a jump. A track can end right after its drop, so the window after it may be shorter.
+  for (let f = win; f < low.length - win / 3; f += step) {
+    const jump = median(low, f, f + win) - median(low, f - win, f) + 0.5 * (median(all, f, f + win) - median(all, f - win, f));
     if (jump > best.jump) best = { f, jump };
   }
   // The strongest hit close to the jump is the drop itself.
