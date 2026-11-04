@@ -12,6 +12,7 @@ import { counterTicks, typeEvents } from "./lib";
 import type { LightSweepProps } from "./LightSweep";
 import type { MatchCutProps } from "./MatchCut";
 import type { StageShotProps } from "./StageShot";
+import type { TypeBackspaceProps } from "./TypeBackspace";
 import type { WireframeCollapseProps } from "./WireframeCollapse";
 
 export interface KitProps {
@@ -23,6 +24,7 @@ export interface KitProps {
   LightSweep: LightSweepProps;
   MatchCut: MatchCutProps;
   Stage: StageShotProps;
+  TypeBackspace: TypeBackspaceProps;
   WireframeCollapse: WireframeCollapseProps;
 }
 export type KitScene = keyof KitProps;
@@ -43,6 +45,7 @@ export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
   LightSweep: (p) => [...kitCues(p.over, p.durationInFrames), { frame: p.at, type: "shimmer" }],
   MatchCut: (p) => [{ frame: p.at - 14, type: "whooshShort" }, { frame: p.at, type: "impact" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
   Stage: () => [],
+  TypeBackspace: (p) => typeEvents(p.steps).map((e) => ({ frame: e.frame, type: "key" as const, ...(e.kind === "erase" ? { gainDb: -4 } : {}) })),
   WireframeCollapse: (p) => [
     { frame: p.breakAt, type: "glitch" },
     ...[0, 1, 2, 3, 4, 5].map((i) => ({ frame: p.breakAt + 6 + i * 7, type: "clickDry" as const })),

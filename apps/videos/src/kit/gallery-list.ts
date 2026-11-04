@@ -45,6 +45,18 @@ export const GALLERY: GalleryItem[] = [
   },
   { name: "WireframeCollapse", frames: 150, scene: "WireframeCollapse", props: { capture: "kit-feed", boxes: "skeleton", breakAt: 24, collapseAt: 100 } },
   { name: "HeadlineSlam", frames: 120, scene: "HeadlineSlam", props: { lines: ["We're not", "letting", "you in."], wordFrames: [6, 16, 28, 40, 50], accent: "in" } },
+  {
+    name: "TypeBackspace",
+    frames: 150,
+    scene: "TypeBackspace",
+    props: {
+      field: true,
+      steps: [
+        { at: 6, text: "best new app for notes" },
+        { at: 76, text: "new apps worth trying" },
+      ],
+    },
+  },
   { name: "FloatCard", frames: 120, scene: "FloatCard", props: { capture: "kit-feed", target: "row1" } },
 ];
 

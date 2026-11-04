@@ -9,6 +9,7 @@ import { LightSweep } from "./LightSweep";
 import { MatchCut } from "./MatchCut";
 import type { KitProps, KitScene } from "./scenes";
 import { StageShot } from "./StageShot";
+import { TypeBackspace } from "./TypeBackspace";
 import { WireframeCollapse } from "./WireframeCollapse";
 
 export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
@@ -20,5 +21,6 @@ export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
   LightSweep,
   MatchCut,
   Stage: StageShot,
+  TypeBackspace,
   WireframeCollapse,
 };
