@@ -2,6 +2,7 @@
  * The kit's components as data: their props by name and what each one sounds like. Pure TypeScript
  * with type-only imports, so the node scripts (video-check) read the same cues the compositions play.
  */
+import type { ChartDrawProps } from "./ChartDraw";
 import type { ChromeMarkProps } from "./ChromeMark";
 import type { ChromeWordmarkProps } from "./ChromeWordmark";
 import type { CounterRollProps } from "./CounterRoll";
@@ -18,6 +19,7 @@ import type { TypeBackspaceProps } from "./TypeBackspace";
 import type { WireframeCollapseProps } from "./WireframeCollapse";
 
 export interface KitProps {
+  ChartDraw: ChartDrawProps;
   ChromeMark: ChromeMarkProps;
   ChromeWordmark: ChromeWordmarkProps;
   CounterRoll: CounterRollProps;
@@ -38,6 +40,7 @@ export type KitBeat = { [S in KitScene]: { scene: S; props: Omit<KitProps[S], "d
 
 /** Each component's sounds, in frames from its start. Transitions add the sounds of the shots they hold. */
 export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
+  ChartDraw: () => [{ frame: 0, type: "riserShort" }],
   ChromeMark: (p) => [{ frame: 0, type: "swell" }, ...(p.sweepAt !== undefined ? [{ frame: p.sweepAt, type: "shimmer" as const }] : [])],
   ChromeWordmark: (p) => [
     { frame: 0, type: "impact" },

@@ -1,5 +1,6 @@
 /* The kit's React components by name. */
 import type React from "react";
+import { ChartDraw } from "./ChartDraw";
 import { ChromeMark } from "./ChromeMark";
 import { ChromeWordmark } from "./ChromeWordmark";
 import { CounterRoll } from "./CounterRoll";
@@ -15,6 +16,7 @@ import { TypeBackspace } from "./TypeBackspace";
 import { WireframeCollapse } from "./WireframeCollapse";
 
 export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
+  ChartDraw,
   ChromeMark,
   ChromeWordmark,
   CounterRoll,
