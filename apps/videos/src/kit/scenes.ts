@@ -13,6 +13,7 @@ import type { FocusPullProps } from "./FocusPull";
 import type { GridPopulateProps } from "./GridPopulate";
 import type { HeadlineSlamProps } from "./HeadlineSlam";
 import type { HudFrameProps } from "./HudFrame";
+import type { KaraokeCaptionProps } from "./KaraokeCaption";
 import { counterTicks, typeEvents } from "./lib";
 import type { LightSweepProps } from "./LightSweep";
 import type { ListCascadeProps } from "./ListCascade";
@@ -33,6 +34,7 @@ export interface KitProps {
   GridPopulate: GridPopulateProps;
   HeadlineSlam: HeadlineSlamProps;
   HudFrame: HudFrameProps;
+  KaraokeCaption: KaraokeCaptionProps;
   LightSweep: LightSweepProps;
   ListCascade: ListCascadeProps;
   MatchCut: MatchCutProps;
@@ -61,6 +63,7 @@ export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
   GridPopulate: (p) => [...p.items.map((_, i) => ({ frame: i * (p.stagger ?? 3), type: "pop" as const })), { frame: p.fadeAt, type: "tone" as const }],
   HeadlineSlam: (p) => p.wordFrames.map((frame) => ({ frame, type: "clickDry" as const })),
   HudFrame: (p) => (p.over ? kitCues(p.over, p.durationInFrames) : []),
+  KaraokeCaption: () => [],
   LightSweep: (p) => [...kitCues(p.over, p.durationInFrames), { frame: p.at, type: "shimmer" }],
   ListCascade: (p) => p.rowFrames.map((frame) => ({ frame, type: "whooshShort" as const })),
   MatchCut: (p) => [{ frame: p.at - 14, type: "whooshShort" }, { frame: p.at, type: "impact" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],

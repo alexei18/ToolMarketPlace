@@ -97,6 +97,15 @@ export const GALLERY: GalleryItem[] = [
       b: { scene: "HeadlineSlam", props: { lines: ["Makers", "first."], wordFrames: [0, 8], accent: "first" } },
     },
   },
+  {
+    name: "KaraokeCaption",
+    frames: 120,
+    scene: "KaraokeCaption",
+    props: {
+      // "Be first to find the new apps worth trying.", about 2.5 words a second.
+      words: ["Be", "first", "to", "find", "the", "new", "apps", "worth", "trying."].map((word, i) => ({ word, from: 6 + i * 12, to: 6 + i * 12 + 10 })),
+    },
+  },
 ];
 
 export const GALLERY_TOTAL = GALLERY.reduce((n, i) => n + i.frames, 0);

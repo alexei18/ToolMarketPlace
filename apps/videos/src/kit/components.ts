@@ -10,6 +10,7 @@ import { FocusPull } from "./FocusPull";
 import { GridPopulate } from "./GridPopulate";
 import { HeadlineSlam } from "./HeadlineSlam";
 import { HudFrame } from "./HudFrame";
+import { KaraokeCaption } from "./KaraokeCaption";
 import { LightSweep } from "./LightSweep";
 import { ListCascade } from "./ListCascade";
 import { MatchCut } from "./MatchCut";
@@ -30,6 +31,7 @@ export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
   GridPopulate,
   HeadlineSlam,
   HudFrame,
+  KaraokeCaption,
   LightSweep,
   ListCascade,
   MatchCut,
