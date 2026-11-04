@@ -5,9 +5,11 @@
 import type { ChromeMarkProps } from "./ChromeMark";
 import { shiftCues, type Cue } from "./cues";
 import { counterTicks, typeEvents } from "./lib";
+import type { StageShotProps } from "./StageShot";
 
 export interface KitProps {
   ChromeMark: ChromeMarkProps;
+  Stage: StageShotProps;
 }
 export type KitScene = keyof KitProps;
 
@@ -17,6 +19,7 @@ export type KitBeat = { [S in KitScene]: { scene: S; props: Omit<KitProps[S], "d
 /** Each component's sounds, in frames from its start. Transitions add the sounds of the shots they hold. */
 export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
   ChromeMark: (p) => [{ frame: 0, type: "swell" }, ...(p.sweepAt !== undefined ? [{ frame: p.sweepAt, type: "shimmer" as const }] : [])],
+  Stage: () => [],
 };
 
 /** Room tone under every shot. */

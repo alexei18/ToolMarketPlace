@@ -13,6 +13,7 @@ export type GalleryItem = KitBeat & { name: string; frames: number; stage?: { dr
 const on3d = { drift: false };
 
 export const GALLERY: GalleryItem[] = [
+  { name: "Stage", frames: 120, scene: "Stage", props: {} },
   { name: "ChromeMark macro glide", frames: 120, stage: on3d, scene: "ChromeMark", props: { camera: "macroGlide" } },
   { name: "ChromeMark slow orbit", frames: 120, stage: on3d, scene: "ChromeMark", props: { camera: "slowOrbit", sweepAt: 50 } },
   { name: "ChromeMark push-in", frames: 120, stage: on3d, scene: "ChromeMark", props: { camera: "pushIn" } },
