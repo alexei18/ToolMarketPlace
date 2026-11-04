@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Sequence } from "remotion";
 import { KIT_COMPONENTS } from "./kit/components";
-import { GALLERY } from "./kit/gallery-list";
+import { galleryCues, GALLERY } from "./kit/gallery-list";
+import { SoundLayer } from "./kit/SoundLayer";
 import { Stage } from "./kit/Stage";
 
 /** Every kit component on the Stage for 4–6 s with its sound. Internal: not a video to post. */
 export const StyleGallery: React.FC = () => {
+  const cues = useMemo(() => galleryCues(), []);
   let from = 0;
   return (
     <>
@@ -21,6 +23,7 @@ export const StyleGallery: React.FC = () => {
           </Sequence>
         );
       })}
+      <SoundLayer cues={cues} />
     </>
   );
 };

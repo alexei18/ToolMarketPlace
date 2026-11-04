@@ -16,6 +16,7 @@
     "video:tracker": "tsx scripts/tracker.ts",
     "video:relayout": "tsx scripts/relayout.ts",
     "video:kit-stills": "tsx scripts/kit-stills.ts",
+    "sfx:synth": "tsx scripts/sfx-synth.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

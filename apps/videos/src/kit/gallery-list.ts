@@ -2,7 +2,8 @@
  * The StyleGallery's items, in order. Texts are from docs/COPY.md and the bible's approved lines;
  * demo numbers come from src/data/facts.json (the seeded demo database), marked Illustrative.
  */
-import type { KitBeat } from "./scenes";
+import { shiftCues, type Cue } from "./cues";
+import { kitCues, stageCues, type KitBeat } from "./scenes";
 
 export type GalleryItem = KitBeat & { name: string; frames: number; stage?: { drift?: boolean } };
 
@@ -14,3 +15,13 @@ export const GALLERY: GalleryItem[] = [
 ];
 
 export const GALLERY_TOTAL = GALLERY.reduce((n, i) => n + i.frames, 0);
+
+/** Every item's sound, on the gallery's timeline. */
+export function galleryCues(): Cue[] {
+  let from = 0;
+  return GALLERY.flatMap((item) => {
+    const cues = shiftCues([...stageCues(item.frames), ...kitCues(item, item.frames)], from);
+    from += item.frames;
+    return cues;
+  });
+}
