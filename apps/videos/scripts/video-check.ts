@@ -1,5 +1,7 @@
 /*
- * The gate before rendering. Fails on: pauses over 0.35 s, a first word later than 0.3 s, any beat
+ * npm run video:check <ID>
+ * The gate before rendering. A motion-kit video goes through scripts/lib/kit-check.ts (the bible's
+ * rules). Any other video, TW-B01 included, keeps these rules. Fails on: pauses over 0.35 s, a first word later than 0.3 s, any beat
  * starting more than 3 frames from its cue word, captions outside 2–4 words or one line, outside
  * the video's one band or on top of the UI the voice talks about, a scene whose main element is more than 8 px off the center
  * line x = 540 or outside its zone, UI the voice talks about outside the safe zone or with text
@@ -10,7 +12,7 @@
  * KineticText lines that don't fit the 720 px column, and a KineticText beat that leaves the screen
  * empty for over 0.3 s while it waits for its first word.
  * Warns (doesn't fail) on a pace outside 2.8–3.5 words/s and on any shot that holds longer than
- * 1.5 s without a meaningful change. Writes out/checks/<ID>.vo-check.json and .md; render.ts
+ * 1.5 s without a meaningful change. Writes out/checks/<ID>.video-check.json and .md; render.ts
  * refuses to run unless the latest report passed and is newer than its inputs.
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -23,10 +25,12 @@ import { emptyStarts, longHolds, MAX_EMPTY_SECONDS, MAX_HOLD_SECONDS, screenEven
 import { fitKinetic, MIN_KINETIC_SIZE, SMALL_KINETIC_SIZE } from "../src/lib/kinetic";
 import { captionColors, contrast, over, themeColors, uiSceneBg } from "../src/lib/theme";
 import { buildTimeline, CTA, END_TAIL_SECONDS, FPS } from "../src/lib/timeline";
-import type { Word } from "../src/lib/types";
+import type { VideoSpec, Word } from "../src/lib/types";
 import { normalizeWord, scriptWords } from "../src/lib/words";
+import type { MusicAnalysis } from "../src/lib/kit-timeline";
 import { captionBand, showsCaptions } from "../src/scenes/names";
-import { decodeMono, ensureDir, fail, idArg, loadSpec, mtime, narrationMatchesSpec, paths, ROOT, writeJson } from "./lib/common";
+import { decodeMono, ensureDir, fail, idArg, loadNarration, loadSpec, mtime, narrationMatchesSpec, paths, ROOT, writeJson } from "./lib/common";
+import { checkKit } from "./lib/kit-check";
 import { silenceMap } from "./lib/silence";
 
 export const LIMITS = {
@@ -83,8 +87,81 @@ export function loadCaptures(): Record<string, CaptureMeta> {
   );
 }
 
+/** The analysis of a kit video's track, next to the track in public/. */
+export function loadMusic(music: string): { analysis: MusicAnalysis | null; licensed: boolean } {
+  const file = path.join(ROOT, "public", music);
+  const base = path.basename(music).replace(/\.[^.]+$/, "");
+  const dir = path.dirname(file);
+  const analysisFile = path.join(dir, `${base}.analysis.json`);
+  return {
+    analysis: existsSync(analysisFile) ? (JSON.parse(readFileSync(analysisFile, "utf8")) as MusicAnalysis) : null,
+    licensed: existsSync(dir) && readdirSync(dir).some((f) => f.startsWith(`${base}.license.`)),
+  };
+}
+
+/** The bible's checks for a motion-kit video, on the prepared voice. */
+async function checkKitVideo(id: string, spec: VideoSpec): Promise<CheckReport> {
+  const wordsFile = paths.words(id);
+  if (!existsSync(wordsFile)) fail(`No ${wordsFile}: run vo-align first`);
+  const words = JSON.parse(readFileSync(wordsFile, "utf8")) as Word[];
+  const { analysis, licensed } = loadMusic(spec.kit!.music);
+  if (!analysis) fail(`No analysis for public/${spec.kit!.music}: run npm run music:analyze`);
+  const audio = silenceMap(await decodeMono(paths.voClean(id), 48000), 48000);
+  const sfxDir = path.join(ROOT, "public", "sfx");
+  const txt = readFileSync(paths.voTxt(id), "utf8").replace(/\r\n/g, "\n");
+  const { failures, warnings, tl } = checkKit({
+    spec,
+    words,
+    music: analysis,
+    musicLicensed: licensed,
+    pauses: audio.pauses,
+    styleBlock: txt.slice(0, txt.indexOf("\n---\n")),
+    narration: loadNarration(id),
+    sounds: JSON.parse(readFileSync(path.join(sfxDir, "manifest.json"), "utf8")),
+    sfxFiles: readdirSync(sfxDir),
+    fps: FPS,
+  });
+  if (mtime(wordsFile) < mtime(paths.voClean(id))) failures.push("words.json is older than the cleaned voice; run vo-align again");
+  if (mtime(paths.voClean(id)) < mtime(paths.voRaw(id))) failures.push(`the cleaned voice is older than vo/${id}.wav; run video:prepare again`);
+  for (const b of spec.kit!.beats) {
+    if (b.scene === "CounterRoll" || b.scene === "ChartDraw") warnings.push(`${b.scene}: src/data/facts.json holds the demo catalog; a posted video needs facts from the production database`);
+  }
+  const longest = audio.pauses.reduce((m, p) => Math.max(m, p.to - p.from), 0);
+  const report = {
+    id,
+    pass: failures.length === 0,
+    checkedAt: new Date().toISOString(),
+    inputs: Object.fromEntries(
+      [paths.spec(id), paths.voTxt(id), paths.voRaw(id), paths.voClean(id), wordsFile, path.join(ROOT, "public", spec.kit!.music)].map((f) => [path.relative(ROOT, f).split(path.sep).join("/"), mtime(f)]),
+    ),
+    failures,
+    warnings,
+    stats: {
+      voiceSeconds: +audio.last.toFixed(0),
+      videoSeconds: tl ? +(tl.durationInFrames / FPS).toFixed(2) : 0,
+      words: words.length,
+      wordsPerSecond: tl ? +(tl.ctaIndex / tl.words[tl.ctaIndex - 1]!.end).toFixed(2) : 0,
+      firstWordAt: words[0]?.start ?? 0,
+      longestPause: longest,
+      endSilence: 0,
+      longestHold: 0,
+      durationInFrames: tl?.durationInFrames ?? 0,
+      coverFrame: tl ? tl.twistFrame : 0,
+    },
+    kit: tl ? { twistFrame: tl.twistFrame, dropFrame: tl.dropFrame, ctaFrame: tl.ctaFrame, cuts: tl.beats.map((b) => ({ frame: b.from, scene: b.beat.scene })), cues: tl.cues.length } : null,
+  } as unknown as CheckReport;
+  ensureDir(paths.checks);
+  writeJson(paths.checkReport(id), report);
+  writeFileSync(
+    paths.checkReport(id).replace(/\.json$/, ".md"),
+    [`# video-check ${id}: ${report.pass ? "PASS" : "FAIL"}`, "", ...(failures.length ? ["## Failures", "", ...failures.map((f) => `- ${f}`), ""] : []), ...(warnings.length ? ["## Warnings", "", ...warnings.map((w) => `- ${w}`), ""] : [])].join("\n"),
+  );
+  return report;
+}
+
 export async function checkVoice(id: string): Promise<CheckReport> {
   const spec = loadSpec(id);
+  if (spec.kit) return checkKitVideo(id, spec);
   const failures: string[] = [];
   const wordsFile = paths.words(id);
   if (!existsSync(wordsFile)) fail(`No ${wordsFile}: run vo-align first`);
@@ -320,7 +397,7 @@ export async function checkVoice(id: string): Promise<CheckReport> {
 function markdown(r: CheckReport): string {
   const s = r.stats;
   const lines = [
-    `# vo-check ${r.id}: ${r.pass ? "PASS" : "FAIL"}`,
+    `# video-check ${r.id}: ${r.pass ? "PASS" : "FAIL"}`,
     "",
     `Checked ${r.checkedAt}. Voice ${s.voiceSeconds} s, video ${s.videoSeconds} s (${s.durationInFrames} frames at ${FPS} fps), ${s.words} words, ${s.wordsPerSecond} words/s, first word at ${s.firstWordAt} s, longest pause ${s.longestPause.toFixed(2)} s, silence at the end ${s.endSilence} s, longest hold without a change ${s.longestHold || "under 1.5"} s, cover frame ${s.coverFrame}.`,
     "",
@@ -378,9 +455,10 @@ function markdown(r: CheckReport): string {
   return lines.join("\n");
 }
 
-if (process.argv[1]?.endsWith("vo-check.ts")) {
+if (process.argv[1]?.endsWith("video-check.ts")) {
   const r = await checkVoice(idArg());
-  console.log(`${r.pass ? "✔" : "✖"} vo-check ${r.id}: ${r.pass ? "PASS" : "FAIL"} — report in ${path.relative(process.cwd(), paths.checkReport(r.id).replace(/\.json$/, ".md"))}`);
+  console.log(`${r.pass ? "✔" : "✖"} video-check ${r.id}: ${r.pass ? "PASS" : "FAIL"} — report in ${path.relative(process.cwd(), paths.checkReport(r.id).replace(/\.json$/, ".md"))}`);
   for (const f of r.failures) console.log(`  - ${f}`);
+  for (const w of r.warnings) console.log(`  ⚠ ${w}`);
   if (!r.pass) process.exit(1);
 }

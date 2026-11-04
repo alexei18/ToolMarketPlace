@@ -1,4 +1,4 @@
-/* What counts as silence in a voice track. Used by vo-clean (to shorten pauses) and vo-check (to measure them). */
+/* What counts as silence in a voice track. Used by vo-clean (to shorten pauses) and video-check (to measure them). */
 
 export interface SilenceMap {
   hop: number;

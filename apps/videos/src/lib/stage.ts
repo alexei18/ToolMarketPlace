@@ -1,6 +1,6 @@
 /*
  * Where each scene puts its main element and the UI the voice talks about, in video px. The
- * scenes place themselves with these boxes and vo-check reads the same boxes, so a scene can't
+ * scenes place themselves with these boxes and video-check reads the same boxes, so a scene can't
  * drift off the center line x = 540 or shrink the UI's text without the check failing.
  */
 import type { CaptureMeta } from "../captures";

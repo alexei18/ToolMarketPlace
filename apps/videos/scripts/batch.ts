@@ -8,7 +8,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fail, loadSpec, paths, ROOT, runScript } from "./lib/common";
 import { bundleProject, renderVideo } from "./render";
-import type { CheckReport } from "./vo-check";
+import type { CheckReport } from "./video-check";
 
 const batch = process.argv[2];
 if (!batch) fail("Usage: npm run video:batch <BATCH>   e.g. TW-B01");
@@ -26,7 +26,7 @@ const prepared: string[] = [];
 for (const id of ids) {
   // Each prepare in its own process: a failing check exits that process only.
   const code = await runScript("prepare", [id]);
-  if (code !== 0) rows.push({ id, status: "vo-check failed" });
+  if (code !== 0) rows.push({ id, status: "video-check failed" });
   else prepared.push(id);
 }
 if (prepared.length) {

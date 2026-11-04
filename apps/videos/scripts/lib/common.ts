@@ -22,7 +22,7 @@ export const paths = {
   voClean: (id: string) => path.join(ROOT, "public", "vo", `${id}.wav`),
   captures: path.join(ROOT, "public", "captures"),
   checks: path.join(ROOT, "out", "checks"),
-  checkReport: (id: string) => path.join(ROOT, "out", "checks", `${id}.vo-check.json`),
+  checkReport: (id: string) => path.join(ROOT, "out", "checks", `${id}.video-check.json`),
   out: (spec: VideoSpec) => path.join(ROOT, "out", spec.batch ?? "", `${spec.id}.mp4`),
   cover: (spec: VideoSpec) => path.join(ROOT, "out", spec.batch ?? "", `${spec.id}.cover.png`),
 };

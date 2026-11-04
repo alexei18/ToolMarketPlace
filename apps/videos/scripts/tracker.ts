@@ -12,7 +12,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node
 import path from "node:path";
 import ExcelJS from "exceljs";
 import { fail, loadSpec, paths, ROOT } from "./lib/common";
-import type { CheckReport } from "./vo-check";
+import type { CheckReport } from "./video-check";
 
 const REPO = path.resolve(ROOT, "../..");
 export const TRACKER = path.join(REPO, "marketing", "tiktok-tracker.xlsx");
@@ -85,7 +85,7 @@ export function videoRow(id: string): Record<string, string | number> {
   const cover = paths.cover(spec);
   if (!existsSync(mp4) || !existsSync(cover)) fail(`${id}: render it first (npm run video:render ${id}); ${mp4} or its cover is missing`);
   const report = JSON.parse(readFileSync(paths.checkReport(id), "utf8")) as CheckReport;
-  if (!report.pass) fail(`${id}: its vo-check didn't pass`);
+  if (!report.pass) fail(`${id}: its video-check didn't pass`);
   return {
     "Video ID": id,
     Batch: spec.batch ?? "",

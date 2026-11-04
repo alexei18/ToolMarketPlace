@@ -1,13 +1,13 @@
 /*
  * Sizing for KineticText: the art-directed lines are kept and the type shrinks until the widest
  * one fits the 720 px column (never below MIN_SIZE). Pure, with the measured widths of the display
- * font, so the scene and vo-check agree.
+ * font, so the scene and video-check agree.
  */
 import { SAFE } from "./layout";
 import { textWidth } from "./textwidth";
 
 export const MIN_KINETIC_SIZE = 72;
-/** Below this the text is still readable but no longer a hook (vo-check warns). */
+/** Below this the text is still readable but no longer a hook (video-check warns). */
 export const SMALL_KINETIC_SIZE = 88;
 /** Width of a word gap in the scene (0.24 em) against the table's space, plus a margin for kerning. */
 const MARGIN = 1.03;

@@ -1,6 +1,6 @@
 /*
  * Advance widths of Inter Tight 800 (the display font), per character at a 1000 px size, measured
- * from the font file the videos load. Lets scenes and vo-check size and lint text without a
+ * from the font file the videos load. Lets scenes and video-check size and lint text without a
  * browser: the same numbers on both sides. Kerning (about 0.5% tighter on average) is ignored, so
  * widths are slightly generous.
  */

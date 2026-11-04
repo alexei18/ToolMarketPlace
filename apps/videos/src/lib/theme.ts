@@ -1,5 +1,5 @@
 /*
- * Theme colors for scenes, captions and the endscreen, plain data so vo-check can measure their
+ * Theme colors for scenes, captions and the endscreen, plain data so video-check can measure their
  * contrast. Light and dark videos; dark ones use the white wordmark and dark captions.
  */
 import { COLORS } from "@tm/shared/brand";

@@ -12,7 +12,7 @@ export const SAFE: Rect = { x: 180, y: 260, w: 720, h: 1160 };
 export const DECOR: Rect = { x: 100, y: 200, w: 880, h: 1300 };
 /** The vertical middle of the safe band (y 260–1420). */
 export const CENTER_Y = SAFE.y + SAFE.h / 2;
-/** How far a scene's main element may sit from x = 540 (vo-check). */
+/** How far a scene's main element may sit from x = 540 (video-check). */
 export const MAX_CENTER_OFFSET = 8;
 
 /**

@@ -1,7 +1,7 @@
 /*
  * The PhoneFrame: a fixed phone (the bezel never scales), and what part of the captured page its
  * screen shows at each moment. Zoom and pan happen inside the screen: the capture moves, the frame
- * stays. Pure, used by the scene, vo-check and render.ts.
+ * stays. Pure, used by the scene, video-check and render.ts.
  */
 import type { CaptureMeta } from "../captures";
 import { CENTER_X } from "./layout";

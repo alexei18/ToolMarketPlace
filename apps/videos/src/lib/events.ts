@@ -1,6 +1,6 @@
 /*
  * Every meaningful change on screen, frame by frame: a cut, a move inside the phone screen, a
- * highlight, a cursor action, a state switch, a light sweep, a kinetic word landing. vo-check
+ * highlight, a cursor action, a state switch, a light sweep, a kinetic word landing. video-check
  * warns when a shot holds longer than 1.5 s without one. Read from the spec props the scenes
  * use, on the same word timings.
  */
@@ -14,7 +14,7 @@ export interface ScreenEvent {
   what: string;
 }
 
-/** Longest a shot may hold without a meaningful change (vo-check warning). */
+/** Longest a shot may hold without a meaningful change (video-check warning). */
 export const MAX_HOLD_SECONDS = 1.5;
 
 /** Spoken start frames of on-screen words, matched in order inside the beat (as KineticText does). */

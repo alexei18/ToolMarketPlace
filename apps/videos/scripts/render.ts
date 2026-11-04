@@ -1,10 +1,13 @@
 /*
  * npm run video:render <ID>
- * Blocked unless the latest vo-check passed and nothing changed since. Renders H.264 MP4 with AAC
+ * Blocked unless the latest video-check passed and nothing changed since. Renders H.264 MP4 with AAC
  * (voice only, no music) to out/[<batch>/]<ID>.mp4, the TikTok cover still at the hook frame, and a
  * side-by-side check image (real page | video frame) for every UI scene in out/checks/.
+ *
+ * A motion-kit video also gets its music and sound effects, a final mix, and the checks only the
+ * finished file can answer (loudness, end silence, static frames). It stays <ID>.failed.mp4 until they pass.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, renameSync } from "node:fs";
 import path from "node:path";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
@@ -12,11 +15,18 @@ import { captionPages } from "../src/lib/captions";
 import { buildTimeline, FPS } from "../src/lib/timeline";
 import { cardLayout, type CardCropSpec } from "../src/lib/cardcrop";
 import { finalView, phoneLayout, type PhoneFrameSpec } from "../src/lib/phone";
-import type { Word } from "../src/lib/types";
+import { buildKitTimeline, type MusicAnalysis } from "../src/lib/kit-timeline";
+import type { VideoSpec, Word } from "../src/lib/types";
 import { findCue } from "../src/lib/words";
 import { webpackOverride } from "../webpack-override";
-import { ensureDir, fail, FFMPEG, FFPROBE, idArg, loadSpec, mtime, paths, ROOT, run } from "./lib/common";
-import { loadCaptures, type CheckReport } from "./vo-check";
+import { ensureDir, fail, FFMPEG, FFPROBE, idArg, loadSpec, mtime, paths, ROOT, run, decodeMono, writeJson } from "./lib/common";
+import { checkRender } from "./lib/kit-check";
+import { endSilence, staticStretches } from "./lib/measure";
+import { masterMix } from "./lib/mix";
+import { silenceMap } from "./lib/silence";
+import { dropInFile } from "./music-analyze";
+import { measureLoudness } from "./vo-clean";
+import { loadCaptures, type CheckReport } from "./video-check";
 
 export async function bundleProject(): Promise<string> {
   console.log("Bundling…");
@@ -25,17 +35,55 @@ export async function bundleProject(): Promise<string> {
 
 function gate(id: string): CheckReport {
   const file = paths.checkReport(id);
-  if (!existsSync(file)) fail(`No vo-check report for ${id}. Run: npm run video:prepare ${id}`);
+  if (!existsSync(file)) fail(`No video-check report for ${id}. Run: npm run video:prepare ${id}`);
   const report = JSON.parse(readFileSync(file, "utf8")) as CheckReport;
-  if (!report.pass) fail(`vo-check ${id} failed; rendering is blocked. See ${file.replace(/\.json$/, ".md")}`);
+  if (!report.pass) fail(`video-check ${id} failed; rendering is blocked. See ${file.replace(/\.json$/, ".md")}`);
   for (const [file, checkedMtime] of Object.entries(report.inputs)) {
-    if (mtime(path.join(ROOT, file)) !== checkedMtime) fail(`${file} changed after the last vo-check. Run: npm run video:prepare ${id}`);
+    if (mtime(path.join(ROOT, file)) !== checkedMtime) fail(`${file} changed after the last video-check. Run: npm run video:prepare ${id}`);
   }
   return report;
 }
 
+/** 3D needs the GPU through ANGLE on Windows; two tabs were the fastest on this kind of machine. */
+const KIT_RENDER = { chromiumOptions: { gl: "angle" as const }, concurrency: 2, timeoutInMilliseconds: 240000 };
+
+async function renderKitVideo(id: string, serveUrl?: string): Promise<{ output: string; cover: string; seconds: number; checks: string[] }> {
+  const spec = loadSpec(id);
+  const report = gate(id);
+  const url = serveUrl ?? (await bundleProject());
+  const composition = await selectComposition({ serveUrl: url, id, chromiumOptions: KIT_RENDER.chromiumOptions });
+  const output = paths.out(spec);
+  ensureDir(path.dirname(output));
+  const draft = output.replace(/\.mp4$/, ".draft.mp4");
+  const mastered = output.replace(/\.mp4$/, ".failed.mp4");
+  await renderMedia({ ...KIT_RENDER, composition, serveUrl: url, codec: "h264", audioCodec: "aac", audioBitrate: "320k", crf: 18, pixelFormat: "yuv420p", imageFormat: "jpeg", jpegQuality: 95, outputLocation: draft });
+  const mix = await masterMix(draft, mastered);
+
+  // Grain changes every frame, so frozen shots are looked for on a small render without it.
+  const proxy = path.join(paths.checks, `${id}.nograin.mp4`);
+  await renderMedia({ ...KIT_RENDER, composition, serveUrl: url, codec: "h264", muted: true, crf: 10, scale: 0.25, imageFormat: "jpeg", jpegQuality: 95, inputProps: { noGrain: true }, outputLocation: proxy });
+  const pauses = silenceMap(await decodeMono(paths.voClean(id), 48000), 48000).pauses;
+  const loud = await measureLoudness(mastered);
+  const twistAt = composition.props as unknown as { spec: VideoSpec; words: Word[]; music: MusicAnalysis };
+  const tl = buildKitTimeline(id, spec.kit!, twistAt.words, twistAt.music, FPS);
+  const dropOffFrames = Math.abs((await dropInFile(mastered)) * FPS - twistAt.words[tl.twistIndex]!.start * FPS);
+  const measured = { lufs: loud.i, truePeak: loud.tp, endSilence: await endSilence(mastered), dropOffFrames: +dropOffFrames.toFixed(2), statics: await staticStretches(proxy) };
+  const failures = checkRender(measured, pauses, FPS);
+  writeJson(paths.checkReport(id).replace(/\.json$/, ".render.json"), { ...measured, mix, failures });
+  if (failures.length) {
+    for (const f of failures) console.error(`✖ ${f}`);
+    fail(`${id} rendered, but the file doesn't pass: it stays at ${mastered}`);
+  }
+  renameSync(mastered, output);
+  const cover = paths.cover(spec);
+  await renderStill({ composition, serveUrl: url, output: cover, frame: report.stats.coverFrame, imageFormat: "png", chromiumOptions: KIT_RENDER.chromiumOptions });
+  console.log(`✔ ${id} → ${path.relative(process.cwd(), output)}: ${measured.lufs} LUFS, ${measured.truePeak} dBTP, ${measured.endSilence} s of end silence`);
+  return { output, cover, seconds: composition.durationInFrames / FPS, checks: [] };
+}
+
 export async function renderVideo(id: string, serveUrl?: string): Promise<{ output: string; cover: string; seconds: number; checks: string[] }> {
   const spec = loadSpec(id);
+  if (spec.kit) return renderKitVideo(id, serveUrl);
   const report = gate(id);
   const url = serveUrl ?? (await bundleProject());
   const inputProps = { debugSafeZone: false };

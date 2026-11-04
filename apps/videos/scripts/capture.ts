@@ -3,7 +3,7 @@
  * Captures the real pages a video shows with Playwright, per the spec's "captures" recipes:
  * public/captures/<name>.png (+ <name>-<state>.png) and <name>.json with the page size, the boxes
  * of named elements and their smallest text, so scenes place the cursor and highlights on the
- * real elements and vo-check can measure the text.
+ * real elements and video-check can measure the text.
  * Always from the video-capture stack (seed/stack.ts, VIDEO_WEB_URL), whose database holds only
  * the fictional catalog of seed/products.ts; the capture refuses any other site. The page markup
  * is the app's own; the capture hides every number (save counts, dates, ranks, filter counts) and fails if a
@@ -92,7 +92,7 @@ export async function captureOne(browser: Awaited<ReturnType<typeof chromium.lau
       const el = document.querySelector(sel);
       if (!el) return null;
       const b = el.getBoundingClientRect();
-      // The smallest visible text inside: headings (names) and everything else, CSS px (vo-check
+      // The smallest visible text inside: headings (names) and everything else, CSS px (video-check
       // turns them into video px and fails under 40 / 32).
       const text: { name?: number; secondary?: number } = {};
       const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);

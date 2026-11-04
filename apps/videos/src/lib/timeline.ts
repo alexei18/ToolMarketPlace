@@ -2,7 +2,7 @@
  * The voice is the clock: every beat starts on the frame of its cue word, the endscreen starts on
  * the spoken "Join" of the closing "Join the waitlist, link in bio." and the video ends
  * END_TAIL_SECONDS after the last word. Nothing here has a hard-coded duration.
- * Used by the compositions and by scripts/vo-check.ts, so both see the same frames.
+ * Used by the compositions and by scripts/video-check.ts, so both see the same frames.
  */
 import type { BeatSpec, VideoSpec, Word } from "./types";
 import { findCue, normalizeWord } from "./words";

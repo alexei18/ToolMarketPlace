@@ -5,22 +5,14 @@
 import { loadFont } from "@remotion/fonts";
 import inter500 from "@fontsource/inter/files/inter-latin-500-normal.woff2";
 import mono500 from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2";
-import { COLORS, FONTS } from "../brand";
+import { FONTS } from "../brand";
+import { KIT } from "./tokens-data";
 
 const MONO = "JetBrains Mono";
 loadFont({ family: FONTS.body, url: inter500, weight: "500", format: "woff2" });
 loadFont({ family: MONO, url: mono500, weight: "500", format: "woff2" });
 
-export const KIT = {
-  bg: "#0A0A0A",
-  text: "#F5F5F3",
-  /** Secondary text: white at 45%. */
-  secondary: "rgba(245,245,243,0.45)",
-  /** Words not spoken yet: white at 30%. */
-  unspoken: "rgba(245,245,243,0.30)",
-  /** At most one green element per frame. */
-  accent: COLORS.accentOnDark,
-} as const;
+export { KIT };
 
 export const TYPE = {
   headline: { fontFamily: FONTS.display, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 0.95 },

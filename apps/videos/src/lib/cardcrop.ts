@@ -1,6 +1,6 @@
 /*
  * CardCrop: the real capture of the one card or row the voice talks about, cut out of the page
- * and shown about 720 px wide, centered on x = 540. Pure, used by the scene, vo-check and render.ts.
+ * and shown about 720 px wide, centered on x = 540. Pure, used by the scene, video-check and render.ts.
  */
 import type { CaptureMeta } from "../captures";
 import { centered } from "./layout";

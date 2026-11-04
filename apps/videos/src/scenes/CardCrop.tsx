@@ -9,7 +9,7 @@ import { progress } from "../motion";
 import { CursorTap, type CursorStop } from "./CursorTap";
 
 export interface CardCropProps {
-  /** Capture name (public/captures/<name>.json). Capture at device scale 3, at a page width where the element's text reaches 40/32 px at 720 px wide (vo-check). */
+  /** Capture name (public/captures/<name>.json). Capture at device scale 3, at a page width where the element's text reaches 40/32 px at 720 px wide (video-check). */
   capture: string;
   /** The captured element shown: the one card or row the voice talks about. */
   target: string;
