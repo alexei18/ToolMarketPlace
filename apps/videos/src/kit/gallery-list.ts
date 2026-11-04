@@ -30,6 +30,19 @@ export const GALLERY: GalleryItem[] = [
       b: { scene: "HeadlineSlam", props: { lines: ["Nobody", "can pay", "to rank."], wordFrames: [8, 12, 16, 20, 24] } },
     },
   },
+  {
+    name: "MatchCut",
+    frames: 150,
+    stage: on3d,
+    scene: "MatchCut",
+    props: {
+      rows: ["Free forever", "Verified makers", "Nobody can pay to rank"],
+      matchRow: 0,
+      at: 60,
+      to: { x: 259, y: 787, w: 275, h: 381 },
+      b: { scene: "ChromeMark", props: { camera: "pushIn", sweepAt: 40 } },
+    },
+  },
   { name: "HeadlineSlam", frames: 120, scene: "HeadlineSlam", props: { lines: ["We're not", "letting", "you in."], wordFrames: [6, 16, 28, 40, 50], accent: "in" } },
   { name: "FloatCard", frames: 120, scene: "FloatCard", props: { capture: "kit-feed", target: "row1" } },
 ];
