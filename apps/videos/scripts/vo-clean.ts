@@ -3,14 +3,19 @@
  * 1. trim the silence before the first and after the last word;
  * 2. shorten every internal pause longer than 0.25 s to 0.18 s;
  * 3. bring the loudness to -14 LUFS with a gain and a -1.5 dBTP limiter, measured with loudnorm.
- * The recorded tempo is kept: a slow or rushed read is re-recorded, not stretched (vo-check warns
+ * The recorded tempo is kept: a slow or rushed read is re-recorded, not stretched (video-check warns
  * outside 2.8–3.5 words/s). Only silent stretches are removed, keeping 90 ms of silence next to each word, so no word is cut.
  * The original file is never changed.
+ *
+ * [beat 0.3–1.0] in a script is a pause on purpose. setBeats runs once the words are aligned, because it
+ * has to know which silence sits between which words: each marked pause becomes exactly that long
+ * (cut, or padded with silence if the reading ran on), and step 2 still applies to every other pause.
  */
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { scriptWords } from "../src/lib/words";
+import type { Word } from "../src/lib/types";
+import { scriptBeats, scriptWords } from "../src/lib/words";
 import { decodeMono, durationOf, ensureDir, FFMPEG, fail, idArg, loadSpec, paths, run, writeJson, writeWav } from "./lib/common";
 import { silenceMap } from "./lib/silence";
 
@@ -110,6 +115,69 @@ export async function cleanVoice(id: string) {
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
+}
+
+/** A cut and what replaces it: `seconds` of silence between `from` and `to`. */
+export interface PauseEdit {
+  from: number;
+  to: number;
+  seconds: number;
+}
+
+/** Replaces each stretch with exact silence, a 5 ms fade on each side so the joins don't click. Pure. */
+export function setPauses(samples: Float32Array, rate: number, edits: PauseEdit[]): Float32Array {
+  const fade = Math.round(0.005 * rate);
+  const sorted = [...edits].sort((a, b) => a.from - b.from);
+  const parts: Float32Array[] = [];
+  let t = 0;
+  for (const e of sorted) {
+    const a = Math.round(e.from * rate);
+    const b = Math.round(e.to * rate);
+    parts.push(samples.slice(t, a), new Float32Array(Math.round(e.seconds * rate)));
+    t = b;
+  }
+  parts.push(samples.slice(t));
+  const out = new Float32Array(parts.reduce((n, p) => n + p.length, 0));
+  let pos = 0;
+  parts.forEach((p, i) => {
+    if (i % 2 === 0 && parts.length > 1) {
+      const c = p.slice();
+      if (i > 0) for (let j = 0; j < Math.min(fade, c.length); j++) c[j]! *= j / fade;
+      if (i < parts.length - 1) for (let j = 0; j < Math.min(fade, c.length); j++) c[c.length - 1 - j]! *= j / fade;
+      out.set(c, pos);
+    } else {
+      out.set(p, pos);
+    }
+    pos += p.length;
+  });
+  return out;
+}
+
+/** Sets every [beat] pause of the cleaned voice to its exact length. Needs the words of that voice. */
+export async function setBeats(id: string): Promise<{ after: string; seconds: number }[]> {
+  const spec = loadSpec(id);
+  const beats = scriptBeats(spec.script);
+  if (beats.length === 0) return [];
+  const words = JSON.parse(readFileSync(paths.words(id), "utf8")) as Word[];
+  const file = paths.voClean(id);
+  const samples = await decodeMono(file, RATE);
+  const map = silenceMap(samples, RATE);
+  const edits: PauseEdit[] = beats.map((b) => {
+    if (b.seconds < 0.3 || b.seconds > 1) fail(`${id}: [beat ${b.seconds}] is outside 0.3–1.0 s`);
+    const before = words[b.afterWord];
+    const after = words[b.afterWord + 1];
+    if (!before || !after) fail(`${id}: a [beat] mark needs a word on both sides`);
+    // The silence between the two words, as the audio measures it. A reading that ran on has none: cut where they meet.
+    const gap = map.pauses.filter((p) => p.from < after.start + 0.06 && p.to > before.end - 0.06).sort((x, y) => y.to - y.from - (x.to - x.from))[0];
+    const mid = (before.end + after.start) / 2;
+    return { from: gap?.from ?? mid, to: gap?.to ?? mid, seconds: b.seconds };
+  });
+  writeWav(file, setPauses(samples, RATE, edits), RATE);
+  const done = beats.map((b) => ({ after: words[b.afterWord]!.word, seconds: b.seconds }));
+  const report = JSON.parse(readFileSync(paths.cleanReport(id), "utf8")) as Record<string, unknown>;
+  writeJson(paths.cleanReport(id), { ...report, beatsKept: done.map((d, i) => ({ ...d, was: +(edits[i]!.to - edits[i]!.from).toFixed(3) })), finalSeconds: +(await durationOf(file)).toFixed(3) });
+  console.log(`✔ vo-clean ${id}: ${done.length} [beat] pause(s) set to their exact length`);
+  return done;
 }
 
 if (process.argv[1]?.endsWith("vo-clean.ts")) {

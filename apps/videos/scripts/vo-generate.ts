@@ -14,7 +14,8 @@ const engine = process.argv.includes("--engine") ? engineArg : process.env.ELEVE
 const out = paths.voRaw(id);
 
 if (existsSync(out) && !force) fail(`${out} already exists (your recording?). Pass --force to replace it.`);
-const text = loadNarration(id);
+// [beat] marks are for vo-clean, not for a voice that would read them out.
+const text = loadNarration(id).replace(/\[beat\s+[\d.]+\]/g, " ").replace(/\s+/g, " ").trim();
 
 if (engine === "elevenlabs") {
   const key = process.env.ELEVENLABS_API_KEY;

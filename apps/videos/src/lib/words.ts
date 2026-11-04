@@ -9,9 +9,19 @@ export function normalizeWord(word: string): string {
     .replace(/^'+|'+$/g, "");
 }
 
-/** The script's words as written (with punctuation), skipping tokens that hold no letters or digits. */
+const BEAT_MARK = /\[beat\s+([\d.]+)\]/g;
+
+/** The pauses a script asks for: `[beat 0.6]`, after which word (index into scriptWords). */
+export function scriptBeats(script: string): { afterWord: number; seconds: number }[] {
+  const out: { afterWord: number; seconds: number }[] = [];
+  for (const m of script.matchAll(BEAT_MARK)) out.push({ afterWord: scriptWords(script.slice(0, m.index)).length - 1, seconds: Number(m[1]) });
+  return out;
+}
+
+/** The script's words as written (with punctuation), skipping tokens that hold no letters or digits, and [beat] marks. */
 export function scriptWords(script: string): string[] {
   return script
+    .replace(BEAT_MARK, " ")
     .split(/\s+/)
     .map((w) => w.trim())
     .filter((w) => normalizeWord(w) !== "");
