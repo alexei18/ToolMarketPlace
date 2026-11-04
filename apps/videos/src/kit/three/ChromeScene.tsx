@@ -21,6 +21,23 @@ export interface ChromePiece {
   green: boolean;
 }
 
+/**
+ * Smoothing bends the normals across the big triangles of the front and back faces, and chrome shows
+ * every triangle. The faces stay exactly flat; only the bevels are smooth.
+ */
+function flatCaps(smooth: THREE.BufferGeometry, raw: THREE.BufferGeometry): THREE.BufferGeometry {
+  const flat = raw.index ? raw.toNonIndexed() : raw;
+  flat.computeVertexNormals();
+  const faceN = flat.getAttribute("normal");
+  const out = smooth.getAttribute("normal");
+  for (let i = 0; i < out.count; i += 3) {
+    const nz = faceN.getZ(i);
+    if (Math.abs(nz) < 0.9995) continue;
+    for (let v = 0; v < 3; v++) out.setXYZ(i + v, 0, 0, Math.sign(nz));
+  }
+  return smooth;
+}
+
 /** The logo's own paths, extruded with a bevel. The outline stays the file's: the bevel grows inward. */
 export function useChromePieces(svgUrl: string, depth: number, bevel: number): ChromePiece[] {
   const svg = useLoader(SVGLoader, svgUrl);
@@ -34,7 +51,7 @@ export function useChromePieces(svgUrl: string, depth: number, bevel: number): C
         return shape;
       });
       const raw = new THREE.ExtrudeGeometry(shapes, { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelOffset: -bevel, bevelSegments: 10, curveSegments: 16 });
-      const geometry = toCreasedNormals(raw, 0.6);
+      const geometry = flatCaps(toCreasedNormals(raw, 0.6), raw);
       geometry.computeBoundingBox();
       return { geometry, green: path.color.getHex() === new THREE.Color("#0E7A4F").getHex() };
     });
@@ -47,8 +64,12 @@ export function useChromePieces(svgUrl: string, depth: number, bevel: number): C
   }, [svg, depth, bevel]);
 }
 
+/**
+ * `soft`: thin shapes like letters have no room for reflections to read, so a slightly rougher,
+ * brighter metal keeps their faces solid.
+ */
 /** Polished chrome, lit by the HDRI (turning slowly, so the reflections slide; the floor doesn't get it). The sweep is a band of light crossing the object in world space, frame-driven. */
-export const ChromeMaterial: React.FC<{ green: boolean; sweep?: number | null; reflection?: boolean }> = ({ green, sweep = null, reflection = false }) => {
+export const ChromeMaterial: React.FC<{ green: boolean; sweep?: number | null; reflection?: boolean; soft?: boolean }> = ({ green, sweep = null, reflection = false, soft = false }) => {
   const env = useEnvironment({ files: staticFile(HDRI) });
   const frame = useCurrentFrame();
   const uniforms = useMemo(() => ({ uSweep: { value: 0 }, uSweepOn: { value: 0 } }), []);
@@ -71,7 +92,7 @@ export const ChromeMaterial: React.FC<{ green: boolean; sweep?: number | null; r
     },
     [uniforms],
   );
-  return <meshStandardMaterial metalness={1} roughness={reflection ? 0.22 : green ? 0.1 : 0.07} color={green ? "#7fe0b4" : "#e4e6e8"} envMap={env} envMapRotation={[0, 0.6 + frame * 0.004, 0]} envMapIntensity={1.15} onBeforeCompile={onBeforeCompile} />;
+  return <meshStandardMaterial metalness={1} roughness={soft ? 0.16 : reflection ? 0.22 : green ? 0.1 : 0.07} color={green ? "#7fe0b4" : "#e4e6e8"} envMap={env} envMapRotation={[0, 0.6 + frame * 0.004, 0]} envMapIntensity={soft ? 1.5 : 1.15} onBeforeCompile={onBeforeCompile} />;
 };
 
 /** Which GPU this tab got: on a laptop with two, ANGLE may pick the slow one. */

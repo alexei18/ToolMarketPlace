@@ -4,7 +4,7 @@
  */
 import { Easing, interpolate } from "remotion";
 
-export type CameraPreset = "macroGlide" | "slowOrbit" | "pushIn" | "revealSpin";
+export type CameraPreset = "macroGlide" | "slowOrbit" | "pushIn" | "revealSpin" | "logoPush";
 
 export interface CameraPose {
   position: [number, number, number];
@@ -43,6 +43,13 @@ export function cameraPose(preset: CameraPreset, t: number): CameraPose {
       const z = interpolate(EXPO_OUT(t), [0, 1], [10.5, 7.2]);
       position = [0.12, 1.1, z];
       target = [0, 0.58, 0];
+      break;
+    }
+    case "logoPush": {
+      // The wordmark: low, straight on, a slow push, the logo above the middle of the frame.
+      const z = interpolate(EXPO_OUT(t), [0, 1], [9.4, 8.4]);
+      position = [0, 0.3, z];
+      target = [0, 0.06, 0];
       break;
     }
     case "revealSpin": {

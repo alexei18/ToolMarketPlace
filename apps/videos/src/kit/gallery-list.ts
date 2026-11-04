@@ -18,6 +18,7 @@ export const GALLERY: GalleryItem[] = [
   { name: "ChromeMark slow orbit", frames: 120, stage: on3d, scene: "ChromeMark", props: { camera: "slowOrbit", sweepAt: 50 } },
   { name: "ChromeMark push-in", frames: 120, stage: on3d, scene: "ChromeMark", props: { camera: "pushIn" } },
   { name: "ChromeMark reveal spin", frames: 120, stage: on3d, scene: "ChromeMark", props: { camera: "revealSpin" } },
+  { name: "ChromeWordmark", frames: 150, stage: on3d, scene: "ChromeWordmark", props: { sweepAt: 14, cta: "Join the waitlist", sub: "Link in bio", textAt: 30 } },
 ];
 
 export const GALLERY_TOTAL = GALLERY.reduce((n, i) => n + i.frames, 0);
