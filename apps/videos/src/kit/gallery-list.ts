@@ -57,6 +57,16 @@ export const GALLERY: GalleryItem[] = [
       ],
     },
   },
+  {
+    name: "HudFrame",
+    frames: 120,
+    scene: "HudFrame",
+    props: {
+      labels: { topLeft: "Top this week", bottomLeft: "Illustrative", bottomRight: "Tryworthy" },
+      timecode: true,
+      over: { scene: "HeadlineSlam", props: { lines: ["Every day,", "new apps", "launch."], wordFrames: [10, 20, 28, 36, 46], layout: "editorial" } },
+    },
+  },
   { name: "FloatCard", frames: 120, scene: "FloatCard", props: { capture: "kit-feed", target: "row1" } },
 ];
 

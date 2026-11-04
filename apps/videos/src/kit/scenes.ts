@@ -8,6 +8,7 @@ import { shiftCues, type Cue } from "./cues";
 import type { FloatCardProps } from "./FloatCard";
 import type { FocusPullProps } from "./FocusPull";
 import type { HeadlineSlamProps } from "./HeadlineSlam";
+import type { HudFrameProps } from "./HudFrame";
 import { counterTicks, typeEvents } from "./lib";
 import type { LightSweepProps } from "./LightSweep";
 import type { MatchCutProps } from "./MatchCut";
@@ -21,6 +22,7 @@ export interface KitProps {
   FloatCard: FloatCardProps;
   FocusPull: FocusPullProps;
   HeadlineSlam: HeadlineSlamProps;
+  HudFrame: HudFrameProps;
   LightSweep: LightSweepProps;
   MatchCut: MatchCutProps;
   Stage: StageShotProps;
@@ -42,6 +44,7 @@ export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
   FloatCard: () => [{ frame: 0, type: "swoosh" }],
   FocusPull: (p) => [...kitCues(p.a, p.at + (p.frames ?? 16)), { frame: p.at, type: "whooshSoft" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
   HeadlineSlam: (p) => p.wordFrames.map((frame) => ({ frame, type: "clickDry" as const })),
+  HudFrame: (p) => (p.over ? kitCues(p.over, p.durationInFrames) : []),
   LightSweep: (p) => [...kitCues(p.over, p.durationInFrames), { frame: p.at, type: "shimmer" }],
   MatchCut: (p) => [{ frame: p.at - 14, type: "whooshShort" }, { frame: p.at, type: "impact" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
   Stage: () => [],
