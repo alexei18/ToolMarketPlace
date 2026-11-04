@@ -6,6 +6,7 @@ import { ChromeWordmark } from "./ChromeWordmark";
 import { CounterRoll } from "./CounterRoll";
 import { FloatCard } from "./FloatCard";
 import { FocusPull } from "./FocusPull";
+import { GridPopulate } from "./GridPopulate";
 import { HeadlineSlam } from "./HeadlineSlam";
 import { HudFrame } from "./HudFrame";
 import { LightSweep } from "./LightSweep";
@@ -23,6 +24,7 @@ export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
   CounterRoll,
   FloatCard,
   FocusPull,
+  GridPopulate,
   HeadlineSlam,
   HudFrame,
   LightSweep,

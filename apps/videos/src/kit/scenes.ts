@@ -9,6 +9,7 @@ import type { CounterRollProps } from "./CounterRoll";
 import { shiftCues, type Cue } from "./cues";
 import type { FloatCardProps } from "./FloatCard";
 import type { FocusPullProps } from "./FocusPull";
+import type { GridPopulateProps } from "./GridPopulate";
 import type { HeadlineSlamProps } from "./HeadlineSlam";
 import type { HudFrameProps } from "./HudFrame";
 import { counterTicks, typeEvents } from "./lib";
@@ -26,6 +27,7 @@ export interface KitProps {
   CounterRoll: CounterRollProps;
   FloatCard: FloatCardProps;
   FocusPull: FocusPullProps;
+  GridPopulate: GridPopulateProps;
   HeadlineSlam: HeadlineSlamProps;
   HudFrame: HudFrameProps;
   LightSweep: LightSweepProps;
@@ -51,6 +53,7 @@ export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
   CounterRoll: (p) => counterTicks(p.settleAt).map((frame) => ({ frame, type: "tick" as const })),
   FloatCard: () => [{ frame: 0, type: "swoosh" }],
   FocusPull: (p) => [...kitCues(p.a, p.at + (p.frames ?? 16)), { frame: p.at, type: "whooshSoft" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
+  GridPopulate: (p) => [...p.items.map((_, i) => ({ frame: i * (p.stagger ?? 3), type: "pop" as const })), { frame: p.fadeAt, type: "tone" as const }],
   HeadlineSlam: (p) => p.wordFrames.map((frame) => ({ frame, type: "clickDry" as const })),
   HudFrame: (p) => (p.over ? kitCues(p.over, p.durationInFrames) : []),
   LightSweep: (p) => [...kitCues(p.over, p.durationInFrames), { frame: p.at, type: "shimmer" }],

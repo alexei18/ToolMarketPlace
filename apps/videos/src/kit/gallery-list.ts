@@ -71,6 +71,7 @@ export const GALLERY: GalleryItem[] = [
   { name: "ChartDraw line", frames: 120, scene: "ChartDraw", props: { kind: "line", series: "productsPublished", title: "New" } },
   { name: "ChartDraw bars", frames: 120, scene: "ChartDraw", props: { kind: "bars", series: "productsByCategory", count: 5, title: "Categories" } },
   { name: "ListCascade", frames: 120, scene: "ListCascade", props: { capture: "kit-feed", boxes: "rows", count: 3, rowFrames: [8, 26, 44] } },
+  { name: "GridPopulate", frames: 150, scene: "GridPopulate", props: { items: CATEGORY_SEED.map((c) => c.name), keep: 2, fadeAt: 90 } },
   { name: "FloatCard", frames: 120, scene: "FloatCard", props: { capture: "kit-feed", target: "row1" } },
 ];
 
