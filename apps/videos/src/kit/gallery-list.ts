@@ -19,6 +19,7 @@ export const GALLERY: GalleryItem[] = [
   { name: "ChromeMark push-in", frames: 120, stage: on3d, scene: "ChromeMark", props: { camera: "pushIn" } },
   { name: "ChromeMark reveal spin", frames: 120, stage: on3d, scene: "ChromeMark", props: { camera: "revealSpin" } },
   { name: "ChromeWordmark", frames: 150, stage: on3d, scene: "ChromeWordmark", props: { sweepAt: 14, cta: "Join the waitlist", sub: "Link in bio", textAt: 30 } },
+  { name: "LightSweep", frames: 120, scene: "LightSweep", props: { at: 44, over: { scene: "FloatCard", props: { capture: "kit-feed", target: "row1" } } } },
   { name: "FloatCard", frames: 120, scene: "FloatCard", props: { capture: "kit-feed", target: "row1" } },
 ];
 
