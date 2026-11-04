@@ -65,8 +65,8 @@ export function useChromePieces(svgUrl: string, depth: number, bevel: number): C
 }
 
 /**
- * `soft`: thin shapes like letters have no room for reflections to read, so a slightly rougher,
- * brighter metal keeps their faces solid.
+ * `soft`: flat faces this small mirror one patch of the studio and read as plain gray, so on the
+ * letters the normals bend in soft waves: bands of reflection run across them, as on curved chrome.
  */
 /** Polished chrome, lit by the HDRI (turning slowly, so the reflections slide; the floor doesn't get it). The sweep is a band of light crossing the object in world space, frame-driven. */
 export const ChromeMaterial: React.FC<{ green: boolean; sweep?: number | null; reflection?: boolean; soft?: boolean }> = ({ green, sweep = null, reflection = false, soft = false }) => {
@@ -88,11 +88,15 @@ export const ChromeMaterial: React.FC<{ green: boolean; sweep?: number | null; r
           "#include <emissivemap_fragment>",
           "#include <emissivemap_fragment>\nfloat band = smoothstep(0.16, 0.0, abs(vWorld.x + 0.55 * vWorld.y - uSweep));\ntotalEmissiveRadiance += uSweepOn * band * band * vec3(2.6);",
         )
+        .replace(
+          "#include <normal_fragment_maps>",
+          soft ? "#include <normal_fragment_maps>\nnormal = normalize(normal + vec3(0.07 * sin(vWorld.x * 7.0 + vWorld.y * 3.0), 0.17 * sin(vWorld.y * 15.0 + vWorld.x * 2.0), 0.0));" : "#include <normal_fragment_maps>",
+        )
         .replace("#include <opaque_fragment>", "#include <opaque_fragment>\nif (vWorld.y < 0.0) gl_FragColor.rgb *= 0.34 * exp(vWorld.y * 3.2);");
     },
-    [uniforms],
+    [uniforms, soft],
   );
-  return <meshStandardMaterial metalness={1} roughness={soft ? 0.16 : reflection ? 0.22 : green ? 0.1 : 0.07} color={green ? "#7fe0b4" : "#e4e6e8"} envMap={env} envMapRotation={[0, 0.6 + frame * 0.004, 0]} envMapIntensity={soft ? 1.5 : 1.15} onBeforeCompile={onBeforeCompile} />;
+  return <meshStandardMaterial metalness={1} roughness={soft ? 0.09 : reflection ? 0.22 : green ? 0.1 : 0.07} color={green ? "#7fe0b4" : "#e4e6e8"} envMap={env} envMapRotation={[0, 0.6 + frame * 0.004, 0]} envMapIntensity={soft ? 1.7 : 1.15} onBeforeCompile={onBeforeCompile} />;
 };
 
 /** Which GPU this tab got: on a laptop with two, ANGLE may pick the slow one. */
