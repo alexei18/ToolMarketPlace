@@ -87,6 +87,16 @@ export const GALLERY: GalleryItem[] = [
       clicks: [{ at: 126, target: "save1", state: "saved" }],
     },
   },
+  {
+    name: "FlashInvert",
+    frames: 120,
+    scene: "FlashInvert",
+    props: {
+      at: 50,
+      a: { scene: "HeadlineSlam", props: { lines: ["Not yet."], wordFrames: [6, 18] } },
+      b: { scene: "HeadlineSlam", props: { lines: ["Makers", "first."], wordFrames: [0, 8], accent: "first" } },
+    },
+  },
 ];
 
 export const GALLERY_TOTAL = GALLERY.reduce((n, i) => n + i.frames, 0);

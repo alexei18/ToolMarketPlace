@@ -7,6 +7,7 @@ import type { ChromeMarkProps } from "./ChromeMark";
 import type { ChromeWordmarkProps } from "./ChromeWordmark";
 import type { CounterRollProps } from "./CounterRoll";
 import { shiftCues, type Cue } from "./cues";
+import type { FlashInvertProps } from "./FlashInvert";
 import type { FloatCardProps } from "./FloatCard";
 import type { FocusPullProps } from "./FocusPull";
 import type { GridPopulateProps } from "./GridPopulate";
@@ -26,6 +27,7 @@ export interface KitProps {
   ChromeMark: ChromeMarkProps;
   ChromeWordmark: ChromeWordmarkProps;
   CounterRoll: CounterRollProps;
+  FlashInvert: FlashInvertProps;
   FloatCard: FloatCardProps;
   FocusPull: FocusPullProps;
   GridPopulate: GridPopulateProps;
@@ -53,6 +55,7 @@ export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
     { frame: p.sweepAt ?? 12, type: "shimmer" },
   ],
   CounterRoll: (p) => counterTicks(p.settleAt).map((frame) => ({ frame, type: "tick" as const })),
+  FlashInvert: (p) => [...kitCues(p.a, p.at), { frame: p.at, type: "impactHeavy" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
   FloatCard: () => [{ frame: 0, type: "swoosh" }],
   FocusPull: (p) => [...kitCues(p.a, p.at + (p.frames ?? 16)), { frame: p.at, type: "whooshSoft" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
   GridPopulate: (p) => [...p.items.map((_, i) => ({ frame: i * (p.stagger ?? 3), type: "pop" as const })), { frame: p.fadeAt, type: "tone" as const }],

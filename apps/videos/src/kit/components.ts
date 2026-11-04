@@ -4,6 +4,7 @@ import { ChartDraw } from "./ChartDraw";
 import { ChromeMark } from "./ChromeMark";
 import { ChromeWordmark } from "./ChromeWordmark";
 import { CounterRoll } from "./CounterRoll";
+import { FlashInvert } from "./FlashInvert";
 import { FloatCard } from "./FloatCard";
 import { FocusPull } from "./FocusPull";
 import { GridPopulate } from "./GridPopulate";
@@ -23,6 +24,7 @@ export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
   ChromeMark,
   ChromeWordmark,
   CounterRoll,
+  FlashInvert,
   FloatCard,
   FocusPull,
   GridPopulate,
