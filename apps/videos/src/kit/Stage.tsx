@@ -25,9 +25,17 @@ function grainTile(): string {
   canvas.width = canvas.height = TILE;
   const ctx = canvas.getContext("2d")!;
   const img = ctx.createImageData(TILE, TILE);
-  for (let i = 0; i < img.data.length; i += 4) {
-    img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
-    img.data[i + 3] = Math.round(random(`grain-${i}`) * 255);
+  const raw = Float32Array.from({ length: TILE * TILE }, (_, i) => random(`grain-${i}`));
+  // Each grain a little over a pixel, like film, which also survives compression better. Soft by
+  // averaging neighbours: scaling the tile instead leaves a regular lattice.
+  for (let y = 0; y < TILE; y++) {
+    for (let x = 0; x < TILE; x++) {
+      const at = (dx: number, dy: number) => raw[((y + dy + TILE) % TILE) * TILE + ((x + dx + TILE) % TILE)]!;
+      const v = (at(0, 0) * 2 + at(1, 0) + at(0, 1) + at(-1, 0) + at(0, -1)) / 6;
+      const i = (y * TILE + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+      img.data[i + 3] = Math.round(Math.min(1, Math.max(0, (v - 0.5) * 2.4 + 0.5)) * 255);
+    }
   }
   ctx.putImageData(img, 0, 0);
   tileUrl = canvas.toDataURL("image/png");
