@@ -10,6 +10,9 @@
     "video:seed": "tsx seed/seed.ts",
     "video:capture": "tsx scripts/capture.ts",
     "video:prepare": "tsx scripts/prepare.ts",
+    "video:check": "tsx scripts/video-check.ts",
+    "video:selftest": "tsx scripts/selftest.ts",
+    "refs:sheets": "tsx scripts/refs-sheets.ts",
     "video:render": "tsx scripts/render.ts",
     "video:batch": "tsx scripts/batch.ts",
     "video:sheet": "tsx scripts/contact-sheet.ts",
@@ -18,6 +21,8 @@
     "video:kit-stills": "tsx scripts/kit-stills.ts",
     "sfx:synth": "tsx scripts/sfx-synth.ts",
     "video:facts": "tsx scripts/facts.ts",
+    "video:gallery": "tsx scripts/gallery.ts",
+    "music:analyze": "tsx scripts/music-analyze.ts",
     "video:kit-capture": "tsx scripts/kit-capture.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
