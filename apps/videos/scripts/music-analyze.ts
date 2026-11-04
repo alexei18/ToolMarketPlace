@@ -103,10 +103,93 @@ export function fitTempo(flux: Float32Array, start: number, end: number): { peri
   return { period: best.period, phase: best.phase };
 }
 
-/** Where the drop really is in a finished mix, in seconds. */
+/** Where a track's jump in energy is, in any audio file, in seconds: for reference videos, whose music we don't have. */
 export async function dropInFile(file: string): Promise<number> {
   const { low, all } = envelopes(await decodeMono(file, RATE));
   return findDrop(low, all, onsets(low, all)).at;
+}
+
+export const MATCH_RATE = 4000;
+
+/** How alike two stretches are, -1 to 1, whatever their levels. */
+function likeness(mix: Float32Array, at: number, piece: Float32Array, from: number, length: number): number {
+  let dot = 0;
+  let em = 0;
+  let ep = 0;
+  for (let i = 0; i < length; i++) {
+    const m = mix[at + i] ?? 0;
+    const q = piece[from + i] ?? 0;
+    dot += m * q;
+    em += m * m;
+    ep += q * q;
+  }
+  return dot / Math.sqrt(em * ep + 1e-12);
+}
+
+/** How loud the track is inside a stretch of the mix. Sounds on top that don't resemble it average out. */
+function gainIn(mix: Float32Array, at: number, piece: Float32Array, from: number, length: number): number {
+  let dot = 0;
+  let energy = 0;
+  for (let i = 0; i < length; i++) {
+    const q = piece[from + i] ?? 0;
+    dot += (mix[at + i] ?? 0) * q;
+    energy += q * q;
+  }
+  return dot / (energy + 1e-12);
+}
+
+export interface DropMatch {
+  /** Where the drop really is, in seconds. */
+  at: number;
+  /** How well the track matches from a second after it on. */
+  score: number;
+  /** The track's level in the first beat after the drop, against its level later on: near zero if it starts late. Ducked, not gone, under the last word. */
+  first: number;
+  /** The same in the beat before the drop: not near zero if it starts early. */
+  before: number;
+}
+
+/**
+ * Finds a track's drop inside a mix. Music repeats, so a phrase also matches whole beats away: the
+ * search stays within less than half a beat, where it can't be fooled. Then a whole-beat mistake shows
+ * by asking whether the track is there just after the expected drop and absent just before it. Both
+ * signals are high-passed first, or the low swells on top would hide the match, and the search skips
+ * the first second, where the impact and the last word sit on the music. Pure, at MATCH_RATE.
+ */
+export function matchDrop(mixRaw: Float32Array, trackRaw: Float32Array, dropAt: number, expected: number, beatSeconds: number): DropMatch {
+  const highPass = (x: Float32Array) => x.map((v, i) => v - (x[i - 1] ?? 0));
+  const mix = highPass(mixRaw);
+  const track = highPass(trackRaw);
+  const drop = Math.round(dropAt * MATCH_RATE);
+  const beat = Math.round(beatSeconds * MATCH_RATE);
+  const skip = MATCH_RATE;
+  const length = 5 * MATCH_RATE;
+  const reach = Math.round(Math.min(0.2, beatSeconds * 0.4) * MATCH_RATE);
+  const centre = Math.round(expected * MATCH_RATE);
+  let best = { lag: centre, score: -1 };
+  for (let lag = Math.max(0, centre - reach); lag <= centre + reach; lag++) {
+    const score = likeness(mix, lag + skip, track, drop + skip, length);
+    if (score > best.score) best = { lag, score };
+  }
+  const steady = gainIn(mix, best.lag + skip, track, drop + skip, length);
+  return {
+    at: best.lag / MATCH_RATE,
+    score: best.score,
+    first: gainIn(mix, best.lag, track, drop, beat) / steady,
+    // The track's first beat against what plays just before the drop: repetition makes them alike if the music is already there.
+    before: gainIn(mix, Math.max(0, best.lag - beat), track, drop, beat) / steady,
+  };
+}
+
+/** Is this a drop on the expected frame, or a track somewhere else? Off by Infinity when it isn't there. */
+export function dropOffFrames(m: DropMatch, expected: number, fps: number): number {
+  if (m.score < 0.2 || m.first < 0.15 || m.before > 0.5) return Infinity;
+  return Math.abs(m.at - expected) * fps;
+}
+
+/** Where the track's drop really landed in a finished mix. */
+export async function dropInMix(mixFile: string, trackFile: string, dropAt: number, expected: number, beatSeconds: number): Promise<DropMatch> {
+  return matchDrop(await decodeMono(mixFile, MATCH_RATE), await decodeMono(trackFile, MATCH_RATE), dropAt, expected, beatSeconds);
 }
 
 export function analyzeSamples(samples: Float32Array, override?: number) {

@@ -11,13 +11,13 @@ import type { KitBeatSpec, KitSpec, MusicAnalysis } from "../src/lib/kit-timelin
 import { FPS } from "../src/lib/timeline";
 import type { VideoSpec, Word } from "../src/lib/types";
 import { scriptWords } from "../src/lib/words";
-import { FFMPEG, ROOT, run } from "./lib/common";
+import { decodeMono, FFMPEG, ROOT, run } from "./lib/common";
 import { AI_STUDIO_STYLE, checkKit, checkRender, type KitInputs } from "./lib/kit-check";
 import { staticStretches } from "./lib/measure";
 import { silenceMap } from "./lib/silence";
 import { dropSeconds, FIXTURES, makeTrack, writeFixtures } from "./music-fixture";
-import { analyzeFile } from "./music-analyze";
-import { setPauses } from "./vo-clean";
+import { analyzeFile, dropOffFrames, MATCH_RATE, matchDrop } from "./music-analyze";
+import { setPauses, shiftWords } from "./vo-clean";
 
 let passed = 0;
 const failed: string[] = [];
@@ -38,6 +38,37 @@ for (const f of FIXTURES) {
   const after = a.beats.filter((b) => b >= a.drop.at - 0.02);
   const worst = truth.slice(0, Math.min(truth.length, after.length)).reduce((m, t, i) => Math.max(m, Math.abs(t - after[i]!) * FPS), 0);
   ok(`${f.name}: beats after the drop within 1 frame`, worst <= 1, `worst ${worst.toFixed(2)} frames`);
+}
+
+// ── finding the drop inside a finished mix ───────────────────────────────────
+{
+  const f = FIXTURES[0]!;
+  const track = await decodeMono(path.join(dir, `${f.name}.wav`), MATCH_RATE);
+  const dropSample = Math.round(dropSeconds(f) * MATCH_RATE);
+  const beat = 60 / f.bpm;
+  /** The track's drop at `at` seconds, under a loud low swell and an impact on the expected spot, as in a real video. */
+  const mixWith = (at: number) => {
+    const mix = new Float32Array(30 * MATCH_RATE);
+    const from = Math.round(at * MATCH_RATE);
+    for (let i = 0; from + i < mix.length; i++) mix[from + i] = 0.4 * (track[dropSample + i] ?? 0);
+    for (let i = 8 * MATCH_RATE; i < 13 * MATCH_RATE; i++) mix[i]! += 0.6 * Math.sin((2 * Math.PI * 50 * i) / MATCH_RATE);
+    for (let i = 0; i < 0.8 * MATCH_RATE; i++) mix[10 * MATCH_RATE + i]! += 0.8 * Math.sin((2 * Math.PI * 70 * i) / MATCH_RATE) * Math.exp((-i / MATCH_RATE) * 5);
+    return mix;
+  };
+  const check = (at: number) => {
+    const m = matchDrop(mixWith(at), track, dropSeconds(f), 10, beat);
+    return { off: dropOffFrames(m, 10, FPS), detail: `off ${dropOffFrames(m, 10, FPS).toFixed(2)} frames, score ${m.score.toFixed(2)}, first beat ${m.first.toFixed(2)}, beat before ${m.before.toFixed(2)}` };
+  };
+  const right = check(10);
+  ok("the drop is found on its frame, under a swell and an impact", right.off < 0.2, right.detail);
+  const twoFrames = check(10 + 2 / FPS);
+  ok("a drop 2 frames late is measured as 2 frames", Math.abs(twoFrames.off - 2) < 0.2, twoFrames.detail);
+  const early = check(10 - beat);
+  ok("a track a whole beat early is caught", early.off === Infinity, early.detail);
+  const late = check(10 + beat);
+  ok("a track a whole beat late is caught", late.off === Infinity, late.detail);
+  const none = matchDrop(new Float32Array(30 * MATCH_RATE).map((_, i) => Math.sin(i * 0.7)), track, dropSeconds(f), 10, beat);
+  ok("a mix without the track is caught", dropOffFrames(none, 10, FPS) === Infinity, `score ${none.score.toFixed(2)}`);
 }
 
 // ── [beat]: exact pauses in the audio ───────────────────────────────────────
@@ -61,6 +92,22 @@ for (const f of FIXTURES) {
   ok("[beat 0.6] shortened from 0.9 s, within 40 ms", Math.abs(pauses[0]! - 0.6) <= 0.04, `${pauses[0]!.toFixed(3)} s`);
   ok("[beat 0.8] padded from 0.05 s, within 40 ms", Math.abs(pauses[1]! - 0.8) <= 0.04, `${pauses[1]!.toFixed(3)} s`);
   ok("an unmarked pause isn't touched", Math.abs(pauses[2]! - 0.2) <= 0.02, `${pauses[2]!.toFixed(3)} s`);
+  // Where each burst really starts and ends afterwards; the alignment's boundaries are deliberately sloppy.
+  const moved = shiftWords(
+    [
+      { word: "a", start: 0, end: 0.7 },
+      { word: "b", start: 1.3, end: 1.9 },
+      { word: "c", start: 1.95, end: 2.45 },
+      { word: "d", start: 2.65, end: 3.15 },
+    ],
+    [0, 1],
+    [
+      { from: 0.5, to: 1.4, seconds: 0.6 },
+      { from: 1.9, to: 1.95, seconds: 0.8 },
+    ],
+  );
+  const near = (a: number, b: number) => Math.abs(a - b) < 0.03;
+  ok("words move with the edits", near(moved[0]!.end, 0.5) && near(moved[1]!.start, 1.1) && near(moved[1]!.end, 1.6) && near(moved[2]!.start, 2.4) && near(moved[3]!.start, 3.1), JSON.stringify(moved.map((w) => [w.start, w.end])));
 }
 
 // ── static frames ───────────────────────────────────────────────────────────

@@ -16,7 +16,7 @@ import { buildTimeline, FPS } from "../src/lib/timeline";
 import { cardLayout, type CardCropSpec } from "../src/lib/cardcrop";
 import { finalView, phoneLayout, type PhoneFrameSpec } from "../src/lib/phone";
 import { buildKitTimeline, type MusicAnalysis } from "../src/lib/kit-timeline";
-import type { VideoSpec, Word } from "../src/lib/types";
+import type { Word } from "../src/lib/types";
 import { findCue } from "../src/lib/words";
 import { webpackOverride } from "../webpack-override";
 import { ensureDir, fail, FFMPEG, FFPROBE, idArg, loadSpec, mtime, paths, ROOT, run, decodeMono, writeJson } from "./lib/common";
@@ -24,7 +24,7 @@ import { checkRender } from "./lib/kit-check";
 import { endSilence, staticStretches } from "./lib/measure";
 import { masterMix } from "./lib/mix";
 import { silenceMap } from "./lib/silence";
-import { dropInFile } from "./music-analyze";
+import { dropInMix, dropOffFrames } from "./music-analyze";
 import { measureLoudness } from "./vo-clean";
 import { loadCaptures, type CheckReport } from "./video-check";
 
@@ -56,7 +56,7 @@ async function renderKitVideo(id: string, serveUrl?: string): Promise<{ output: 
   ensureDir(path.dirname(output));
   const draft = output.replace(/\.mp4$/, ".draft.mp4");
   const mastered = output.replace(/\.mp4$/, ".failed.mp4");
-  await renderMedia({ ...KIT_RENDER, composition, serveUrl: url, codec: "h264", audioCodec: "aac", audioBitrate: "320k", crf: 18, pixelFormat: "yuv420p", imageFormat: "jpeg", jpegQuality: 95, outputLocation: draft });
+  await renderMedia({ ...KIT_RENDER, composition, serveUrl: url, codec: "h264", audioCodec: "aac", audioBitrate: "320k", crf: 18, encodingMaxRate: "16M", encodingBufferSize: "32M", pixelFormat: "yuv420p", imageFormat: "jpeg", jpegQuality: 95, outputLocation: draft });
   const mix = await masterMix(draft, mastered);
 
   // Grain changes every frame, so frozen shots are looked for on a small render without it.
@@ -64,10 +64,12 @@ async function renderKitVideo(id: string, serveUrl?: string): Promise<{ output: 
   await renderMedia({ ...KIT_RENDER, composition, serveUrl: url, codec: "h264", muted: true, crf: 10, scale: 0.25, imageFormat: "jpeg", jpegQuality: 95, inputProps: { noGrain: true }, outputLocation: proxy });
   const pauses = silenceMap(await decodeMono(paths.voClean(id), 48000), 48000).pauses;
   const loud = await measureLoudness(mastered);
-  const twistAt = composition.props as unknown as { spec: VideoSpec; words: Word[]; music: MusicAnalysis };
-  const tl = buildKitTimeline(id, spec.kit!, twistAt.words, twistAt.music, FPS);
-  const dropOffFrames = Math.abs((await dropInFile(mastered)) * FPS - twistAt.words[tl.twistIndex]!.start * FPS);
-  const measured = { lufs: loud.i, truePeak: loud.tp, endSilence: await endSilence(mastered), dropOffFrames: +dropOffFrames.toFixed(2), statics: await staticStretches(proxy) };
+  const { words, music } = composition.props as unknown as { words: Word[]; music: MusicAnalysis };
+  const tl = buildKitTimeline(id, spec.kit!, words, music, FPS);
+  const twistAt = words[tl.twistIndex]!.start;
+  const found = await dropInMix(mastered, path.join(ROOT, "public", spec.kit!.music), music.drop.at, twistAt, 60 / music.bpm);
+  const dropOff = dropOffFrames(found, twistAt, FPS);
+  const measured = { lufs: loud.i, truePeak: loud.tp, endSilence: await endSilence(mastered), dropOffFrames: dropOff, dropMatch: found, statics: await staticStretches(proxy) };
   const failures = checkRender(measured, pauses, FPS);
   writeJson(paths.checkReport(id).replace(/\.json$/, ".render.json"), { ...measured, mix, failures });
   if (failures.length) {
