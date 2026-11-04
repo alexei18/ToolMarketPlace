@@ -3,6 +3,7 @@ import type React from "react";
 import { ChromeMark } from "./ChromeMark";
 import { ChromeWordmark } from "./ChromeWordmark";
 import { FloatCard } from "./FloatCard";
+import { FocusPull } from "./FocusPull";
 import { HeadlineSlam } from "./HeadlineSlam";
 import { LightSweep } from "./LightSweep";
 import type { KitProps, KitScene } from "./scenes";
@@ -12,6 +13,7 @@ export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
   ChromeMark,
   ChromeWordmark,
   FloatCard,
+  FocusPull,
   HeadlineSlam,
   LightSweep,
   Stage: StageShot,

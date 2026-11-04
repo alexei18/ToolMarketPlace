@@ -6,6 +6,7 @@ import type { ChromeMarkProps } from "./ChromeMark";
 import type { ChromeWordmarkProps } from "./ChromeWordmark";
 import { shiftCues, type Cue } from "./cues";
 import type { FloatCardProps } from "./FloatCard";
+import type { FocusPullProps } from "./FocusPull";
 import type { HeadlineSlamProps } from "./HeadlineSlam";
 import { counterTicks, typeEvents } from "./lib";
 import type { LightSweepProps } from "./LightSweep";
@@ -15,6 +16,7 @@ export interface KitProps {
   ChromeMark: ChromeMarkProps;
   ChromeWordmark: ChromeWordmarkProps;
   FloatCard: FloatCardProps;
+  FocusPull: FocusPullProps;
   HeadlineSlam: HeadlineSlamProps;
   LightSweep: LightSweepProps;
   Stage: StageShotProps;
@@ -32,6 +34,7 @@ export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
     { frame: p.sweepAt ?? 12, type: "shimmer" },
   ],
   FloatCard: () => [{ frame: 0, type: "swoosh" }],
+  FocusPull: (p) => [...kitCues(p.a, p.at + (p.frames ?? 16)), { frame: p.at, type: "whooshSoft" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
   HeadlineSlam: (p) => p.wordFrames.map((frame) => ({ frame, type: "clickDry" as const })),
   LightSweep: (p) => [...kitCues(p.over, p.durationInFrames), { frame: p.at, type: "shimmer" }],
   Stage: () => [],
