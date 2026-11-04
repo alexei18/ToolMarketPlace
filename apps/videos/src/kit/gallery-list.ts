@@ -73,6 +73,20 @@ export const GALLERY: GalleryItem[] = [
   { name: "ListCascade", frames: 120, scene: "ListCascade", props: { capture: "kit-feed", boxes: "rows", count: 3, rowFrames: [8, 26, 44] } },
   { name: "GridPopulate", frames: 150, scene: "GridPopulate", props: { items: CATEGORY_SEED.map((c) => c.name), keep: 2, fadeAt: 90 } },
   { name: "FloatCard", frames: 120, scene: "FloatCard", props: { capture: "kit-feed", target: "row1" } },
+  {
+    name: "UiDive",
+    frames: 165,
+    scene: "UiDive",
+    props: {
+      capture: "kit-feed",
+      keys: [
+        { at: 0, x: 195, y: 400, zoom: 1.85 },
+        { at: 60, x: 195, y: 440, zoom: 2.8 },
+        { at: 110, x: 165, y: 495, zoom: 4.2 },
+      ],
+      clicks: [{ at: 126, target: "save1", state: "saved" }],
+    },
+  },
 ];
 
 export const GALLERY_TOTAL = GALLERY.reduce((n, i) => n + i.frames, 0);

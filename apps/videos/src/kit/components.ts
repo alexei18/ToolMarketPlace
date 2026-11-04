@@ -15,6 +15,7 @@ import { MatchCut } from "./MatchCut";
 import type { KitProps, KitScene } from "./scenes";
 import { StageShot } from "./StageShot";
 import { TypeBackspace } from "./TypeBackspace";
+import { UiDive } from "./UiDive";
 import { WireframeCollapse } from "./WireframeCollapse";
 
 export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
@@ -32,5 +33,6 @@ export const KIT_COMPONENTS: { [S in KitScene]: React.FC<KitProps[S]> } = {
   MatchCut,
   Stage: StageShot,
   TypeBackspace,
+  UiDive,
   WireframeCollapse,
 };
