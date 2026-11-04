@@ -153,6 +153,24 @@ export function setPauses(samples: Float32Array, rate: number, edits: PauseEdit[
   return out;
 }
 
+/** Word timings after the edits: each word moves by what the edits before it added or removed. Pure. */
+export function shiftWords(words: Word[], afterWord: number[], edits: PauseEdit[]): Word[] {
+  let shift = 0;
+  return words.map((w, i) => {
+    const edit = edits[afterWord.indexOf(i - 1)];
+    if (edit) {
+      // This word starts after the edit, whatever the alignment thought about where the gap was.
+      shift += edit.seconds - (edit.to - edit.from);
+      const end = Math.max(w.end, edit.to + 0.02);
+      return { ...w, start: +(Math.max(w.start, edit.to) + shift).toFixed(3), end: +(end + shift).toFixed(3) };
+    }
+    const next = edits[afterWord.indexOf(i)];
+    // The word before the edit ends where it starts.
+    const end = next ? Math.min(w.end, next.from) : w.end;
+    return { ...w, start: +(w.start + shift).toFixed(3), end: +(Math.max(end, w.start + 0.02) + shift).toFixed(3) };
+  });
+}
+
 /** Sets every [beat] pause of the cleaned voice to its exact length. Needs the words of that voice. */
 export async function setBeats(id: string): Promise<{ after: string; seconds: number }[]> {
   const spec = loadSpec(id);
@@ -173,6 +191,9 @@ export async function setBeats(id: string): Promise<{ after: string; seconds: nu
     return { from: gap?.from ?? mid, to: gap?.to ?? mid, seconds: b.seconds };
   });
   writeWav(file, setPauses(samples, RATE, edits), RATE);
+  // The words move with the edits. Whisper isn't asked again: next to a long pause it misplaces words
+  // by half a second, and here every shift is known exactly.
+  writeJson(paths.words(id), shiftWords(words, beats.map((b) => b.afterWord), edits));
   const done = beats.map((b) => ({ after: words[b.afterWord]!.word, seconds: b.seconds }));
   const report = JSON.parse(readFileSync(paths.cleanReport(id), "utf8")) as Record<string, unknown>;
   writeJson(paths.cleanReport(id), { ...report, beatsKept: done.map((d, i) => ({ ...d, was: +(edits[i]!.to - edits[i]!.from).toFixed(3) })), finalSeconds: +(await durationOf(file)).toFixed(3) });

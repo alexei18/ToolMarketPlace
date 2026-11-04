@@ -12,8 +12,8 @@ import { cleanVoice, setBeats } from "./vo-clean";
 const id = idArg();
 await cleanVoice(id);
 await alignVoice(id);
-// Marked pauses are set once the words are known, and the words read again on the final audio.
-if ((await setBeats(id)).length) await alignVoice(id);
+// Marked pauses are set once the words are known; the words move with them.
+await setBeats(id);
 const report = await checkVoice(id);
 const md = path.relative(process.cwd(), paths.checkReport(id).replace(/\.json$/, ".md"));
 if (!report.pass) {
