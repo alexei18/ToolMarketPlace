@@ -46,6 +46,6 @@ export const Root: React.FC = () => (
       />
     ))}
     <Composition id="SceneGallery" component={Gallery} fps={FPS} width={WIDTH} height={HEIGHT} durationInFrames={GALLERY_FRAMES} defaultProps={{ debugSafeZone: true, captures }} />
-    <Composition id="StyleGallery" component={StyleGallery} fps={FPS} width={WIDTH} height={HEIGHT} durationInFrames={GALLERY_TOTAL} />
+    <Composition id="StyleGallery" component={StyleGallery} fps={FPS} width={WIDTH} height={HEIGHT} durationInFrames={GALLERY_TOTAL} defaultProps={{ captures }} />
   </>
 );

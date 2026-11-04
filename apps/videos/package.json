@@ -17,6 +17,8 @@
     "video:relayout": "tsx scripts/relayout.ts",
     "video:kit-stills": "tsx scripts/kit-stills.ts",
     "sfx:synth": "tsx scripts/sfx-synth.ts",
+    "video:facts": "tsx scripts/facts.ts",
+    "video:kit-capture": "tsx scripts/kit-capture.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

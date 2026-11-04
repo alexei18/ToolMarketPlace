@@ -18,6 +18,8 @@ export interface CaptureMeta {
    * `name` for headings (product names), `secondary` for everything else.
    */
   targets: Record<string, { x: number; y: number; w: number; h: number; text?: { name?: number; secondary?: number } }>;
+  /** Named lists of boxes (every element a selector matches), for scenes that take a page apart. */
+  boxes?: Record<string, { x: number; y: number; w: number; h: number }[]>;
 }
 
 export const CapturesContext = createContext<Record<string, CaptureMeta>>({});

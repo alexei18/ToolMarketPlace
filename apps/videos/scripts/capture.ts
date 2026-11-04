@@ -37,7 +37,7 @@ export async function capturePages(id: string): Promise<CaptureMeta[]> {
   return metas;
 }
 
-async function captureOne(browser: Awaited<ReturnType<typeof chromium.launch>>, name: string, r: CaptureRecipe): Promise<CaptureMeta> {
+export async function captureOne(browser: Awaited<ReturnType<typeof chromium.launch>>, name: string, r: CaptureRecipe): Promise<CaptureMeta> {
   const scale = r.scale ?? 2;
   const page = await browser.newPage({ viewport: { width: r.width, height: r.height }, deviceScaleFactor: scale });
   const res = await page.goto(WEB + r.route, { waitUntil: "networkidle" });
@@ -112,6 +112,19 @@ async function captureOne(browser: Awaited<ReturnType<typeof chromium.launch>>, 
     targets[t] = box;
   }
 
+  const boxes: NonNullable<CaptureMeta["boxes"]> = {};
+  for (const [b, selector] of Object.entries(r.boxes ?? {})) {
+    boxes[b] = await page.evaluate(
+      (sel) =>
+        [...document.querySelectorAll(sel)]
+          .map((el) => el.getBoundingClientRect())
+          .filter((box) => box.width > 1 && box.height > 1)
+          .map((box) => ({ x: box.left + window.scrollX, y: box.top + window.scrollY, w: box.width, h: box.height })),
+      selector,
+    );
+    if (boxes[b]!.length === 0) fail(`capture "${name}": boxes "${b}" (${selector}) found nothing on ${r.route}`);
+  }
+
   const file = (state?: string) => `captures/${name}${state ? `-${state}` : ""}.png`;
   const states: Record<string, string> = { default: file() };
   await page.screenshot({ path: path.join(paths.captures, "..", file()), fullPage: true });
@@ -141,12 +154,12 @@ async function captureOne(browser: Awaited<ReturnType<typeof chromium.launch>>, 
   }
   await page.close();
 
-  const meta: CaptureMeta = { name, route: r.route, width, height, scale, states, targets };
+  const meta: CaptureMeta = { name, route: r.route, width, height, scale, states, targets, ...(r.boxes ? { boxes } : {}) };
   writeJson(path.join(paths.captures, `${name}.json`), meta);
   console.log(`✔ capture ${name}: ${WEB}${r.route} at ${r.width}px ×${scale}, ${Object.keys(states).length} state(s), targets ${Object.keys(targets).join(", ") || "none"}`);
   return meta;
 }
 
-if (process.argv[1]?.endsWith("capture.ts")) {
+if (/[\\/]capture\.ts$/.test(process.argv[1] ?? "")) {
   await capturePages(idArg());
 }

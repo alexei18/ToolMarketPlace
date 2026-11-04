@@ -52,10 +52,13 @@ export const Stage: React.FC<StageProps> = ({ children, drift = true, seed = "st
   const frame = useCurrentFrame();
   const move = drift ? driftAt(frame, durationInFrames, seed) : null;
   const tile = useMemo(() => (grainOff() ? null : grainTile()), []);
+  // Behind 2D content, or it dirties the white UI; on top of a 3D scene (no drift), which fills the frame.
+  const vignette = <AbsoluteFill style={{ background: "radial-gradient(ellipse 85% 70% at 50% 46%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.55) 100%)", pointerEvents: "none" }} />;
   return (
     <AbsoluteFill style={{ backgroundColor: KIT.bg, overflow: "hidden" }}>
+      {drift && vignette}
       <AbsoluteFill style={move ? { transform: `translate(${move.x}px, ${move.y}px) scale(${move.scale})` } : undefined}>{children}</AbsoluteFill>
-      <AbsoluteFill style={{ background: "radial-gradient(ellipse 85% 70% at 50% 46%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.55) 100%)", pointerEvents: "none" }} />
+      {!drift && vignette}
       {tile && (
         <AbsoluteFill
           style={{

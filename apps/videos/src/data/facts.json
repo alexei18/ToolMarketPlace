@@ -1,0 +1,147 @@
+{
+  "source": "video-capture database (fictional demo catalog, seed/products.ts)",
+  "demo": true,
+  "counts": {
+    "products": 16,
+    "perks": 5,
+    "categories": 17
+  },
+  "series": {
+    "productsByCategory": [
+      {
+        "label": "AI",
+        "value": 4
+      },
+      {
+        "label": "Productivity",
+        "value": 4
+      },
+      {
+        "label": "Writing",
+        "value": 2
+      },
+      {
+        "label": "Analytics & Data",
+        "value": 1
+      },
+      {
+        "label": "Audio & Music",
+        "value": 1
+      },
+      {
+        "label": "Collaboration",
+        "value": 1
+      },
+      {
+        "label": "Customer Support",
+        "value": 1
+      },
+      {
+        "label": "Design",
+        "value": 1
+      },
+      {
+        "label": "Developer Tools",
+        "value": 1
+      },
+      {
+        "label": "E-commerce",
+        "value": 1
+      },
+      {
+        "label": "Finance",
+        "value": 1
+      },
+      {
+        "label": "Games & Fun",
+        "value": 1
+      },
+      {
+        "label": "Health & Fitness",
+        "value": 1
+      },
+      {
+        "label": "Marketing",
+        "value": 1
+      },
+      {
+        "label": "No-Code",
+        "value": 1
+      },
+      {
+        "label": "Security & Privacy",
+        "value": 1
+      },
+      {
+        "label": "Video",
+        "value": 1
+      }
+    ],
+    "productsPublished": [
+      {
+        "label": "",
+        "value": 1
+      },
+      {
+        "label": "",
+        "value": 2
+      },
+      {
+        "label": "",
+        "value": 3
+      },
+      {
+        "label": "",
+        "value": 4
+      },
+      {
+        "label": "",
+        "value": 5
+      },
+      {
+        "label": "",
+        "value": 6
+      },
+      {
+        "label": "",
+        "value": 7
+      },
+      {
+        "label": "",
+        "value": 8
+      },
+      {
+        "label": "",
+        "value": 9
+      },
+      {
+        "label": "",
+        "value": 10
+      },
+      {
+        "label": "",
+        "value": 11
+      },
+      {
+        "label": "",
+        "value": 12
+      },
+      {
+        "label": "",
+        "value": 13
+      },
+      {
+        "label": "",
+        "value": 14
+      },
+      {
+        "label": "",
+        "value": 15
+      },
+      {
+        "label": "",
+        "value": 16
+      }
+    ]
+  }
+}

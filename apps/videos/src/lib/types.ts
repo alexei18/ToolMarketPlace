@@ -78,6 +78,8 @@ export interface CaptureRecipe {
   keepProducts?: string[];
   /** Named elements (CSS selectors, evaluated after the clean-up) whose boxes the scenes use. */
   targets?: Record<string, string>;
+  /** Named CSS selectors whose every match's box is recorded, for scenes that take a page apart. */
+  boxes?: Record<string, string>;
   /** Extra PNGs of the same page with attributes changed, e.g. { "saved": [{ "selector": "...", "attributes": { "aria-pressed": "true" } }] }. */
   states?: Record<string, { selector: string; attributes: Record<string, string> }[]>;
 }
