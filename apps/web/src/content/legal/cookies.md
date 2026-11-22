@@ -50,7 +50,7 @@ Apart from the items above, we don't use local storage, IndexedDB or any other b
 
 - **Cloudflare Turnstile** runs a bot check from `challenges.cloudflare.com` when you sign up, claim a perk, report a product or start publishing one.
 - **Google** shows its sign-in page when you choose "Continue with Google". Profile pictures of people who signed in with Google load from Google's servers, without telling Google which page you were on.
-- **PostHog** counts visits through `eu.i.posthog.com` without cookies or browser storage, and may load its own small scripts from there (page speed and error reports). See [Site usage statistics](/privacy#site-usage-statistics).
+- **PostHog** counts visits through `us.i.posthog.com` without cookies or browser storage, and may load its own small scripts from there (page speed and error reports). See [Site usage statistics](/privacy#site-usage-statistics).
 - **Cloudflare** hosts the site. If its bot protection checks your browser, it may set its own strictly necessary security cookies, `__cf_bm` (30 minutes) or `cf_clearance` (after a security check, usually 30 minutes).
 
 We don't load analytics, advertising, fonts or scripts from any other service.

@@ -28,7 +28,7 @@ For each activity below you'll find the data, why we need it, the legal basis an
 ### The waitlist
 
 - **Data:** your email address; whether you want to discover apps or build them; the categories you pick (up to 5), or your product's link and category; your answer to "Where did you find us?" if you give one; the campaign tags of the link that brought you (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`); your personal share code and, if you came through someone's share link, whose link it was; and when you joined, got an invite or unsubscribed. We don't store your IP address. Cloudflare Turnstile checks that you are not a bot and sign-ups are rate-limited by IP address, as described under [Signing in and security](#signing-in-and-security).
-- **Why:** to send makers their early-access invite and everyone else one invite on launch day with the top picks in their categories, and to know which videos, campaigns and share links bring people.
+- **Why:** to confirm by email that you joined, send makers their early-access invite and everyone else one invite on launch day with the top picks in their categories, and to know which videos, campaigns and share links bring people.
 - **Legal basis:** consent for the emails, which you give by joining the waitlist and can withdraw at any time with the unsubscribe link in every email; legitimate interest for the campaign tags, the "Where did you find us?" answer and the share-link counts.
 - **Kept:** if you unsubscribe, we keep the record that you did, so we don't email you again. All waitlist data is deleted 6 months after launch. If you create an account, your campaign tags and categories are copied to it when you sign up and kept as described below.
 
@@ -133,8 +133,8 @@ We use these providers to run the service. They process personal data only on ou
 
 - **Cloudflare, Inc.** (United States): hosting, database, file storage, image processing, bot checks (Turnstile), website screenshots and server logs.
 - **Google LLC** (United States): sign-in with Google, only if you choose it. Profile pictures of people who signed in with Google are loaded from Google's servers, so Google receives the IP address of anyone viewing a page that shows one.
-- **PostHog Inc.** (United States, with servers in the European Union): [site usage statistics](#site-usage-statistics), counted without cookies.
-- **Resend** (United States): sending email, including the waitlist invite and launch emails. Resend receives your email address and the content of each message.
+- **PostHog Inc.** (United States): [site usage statistics](#site-usage-statistics), counted without cookies.
+- **Resend** (United States): sending email, including the waitlist welcome, invite and launch emails. Resend receives your email address and the content of each message.
 - **Browser push services** (for example Google, Mozilla, Apple or Microsoft, depending on your browser): delivering push notifications, only if you turn them on. Message content is encrypted.
 
 We don't sell personal data or share it for advertising. We may disclose data when the law requires it.

@@ -1,13 +1,15 @@
 # Analytics (PostHog)
 
-PostHog rulează pe fiecare pagină (`layouts/Base.astro` → `scripts/analytics.ts` → `lib/analytics.ts`), **fără cookie-uri** (`cookieless_mode: "always"`). Nimic nu se salvează în browser, deci tot nu avem banner (`/cookies`, `/privacy#site-usage-statistics`). Proiectul PostHog e în UE (`eu.i.posthog.com`).
+PostHog rulează pe fiecare pagină (`layouts/Base.astro` → `scripts/analytics.ts` → `lib/analytics.ts`), **fără cookie-uri** (`cookieless_mode: "always"`). Nimic nu se salvează în browser, deci tot nu avem banner (`/cookies`, `/privacy#site-usage-statistics`). Proiectul PostHog: „Tryworthy” (759174) pe PostHog Cloud US (`us.i.posthog.com`); transferul e acoperit în `/privacy#international-transfers`.
 
 ## Config
 
 | Var (wrangler.jsonc, `apps/web`) | Ce e |
 | --- | --- |
 | `POSTHOG_KEY` | Tokenul public al proiectului (`phc_…`). Gol = analytics oprit. |
-| `POSTHOG_HOST` | `https://eu.i.posthog.com`, sau subdomeniul reverse proxy-ului gestionat de PostHog după ce există CNAME-ul. |
+| `POSTHOG_HOST` | `https://us.i.posthog.com`, sau subdomeniul reverse proxy-ului gestionat de PostHog după ce există CNAME-ul. |
+
+Reverse proxy gestionat (creat în PostHog, organizația OnesDev): `e.tryworthy.app`, CNAME către `0c2c74eeca594c4693ac.cf-prod-us-proxy.proxyhog.com` (DNS only, nor gri în Cloudflare). Când PostHog îl arată „live”, `POSTHOG_HOST` devine `https://e.tryworthy.app`.
 
 În proiectul PostHog trebuie să fie pornit **Settings → Project → Web analytics → Cookieless tracking**. Fără el, PostHog aruncă toate evenimentele.
 

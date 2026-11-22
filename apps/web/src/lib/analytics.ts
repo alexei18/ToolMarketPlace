@@ -13,7 +13,8 @@ const SECRET_PARAM = /([?&](?:t|token)=)[^&#\s"]*/g;
 export function redactSecrets<T>(value: T): T {
   if (typeof value === "string") return value.replace(SECRET_PARAM, "$1redacted") as T;
   if (Array.isArray(value)) return value.map(redactSecrets) as T;
-  if (value && typeof value === "object") {
+  // Plain objects only: the event's `timestamp` is a Date, which must reach posthog-js untouched.
+  if (value && Object.getPrototypeOf(value) === Object.prototype) {
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, redactSecrets(v)])) as T;
   }
   return value;

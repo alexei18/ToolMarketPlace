@@ -23,6 +23,11 @@ describe("redactSecrets", () => {
     });
   });
 
+  test("keeps the Date timestamp (PostHog rejects the batch without it)", () => {
+    const timestamp = new Date("2026-11-22T12:00:00Z");
+    expect(redactSecrets({ event: "$pageview", timestamp }).timestamp).toBe(timestamp);
+  });
+
   test("leaves look-alike params alone", () => {
     expect(redactSecrets("/?utm_content=t1&h=b&tab=new")).toBe("/?utm_content=t1&h=b&tab=new");
   });
