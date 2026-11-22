@@ -10,6 +10,7 @@ import interact from "./routes/interact";
 import maker from "./routes/maker";
 import me from "./routes/me";
 import publicRoutes from "./routes/public";
+import waitlist from "./routes/waitlist";
 
 /** Name of the non-HttpOnly cookie that only tells the web app "a session probably exists". */
 export const AUTH_HINT_COOKIE = "tm_auth";
@@ -52,6 +53,11 @@ export function createApp() {
 
   app.get("/", (c) => c.json({ name: `${c.env.SITE_NAME} API`, ok: true }));
   app.get("/health", (c) => c.json({ ok: true }));
+  // The API lives on its own subdomain, so the site's robots.txt doesn't cover it. Card and product
+  // images stay fetchable: Twitterbot drops images that robots.txt disallows.
+  app.get("/robots.txt", (c) =>
+    c.text("User-agent: *\nAllow: /og/\nAllow: /img/\nDisallow: /\n", 200, { "Cache-Control": "public, max-age=86400" }),
+  );
 
   /** Product images from R2 (fallback when no img. custom domain is configured). */
   app.get("/img/:file", async (c) => {
@@ -71,6 +77,10 @@ export function createApp() {
   app.use("*", rateLimit);
   app.use("*", originCheck);
 
+  // Magic links are minted only by the API itself (the maker invite, routes/waitlist.ts), never on request.
+  app.post("/auth/sign-in/magic-link", () => {
+    throw new ApiError("NOT_FOUND", "Not found");
+  });
   app.on(["GET", "POST"], "/auth/*", async (c) => withAuthHint(await c.get("auth").handler(c.req.raw), c.env));
 
   app.route("/", publicRoutes);
@@ -78,5 +88,6 @@ export function createApp() {
   app.route("/", interact);
   app.route("/", maker);
   app.route("/", admin);
+  app.route("/", waitlist);
   return app;
 }

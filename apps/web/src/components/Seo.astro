@@ -1,0 +1,37 @@
+---
+import { DESCRIPTION_MAX, TITLE_MAX, clip } from "../lib/seo";
+
+interface Props {
+  /** Full title (templates from lib/seo.ts); clipped to 60 characters as a last guard. */
+  title: string;
+  description: string;
+  /** Absolute URL without query params. */
+  canonical: string;
+  /** Absolute image URL. */
+  image: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  noindex: boolean;
+  siteName: string;
+}
+const { canonical, image, imageWidth, imageHeight, noindex, siteName } = Astro.props;
+const title = clip(Astro.props.title, TITLE_MAX);
+const description = clip(Astro.props.description, DESCRIPTION_MAX);
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={image} />
+{imageWidth && <meta property="og:image:width" content={String(imageWidth)} />}
+{imageHeight && <meta property="og:image:height" content={String(imageHeight)} />}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={image} />

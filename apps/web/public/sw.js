@@ -13,8 +13,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || "",
-      icon: "/icons/icon-192.png",
-      badge: "/icons/badge-72.png",
+      icon: "/brand/icon-192.png",
+      badge: "/brand/badge-96.png",
       data: { url: data.url || "/feed" },
       tag: "digest",
     }),

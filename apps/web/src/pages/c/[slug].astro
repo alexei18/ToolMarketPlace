@@ -1,19 +1,26 @@
 ---
-import type { CategoryDTO, Page, ProductCardDTO } from "@tm/shared";
-import { encodeCursor } from "@tm/shared";
+import { collectionPageJsonLd, type CategoryDTO, type Page, type ProductCardDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import EmptyState from "../../components/EmptyState.astro";
 import ErrorState from "../../components/ErrorState.astro";
+import FilterBar from "../../components/FilterBar.astro";
 import ProductList from "../../components/ProductList.astro";
+import RankTabs from "../../components/RankTabs.astro";
 import SignupGate from "../../components/SignupGate.astro";
 import Base from "../../layouts/Base.astro";
 import { apiCall } from "../../lib/api";
 import { plural } from "../../lib/format";
+import { listParams, listQuery } from "../../lib/listing";
+import { siteConfig } from "../../lib/config";
+import { categorySeo } from "../../lib/seo";
 
 const slug = Astro.params.slug!;
+const { sort, filters, indexable } = listParams(Astro.url);
+const view = listQuery(sort, filters);
 const [catRes, listRes, allRes] = await Promise.all([
   apiCall<CategoryDTO>(`/categories/${encodeURIComponent(slug)}`),
   // Rendered as a visitor so the cached page is the same for everyone; members load the rest client-side.
-  apiCall<Page<ProductCardDTO>>(`/categories/${encodeURIComponent(slug)}/products`),
+  apiCall<Page<ProductCardDTO>>(`/categories/${encodeURIComponent(slug)}/products${view}`),
   apiCall<{ items: CategoryDTO[] }>("/categories"),
 ]);
 
@@ -28,12 +35,31 @@ const category = catRes.ok ? catRes.data : null;
 const page = listRes.ok ? listRes.data : { items: [], nextCursor: null, limited: false };
 const all = allRes.ok ? allRes.data.items : [];
 const count = all.find((c) => c.slug === slug)?.productCount ?? page.items.length;
-const last = page.items[page.items.length - 1];
-const memberCursor = page.limited && last ? encodeCursor(last.publishedAt, last.id) : null;
-const title = category ? `New ${category.name} products` : "Category";
+const memberCursor = page.limited ? (page.resumeCursor ?? null) : null;
+const { siteName, siteUrl } = siteConfig();
+// Filtered views and, in pre-launch, categories with too few quality products stay out of the index (docs/SEO.md).
+const listed = all.find((c) => c.slug === slug)?.listed !== false;
+const seo = category ? categorySeo(category.name, siteName) : undefined;
+const pageUrl = `${siteUrl}/c/${slug}`;
+// Structured data describes the indexed view: Top this week without filters, as shown to visitors.
+const jsonLd =
+  category && seo && indexable
+    ? collectionPageJsonLd({
+        name: en.category.h1(category.name),
+        description: seo.description,
+        url: pageUrl,
+        items: page.items.map((p) => ({ name: p.title, url: `${siteUrl}/p/${p.slug}` })),
+        crumbs: [
+          { name: "Home", url: `${siteUrl}/` },
+          { name: category.name, url: pageUrl },
+        ],
+      })
+    : null;
+const fragment = `/fragments/products?${new URLSearchParams({ source: "category", slug, ...(sort !== "top" ? { sort } : {}), ...Object.fromEntries(filters) })}`;
+const viewLabel = en.feed.tabs[sort];
 ---
 
-<Base title={title} description={category?.description ? `${category.description} New ${category.name.toLowerCase()} products, updated daily.` : undefined}>
+<Base title={category ? undefined : "Category"} seo={seo} noindex={!indexable || !listed} jsonLd={jsonLd}>
   <div class="container page">
     <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span>/</span><a href="/#categories">Categories</a></nav>
     {failed && <div style="margin-top: 24px"><ErrorState /></div>}
@@ -41,8 +67,8 @@ const title = category ? `New ${category.name} products` : "Category";
       category && (
         <>
           <header class="cat-head">
-            <h1 class="t-48">{category.name}</h1>
-            {category.description && <p class="t-17 muted">{category.description}</p>}
+            <h1 class="t-48">{en.category.h1(category.name)}</h1>
+            <p class="t-17 muted">{en.category.intro(category.name)}</p>
             <p class="t-13 muted">{plural(count, "product")}</p>
           </header>
 
@@ -55,28 +81,34 @@ const title = category ? `New ${category.name} products` : "Category";
           </div>
 
           <section class="section-tight">
-            <div class="section-head">
-              <h2>Newest first</h2>
-            </div>
-            {page.items.length === 0 ? (
+            <FilterBar base={`/c/${slug}`} sort={sort} filters={filters} />
+            <RankTabs base={`/c/${slug}`} sort={sort} filters={filters} />
+            <h2 class="visually-hidden">{viewLabel}</h2>
+            {page.items.length === 0 && sort === "new" && (
               <div style="margin-top: 20px">
                 <EmptyState title={`No ${category.name} products yet`} text="New launches show up here the moment makers publish them.">
                   <a class="btn btn-secondary" href="/dashboard/new">Submit a product</a>
                 </EmptyState>
               </div>
-            ) : (
-              <ProductList id="cat-list" products={page.items} />
             )}
+            {page.items.length === 0 && sort !== "new" && (
+              <div style="margin-top: 20px">
+                <EmptyState title="Nothing ranked here yet" text="New launches need a few days of saves, perk claims and feedback to show up here.">
+                  <a class="btn btn-secondary" href={`/c/${slug}${listQuery("new", filters)}`}>{en.feed.tabs.new}</a>
+                </EmptyState>
+              </div>
+            )}
+            {page.items.length > 0 && <ProductList id="cat-list" products={page.items} />}
 
             {memberCursor && (
               <>
                 <div class="load-more member-only-block">
-                  <button type="button" class="btn btn-secondary" data-load-more data-target="cat-list" data-source={`/fragments/products?source=category&slug=${encodeURIComponent(slug)}`} data-cursor={memberCursor} data-requires-auth="true">
+                  <button type="button" class="btn btn-secondary" data-load-more data-target="cat-list" data-source={fragment} data-cursor={memberCursor} data-requires-auth="true">
                     Load more
                   </button>
                 </div>
                 <div class="visitor-only-block">
-                  <SignupGate title={`See all ${plural(count, "product")} in ${category.name}`} text="Visitors see the newest few. A free account unlocks the full list, your own feed and member perks." />
+                  <SignupGate text={en.category.visitorBanner(category.name)} />
                 </div>
               </>
             )}

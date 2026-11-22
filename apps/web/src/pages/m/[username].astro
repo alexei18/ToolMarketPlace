@@ -5,7 +5,9 @@ import EmptyState from "../../components/EmptyState.astro";
 import ProductList from "../../components/ProductList.astro";
 import Base from "../../layouts/Base.astro";
 import { apiCall } from "../../lib/api";
+import { siteConfig } from "../../lib/config";
 import { longDate, plural } from "../../lib/format";
+import { makerSeo } from "../../lib/seo";
 
 const username = Astro.params.username!;
 const res = await apiCall<MakerProfileDTO>(`/makers/${encodeURIComponent(username)}`);
@@ -13,9 +15,10 @@ if (!res.ok && res.status === 404) return Astro.rewrite("/404");
 if (res.ok) Astro.cache.set({ maxAge: 300, swr: 60, tags: ["products", `m:${username}`] });
 const data = res.ok ? res.data : null;
 const u = data?.user;
+const { siteName } = siteConfig();
 ---
 
-<Base title={u ? `${u.name} (@${u.username})` : "Maker"} description={u ? (u.bio ?? `Products launched by ${u.name}.`) : undefined}>
+<Base title={u ? undefined : "Maker"} seo={u ? makerSeo(u.name, siteName) : undefined} noindex={!data || data.products.length === 0}>
   <div class="container container-narrow page">
     {
       u && data && (
@@ -44,7 +47,7 @@ const u = data?.user;
 <style>
   .maker-head {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
     gap: 20px;
     align-items: center;
   }

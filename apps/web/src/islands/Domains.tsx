@@ -3,7 +3,7 @@ import type { DomainDTO } from "@tm/shared";
 import { del, post, toast } from "../lib/client";
 import { shortDate } from "../lib/format";
 import { Trash2 } from "./icons";
-import { Button, CopyField, Empty, Field, Notice, Segmented, useAction } from "./ui";
+import { Button, CopyField, Empty, Field, Notice, Segmented, useAction, useAdoptTyped } from "./ui";
 
 interface Props {
   initial: DomainDTO[];
@@ -13,6 +13,7 @@ interface Props {
 export default function Domains({ initial, emailVerified }: Props) {
   const [domains, setDomains] = useState(initial);
   const [input, setInput] = useState("");
+  useAdoptTyped({ dom: setInput });
   const add = useAction(async () => {
     const d = await post<DomainDTO>("/me/domains", { domain: input });
     setDomains((ds) => [d, ...ds.filter((x) => x.id !== d.id)]);
@@ -76,7 +77,7 @@ function DomainCard({ d, onChange, onRemove }: { d: DomainDTO; onChange: (d: Dom
 
   return (
     <li className="box stack-16">
-      <div className="spread">
+      <div className="spread row-wrap">
         <div className="stack-4">
           <div className="w-600 t-17">{d.hostname}</div>
           <span className="status" data-status={d.verifiedAt ? "verified" : "pending"}>
@@ -99,7 +100,10 @@ function DomainCard({ d, onChange, onRemove }: { d: DomainDTO; onChange: (d: Dom
           <Segmented
             label="Verification method"
             value={method}
-            onChange={setMethod}
+            onChange={(m) => {
+              setMethod(m);
+              verify.setError(null);
+            }}
             options={[
               { value: "dns", label: "DNS TXT record" },
               { value: "meta", label: "Meta tag" },

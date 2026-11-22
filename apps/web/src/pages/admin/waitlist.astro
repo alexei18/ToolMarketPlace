@@ -1,0 +1,51 @@
+---
+import WaitlistAdmin from "../../islands/WaitlistAdmin";
+import Base from "../../layouts/Base.astro";
+import { requireMe } from "../../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+if (me.role !== "admin") return Astro.rewrite("/404");
+---
+
+<Base title="Waitlist" noindex>
+  <div class="container page">
+    <p class="t-13"><a class="link" href="/admin">Admin</a></p>
+    <h1 class="t-32" style="margin: 8px 0 24px">Waitlist</h1>
+    <WaitlistAdmin client:load />
+  </div>
+</Base>
+
+<style is:global>
+  .wa-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .wa-tile {
+    display: grid;
+    gap: 4px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .wa-tile[data-warn="true"] {
+    background: var(--warning-soft);
+  }
+  .wa-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+  }
+  .wa-action {
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    max-width: 720px;
+  }
+  @media (max-width: 720px) {
+    .wa-two {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

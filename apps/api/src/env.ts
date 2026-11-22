@@ -10,6 +10,8 @@ export interface Env {
   /** Service binding to the site worker (cache purges). */
   WEB?: Fetcher;
   USER_LIMITER?: RateLimit;
+  /** Waitlist sign-ups per IP (5 a minute). */
+  WAITLIST_LIMITER?: RateLimit;
 
   SITE_NAME: string;
   WEB_ORIGIN: string;
@@ -20,6 +22,12 @@ export interface Env {
   VAPID_SUBJECT?: string;
   VAPID_PUBLIC_KEY?: string;
   EMAIL_FROM?: string;
+  /** "true" runs the site as the waitlist (pre-launch mode, docs/PRELAUNCH.md) until the admin Launch action. */
+  WAITLIST?: string;
+  /** Day invited makers get access, YYYY-MM-DD (docs/tiktok-campaign.md). Anything else counts as not set yet. */
+  MAKER_ACCESS_DATE?: string;
+  /** Public launch day, YYYY-MM-DD. Anything else counts as not set yet. */
+  LAUNCH_DATE?: string;
 
   BETTER_AUTH_SECRET: string;
   GOOGLE_CLIENT_ID?: string;
@@ -52,13 +60,18 @@ export interface SessionUser {
   bannedAt: number | null;
   digestFrequency: "daily" | "weekly" | "off";
   onboardedAt: number | null;
+  /** TERMS_VERSION last accepted; null = never. */
+  termsVersion: string | null;
 }
 
 export interface Variables {
   db: Database;
   auth: Auth;
   limits: Limits;
+  /** Signed-in, not suspended. */
   user: SessionUser | null;
+  /** Signed-in but suspended: treated as signed out except on /me and the decision endpoints. */
+  suspendedUser: SessionUser | null;
   sessionId: string | null;
 }
 

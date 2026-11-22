@@ -1,0 +1,32 @@
+---
+import type { DecisionDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
+import ErrorState from "../../components/ErrorState.astro";
+import Decisions from "../../islands/Decisions";
+import DashboardLayout from "../../layouts/DashboardLayout.astro";
+import { apiCall } from "../../lib/api";
+import { requireMe } from "../../lib/session";
+
+const me = await requireMe(Astro);
+if (me instanceof Response) return me;
+const res = await apiCall<{ items: DecisionDTO[] }>("/me/decisions", { request: Astro.request });
+const m = en.moderation.page;
+---
+
+<DashboardLayout title={m.title} active="decisions">
+  <h1 class="t-32">{m.title}</h1>
+  <p class="t-15 muted" style="margin: 8px 0 24px; max-width: 600px">{m.intro}</p>
+  {res.ok ? <Decisions client:load items={res.data.items} /> : <ErrorState />}
+</DashboardLayout>
+
+<style is:global>
+  .decision {
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+  }
+  .contest-box {
+    padding: 12px 14px;
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+</style>

@@ -9,5 +9,5 @@ const { title = "We couldn't load this page", text = "Something went wrong on ou
 <div class="empty">
   <h3>{title}</h3>
   <p>{text}</p>
-  <div class="actions"><a class="btn btn-secondary" href={Astro.url.pathname}>Try again</a></div>
+  <div class="actions"><a class="btn btn-secondary" href={Astro.originPathname}>Try again</a></div>
 </div>

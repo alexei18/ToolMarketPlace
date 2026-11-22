@@ -1,17 +1,23 @@
 ---
+import { en } from "@tm/shared/copy";
 import AuthForm from "../islands/AuthForm";
 import AuthLayout from "../layouts/AuthLayout.astro";
-import { hasSessionHint } from "../lib/api";
+import { apiCall, hasSessionHint } from "../lib/api";
 import { siteConfig } from "../lib/config";
 import { safePath } from "../lib/safe";
 
 const next = safePath(Astro.url.searchParams.get("next")) ?? undefined;
 if (hasSessionHint(Astro.request) && !Astro.url.searchParams.has("reason")) return Astro.redirect(next ?? "/feed");
 const { googleEnabled } = siteConfig();
+// During the waitlist, accounts are for invited makers only: new visitors join the waitlist instead.
+const site = await apiCall<{ prelaunch: boolean }>("/site");
+const waitlist = site.ok && site.data.prelaunch;
 // Better Auth appends ?error=<code> to the error callback URL.
 const oauthError = Astro.url.searchParams.get("oauth") === "failed" ? (Astro.url.searchParams.get("error") ?? "unknown") : null;
 const oauthMessage =
-  oauthError === "account_not_linked"
+  oauthError?.toUpperCase() === "WAITLIST_ONLY"
+    ? en.waitlist.accountsClosed
+    : oauthError === "account_not_linked"
     ? "An account with this email already exists. Log in with your password and confirm your email; after that, Google sign-in works too."
     : "Google sign-in didn't finish. Try again or use email.";
 ---
@@ -19,5 +25,18 @@ const oauthMessage =
 <AuthLayout title="Log in" heading="Welcome back" sub="Log in to see your feed, saved products and perks.">
   {oauthError && <div class="notice notice-danger" style="margin-bottom: 20px">{oauthMessage}</div>}
   <AuthForm client:load mode="login" next={next} googleEnabled={googleEnabled} reason={Astro.url.searchParams.get("reason") ?? undefined} />
-  <Fragment slot="foot">New here? <a class="link" href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Create a free account</a></Fragment>
+  {
+    waitlist ? (
+      <Fragment slot="foot">
+        {en.waitlist.login.before}
+        <a class="link" href="/#waitlist">
+          {en.waitlist.login.link}
+        </a>
+      </Fragment>
+    ) : (
+      <Fragment slot="foot">
+        New here? <a class="link" href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Create a free account</a>
+      </Fragment>
+    )
+  }
 </AuthLayout>

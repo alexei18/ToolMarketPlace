@@ -7,7 +7,7 @@
     "dev": "astro dev --port 4321",
     "build": "astro build",
     "preview": "wrangler dev --port 4321",
-    "deploy": "astro build && wrangler deploy",
+    "deploy": "CLOUDFLARE_ENV=production astro build && wrangler deploy",
     "typecheck": "astro check",
     "cf-typegen": "wrangler types"
   },
@@ -19,6 +19,7 @@
     "astro": "^7.3.6",
     "lucide": "^1.52.0",
     "lucide-react": "^1.52.0",
+    "posthog-js": "^1.453.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

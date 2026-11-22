@@ -1,5 +1,5 @@
 ---
-import type { ReviewQueueItemDTO } from "@tm/shared";
+import type { AdminDecisionDTO, ReviewCaseDTO, ReviewQueueItemDTO } from "@tm/shared";
 import Admin from "../islands/Admin";
 import Base from "../layouts/Base.astro";
 import { apiCall } from "../lib/api";
@@ -8,13 +8,16 @@ import { requireMe } from "../lib/session";
 const me = await requireMe(Astro);
 if (me instanceof Response) return me;
 if (me.role !== "admin") return Astro.rewrite("/404");
-const res = await apiCall<{ items: ReviewQueueItemDTO[] }>("/admin/review-queue", { request: Astro.request });
+const res = await apiCall<{ items: ReviewQueueItemDTO[]; cases: ReviewCaseDTO[]; contests: AdminDecisionDTO[] }>("/admin/review-queue", { request: Astro.request });
 ---
 
 <Base title="Admin" noindex>
   <div class="container page">
-    <h1 class="t-32" style="margin-bottom: 24px">Admin</h1>
-    <Admin client:load queue={res.ok ? res.data.items : []} />
+    <div class="spread" style="margin-bottom: 24px">
+      <h1 class="t-32">Admin</h1>
+      <a class="btn btn-secondary" href="/admin/waitlist">Waitlist</a>
+    </div>
+    <Admin client:load queue={res.ok ? res.data.items : []} cases={res.ok ? res.data.cases : []} contests={res.ok ? res.data.contests : []} meId={me.id} />
   </div>
 </Base>
 
@@ -30,5 +33,12 @@ const res = await apiCall<{ items: ReviewQueueItemDTO[] }>("/admin/review-queue"
     border-radius: var(--radius);
     display: grid;
     gap: 8px;
+  }
+  .decision-form {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    max-width: 560px;
   }
 </style>

@@ -16,9 +16,11 @@ const { title, heading, sub } = Astro.props;
       {sub && <p class="muted">{sub}</p>}
     </div>
     <slot />
-    <div class="auth-foot t-15 muted">
-      <slot name="foot" />
-    </div>
+    {Astro.slots.has("foot") && (
+      <div class="auth-foot t-15 muted">
+        <slot name="foot" />
+      </div>
+    )}
   </div>
 </Base>
 

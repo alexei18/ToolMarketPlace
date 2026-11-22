@@ -1,0 +1,38 @@
+{
+  "name": "v1-card",
+  "route": "/top",
+  "width": 320,
+  "height": 3630,
+  "scale": 3,
+  "states": {
+    "default": "captures/v1-card.png",
+    "saved": "captures/v1-card-saved.png"
+  },
+  "targets": {
+    "row": {
+      "x": 16,
+      "y": 2571.5,
+      "w": 268,
+      "h": 191.0625,
+      "text": {
+        "name": 15,
+        "secondary": 13
+      }
+    },
+    "title": {
+      "x": 142,
+      "y": 2587.5,
+      "w": 142,
+      "h": 19.5,
+      "text": {
+        "name": 15
+      }
+    },
+    "save": {
+      "x": 142,
+      "y": 2713.5625,
+      "w": 37,
+      "h": 32
+    }
+  }
+}

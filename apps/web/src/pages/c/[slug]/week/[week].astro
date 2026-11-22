@@ -1,0 +1,89 @@
+---
+/* A category's weekly archive, e.g. /c/design/week/2026-44 (docs/SEO.md). The API answers 404 for weeks without one and in pre-launch. */
+import { collectionPageJsonLd, type WeekArchiveDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
+import ErrorState from "../../../../components/ErrorState.astro";
+import Icon from "../../../../components/Icon.astro";
+import ProductList from "../../../../components/ProductList.astro";
+import Base from "../../../../layouts/Base.astro";
+import { apiCall } from "../../../../lib/api";
+import { siteConfig } from "../../../../lib/config";
+import { weekSeo } from "../../../../lib/seo";
+
+const { slug, week } = Astro.params as { slug: string; week: string };
+const res = await apiCall<WeekArchiveDTO>(`/categories/${encodeURIComponent(slug)}/weeks/${encodeURIComponent(week)}`);
+if (!res.ok && res.status === 404) return Astro.rewrite("/404");
+// A completed week only changes when a product is hidden, removed or edited.
+if (res.ok) Astro.cache.set({ maxAge: 3600, swr: 3600, tags: ["products", `c:${slug}`] });
+else Astro.response.status = 503;
+
+const archive = res.ok ? res.data : null;
+const { siteName, siteUrl } = siteConfig();
+const seo = archive ? weekSeo(archive.category.name, archive.week.week, archive.week.year, siteName) : undefined;
+const h1 = archive ? en.weekArchive.h1(archive.category.name, archive.week.week, archive.week.year) : "";
+const pageUrl = `${siteUrl}/c/${slug}/week/${week}`;
+const jsonLd =
+  archive && seo
+    ? collectionPageJsonLd({
+        name: h1,
+        description: seo.description,
+        url: pageUrl,
+        items: archive.items.map((p) => ({ name: p.title, url: `${siteUrl}/p/${p.slug}` })),
+        crumbs: [
+          { name: "Home", url: `${siteUrl}/` },
+          { name: archive.category.name, url: `${siteUrl}/c/${slug}` },
+          { name: h1, url: pageUrl },
+        ],
+      })
+    : null;
+---
+
+<Base title={archive ? undefined : "Weekly archive"} seo={seo} noindex={!archive} jsonLd={jsonLd}>
+  <div class="container page">
+    {!archive && <ErrorState />}
+    {
+      archive && seo && (
+        <>
+          <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span>/</span>
+            <a href={`/c/${slug}`}>{archive.category.name}</a>
+          </nav>
+          <header class="week-head">
+            <h1 class="t-48">{h1}</h1>
+            <p class="t-17 muted">{seo.description}</p>
+          </header>
+          <section class="section-tight">
+            <ProductList id="week-list" products={archive.items} />
+            {archive.previous && (
+              <a class="link-arrow" href={`/c/${slug}/week/${archive.previous.slug}`}>
+                <Icon name="arrow-left" /> {en.weekArchive.previous(archive.previous.week, archive.previous.year)}
+              </a>
+            )}
+          </section>
+        </>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .week-head {
+    margin-top: 16px;
+    display: grid;
+    gap: 10px;
+    max-width: 720px;
+  }
+  .link-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 28px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .link-arrow :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+</style>

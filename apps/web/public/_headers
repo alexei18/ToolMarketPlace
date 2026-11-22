@@ -1,0 +1,14 @@
+# Brand files, favicons and the default OG image keep their names, so they are cached for a day
+# (not forever). sw.js and the manifest keep the default revalidation so updates reach users.
+/brand/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/favicon.svg
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/favicon-32.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/favicon-16.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/apple-touch-icon.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/og.png
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800

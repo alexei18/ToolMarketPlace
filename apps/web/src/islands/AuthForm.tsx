@@ -1,7 +1,11 @@
 import { useState } from "react";
+import { TERMS_VERSION } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import { call, ClientError, post } from "../lib/client";
 import { safePath } from "../lib/safe";
-import { Button, Field, Notice, useAction, useTurnstile } from "./ui";
+import { utmParams, withUtm } from "../lib/utm";
+import { TermsConsent } from "./TermsConsent";
+import { Button, Field, Notice, useAction, useAdoptTyped, useTurnstile } from "./ui";
 
 type Mode = "login" | "signup" | "forgot" | "reset";
 
@@ -19,6 +23,7 @@ const REASONS: Record<string, string> = {
   vote: "Log in to vote on roadmaps.",
   feedback: "Log in to leave feedback.",
   report: "Log in to report a product.",
+  expired: "Your session ended. Log in again to continue.",
 };
 
 function GoogleMark() {
@@ -37,6 +42,10 @@ export default function AuthForm({ mode, next, googleEnabled, token, reason }: P
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [done, setDone] = useState(false);
+  // Sign-up only: the required age checkbox, which also accepts the Terms (docs/LEGAL.md).
+  const [adult, setAdult] = useState(false);
+  const [ageError, setAgeError] = useState(false);
+  useAdoptTyped({ name: setName, email: setEmail, password: setPassword });
   const turnstile = useTurnstile();
   const target = safePath(next);
   const origin = typeof location !== "undefined" ? location.origin : "";
@@ -45,8 +54,8 @@ export default function AuthForm({ mode, next, googleEnabled, token, reason }: P
     async () => {
       if (mode === "signup") {
         const captcha = await turnstile.getToken();
-        await call("POST", "/auth/sign-up/email", { name: name.trim(), email: email.trim(), password, callbackURL: `${origin}/feed?verified=1` }, { headers: captcha ? { "x-captcha-response": captcha } : {} });
-        location.href = `/onboarding${target ? `?next=${encodeURIComponent(target)}` : ""}`;
+        await call("POST", "/auth/sign-up/email", { name: name.trim(), email: email.trim(), password, acceptedTerms: TERMS_VERSION, callbackURL: `${origin}/feed?verified=1` }, { headers: captcha ? { "x-captcha-response": captcha } : {} });
+        location.href = withUtm(`/onboarding${target ? `?next=${encodeURIComponent(target)}` : ""}`, utmParams(location.search));
       } else if (mode === "login") {
         await post("/auth/sign-in/email", { email: email.trim(), password, rememberMe: true });
         location.href = target ?? "/feed";
@@ -62,18 +71,30 @@ export default function AuthForm({ mode, next, googleEnabled, token, reason }: P
   );
 
   const google = useAction(async () => {
+    // New Google accounts record the Terms in onboarding; "terms" says the box was ticked here (from /signup).
+    const onboarding = new URLSearchParams();
+    if (mode === "signup") onboarding.set("terms", TERMS_VERSION);
+    if (target) onboarding.set("next", target);
     const res = await post<{ url?: string }>("/auth/sign-in/social", {
       provider: "google",
       callbackURL: `${origin}${target ?? "/feed"}`,
-      newUserCallbackURL: `${origin}/onboarding${target ? `?next=${encodeURIComponent(target)}` : ""}`,
+      newUserCallbackURL: `${origin}${withUtm(`/onboarding${onboarding.toString() ? `?${onboarding}` : ""}`, utmParams(location.search))}`,
       errorCallbackURL: `${origin}/login?oauth=failed`,
     });
     if (res.url) location.href = res.url;
   });
 
+  /** Sign-up needs the age checkbox, for email and Google alike. */
+  const consented = () => {
+    if (mode !== "signup" || adult) return true;
+    setAgeError(true);
+    document.getElementById("age-confirm")?.focus();
+    return false;
+  };
+
   const onSubmit = (e: { preventDefault(): void }) => {
     e.preventDefault();
-    submit.run();
+    if (consented()) submit.run();
   };
 
   const err = submit.error;
@@ -102,9 +123,19 @@ export default function AuthForm({ mode, next, googleEnabled, token, reason }: P
   return (
     <div className="stack-24">
       {reason && REASONS[reason] && <Notice>{REASONS[reason]}</Notice>}
+      {mode === "signup" && (
+        <TermsConsent
+          checked={adult}
+          error={ageError}
+          onChange={(v) => {
+            setAdult(v);
+            if (v) setAgeError(false);
+          }}
+        />
+      )}
       {(mode === "login" || mode === "signup") && googleEnabled && (
         <>
-          <Button type="button" variant="secondary" className="btn-block btn-lg" busy={google.busy} onClick={() => google.run()}>
+          <Button type="button" variant="secondary" className="btn-block btn-lg" busy={google.busy} onClick={() => consented() && google.run()}>
             <GoogleMark /> Continue with Google
           </Button>
           <div className="or">
@@ -166,6 +197,7 @@ export default function AuthForm({ mode, next, googleEnabled, token, reason }: P
 function friendly(err: ClientError, mode: Mode): string {
   if (err.code === "INVALID_EMAIL_OR_PASSWORD" || (mode === "login" && err.status === 401)) return "That email and password don't match.";
   if (err.code === "USER_ALREADY_EXISTS" || err.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") return "An account with this email already exists. Log in instead.";
+  if (err.code === "TERMS_NOT_ACCEPTED") return en.legal.ageRequired;
   if (err.code === "PASSWORD_TOO_SHORT") return "Use at least 8 characters.";
   if (err.code === "INVALID_TOKEN") return "This reset link is invalid or expired. Ask for a new one.";
   if (err.status === 429) return "Too many attempts. Wait a minute and try again.";

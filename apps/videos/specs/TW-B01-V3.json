@@ -1,0 +1,208 @@
+{
+  "id": "TW-B01-V3",
+  "batch": "TW-B01",
+  "concept": "Launch here first: spoken straight to makers. White editorial typography in brand colors, text that types itself, the logo's checks drawing.",
+  "meta": {
+    "title": "Launch here first",
+    "audience": "Makers",
+    "message": "First users for what you built; makers get in a week early.",
+    "hookType": "Direct address to the maker",
+    "hookText": "Built something with AI this weekend? Nobody's going to find it. Unless you launch it where people actually try new apps.",
+    "visualStyle": "White, editorial, large type in brand colors",
+    "animationStyle": "Self-typing text; the logo's checks drawing themselves",
+    "coverText": "Built it? Launch here first",
+    "caption": "Built something with AI this weekend? Launch it where people actually try new apps. Makers get in a week early. Join the waitlist, link in bio.",
+    "hashtags": [
+      "#buildinpublic",
+      "#indiemaker",
+      "#vibecoding",
+      "#newapps"
+    ],
+    "pinnedComment": "What did you build this weekend? Join the waitlist as a maker, link in bio.",
+    "musicSearch": "light acoustic motivational",
+    "changedVariable": ""
+  },
+  "script": "Built something with AI this weekend? Nobody's going to find it. Unless you launch it where people actually try new apps. On Tryworthy, makers get in a week early. Verify your domain, paste your link, and you're live on launch day. List it as Pre-launch and find your first testers. They send feedback straight to you and vote on your roadmap. Offer a perk people can only claim here. Listing your product on Tryworthy is free. Join the waitlist, link in bio.",
+  "beats": [
+    {
+      "cue": "built",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Built",
+          "something",
+          "with AI this",
+          "weekend?"
+        ],
+        "mode": "typewriter",
+        "highlight": [
+          "ai"
+        ],
+        "size": 130
+      }
+    },
+    {
+      "cue": "nobody's",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Nobody's",
+          "going to",
+          "find it."
+        ],
+        "mode": "slam",
+        "size": 140
+      }
+    },
+    {
+      "cue": "unless",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Unless you",
+          "launch it where",
+          "people actually",
+          "try new apps."
+        ],
+        "mode": "typewriter",
+        "highlight": [
+          "try"
+        ],
+        "size": 100
+      }
+    },
+    {
+      "cue": "makers",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Makers get in",
+          "a week early."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "week",
+          "early"
+        ],
+        "size": 130
+      }
+    },
+    {
+      "cue": "verify",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Verify your",
+          "domain, paste",
+          "your link,"
+        ],
+        "mode": "typewriter",
+        "size": 110
+      }
+    },
+    {
+      "cue": "live",
+      "scene": "CheckDraw",
+      "props": {
+        "secondCue": "day",
+        "text": "Live on launch day"
+      }
+    },
+    {
+      "cue": "list",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "v3-prelaunch-card",
+        "target": "row",
+        "highlight": {
+          "cue": "pre-launch",
+          "target": "badge"
+        },
+        "cursor": [
+          {
+            "cue": "find#2",
+            "target": "title",
+            "tap": false
+          },
+          {
+            "cue": "testers",
+            "target": "title",
+            "tap": true
+          }
+        ]
+      }
+    },
+    {
+      "cue": "they",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "They send",
+          "feedback straight",
+          "to you and vote",
+          "on your roadmap."
+        ],
+        "mode": "typewriter",
+        "highlight": [
+          "feedback",
+          "roadmap"
+        ],
+        "size": 100
+      }
+    },
+    {
+      "cue": "offer",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Offer a perk",
+          "people",
+          "can only",
+          "claim here."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "only",
+          "here"
+        ],
+        "size": 120
+      }
+    },
+    {
+      "cue": "listing",
+      "scene": "StatOrQuote",
+      "props": {
+        "label": "For makers",
+        "text": "Listing your product on Tryworthy is free."
+      }
+    }
+  ],
+  "style": {
+    "theme": "light",
+    "keywords": [
+      "week",
+      "early",
+      "pre-launch",
+      "testers",
+      "free"
+    ]
+  },
+  "endscreen": "light",
+  "cover": {
+    "cue": "weekend",
+    "offsetFrames": 10
+  },
+  "captures": {
+    "v3-prelaunch-card": {
+      "route": "/top?stage=beta",
+      "width": 300,
+      "height": 700,
+      "scale": 3,
+      "targets": {
+        "row": "li.product-row:has(a.thumb[href=\"/p/mailmeadow\"])",
+        "title": "li.product-row:has(a.thumb[href=\"/p/mailmeadow\"]) h3",
+        "badge": "li.product-row:has(a.thumb[href=\"/p/mailmeadow\"]) [data-badge=\"preLaunch\"]"
+      }
+    }
+  }
+}

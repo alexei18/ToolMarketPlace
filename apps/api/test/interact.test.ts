@@ -38,6 +38,7 @@ describe("perks", () => {
     const pub = await new Client(t).get(`/products/${p.slug}`);
     expect(pub.data.hasPerk).toBe(true);
     expect(pub.data.perks).toHaveLength(2);
+    expect(pub.data.perks[0]).toMatchObject({ available: true, remaining: 2 });
     expect(JSON.stringify(pub.data)).not.toContain("AAA-1");
     expect(JSON.stringify(pub.data)).not.toContain("LAUNCH20");
     expect(JSON.stringify(pub.data)).not.toContain("/redeem");
@@ -70,6 +71,16 @@ describe("perks", () => {
 
     const stats = await p.maker.client.get(`/maker/products/${p.id}/stats`);
     expect(stats.data.perkClaims).toBe(3);
+
+    // Every code and the single coupon are taken: nothing left to claim, on the page or in lists.
+    const after = await new Client(t).get(`/products/${p.slug}`);
+    expect(after.data.perks.map((x: { available: boolean }) => x.available)).toEqual([false, false]);
+    expect(after.data.perks[0].remaining).toBe(0);
+    expect(after.data.hasPerk).toBe(false);
+    const withPerk = await new Client(t).get("/search?perk=1");
+    expect(withPerk.data.items.map((x: { id: string }) => x.id)).not.toContain(p.id);
+    const late = await c.client.get(`/products/${p.id}/viewer`);
+    expect(late.data.viewer.perks.every((x: { claimed: boolean; available: boolean }) => x.claimed || !x.available)).toBe(true);
   });
 
   test("expired or inactive perks can't be claimed; unverified users can't claim", async () => {
@@ -81,6 +92,25 @@ describe("perks", () => {
     expect((await u.client.post(`/perks/${perkId}/claim`)).data.error.code).toBe("PERK_UNAVAILABLE");
     const unverified = await signUp(t, { verified: false });
     expect((await unverified.client.post(`/perks/${perkId}/claim`)).data.error.code).toBe("EMAIL_NOT_VERIFIED");
+  });
+
+  test("the public list shows available perks of live products, without codes or redeem links", async () => {
+    const t = setup();
+    const p = await product(t);
+    await p.maker.client.put(`/maker/products/${p.id}/perks`, {
+      perks: [
+        { type: "coupon", title: "20% off", sharedCode: "LAUNCH20", redeemUrl: "https://myapp.com/redeem", expiresAt: Math.floor(Date.now() / 1000) + 86400 },
+        { type: "free_trial", title: "Expired trial", expiresAt: 1000, redeemUrl: "https://myapp.com/t" },
+      ],
+    });
+    const list = await new Client(t).get("/perks");
+    expect(list.status).toBe(200);
+    expect(list.data.items).toEqual([{ perkId: expect.any(String), title: "20% off", type: "coupon", expiresAt: expect.any(Number), product: { slug: p.slug, title: "My App", image: null } }]);
+    expect(JSON.stringify(list.data)).not.toContain("LAUNCH20");
+    expect(JSON.stringify(list.data)).not.toContain("/redeem");
+
+    t.sqlite.run("UPDATE products SET status = 'hidden' WHERE id = ?", [p.id]);
+    expect((await new Client(t).get("/perks")).data.items).toEqual([]);
   });
 });
 
@@ -157,6 +187,8 @@ describe("roadmap", () => {
   });
 });
 
+const REMOVE = { rule: "spam", facts: "The same product is listed several times." };
+
 describe("reports and moderation", () => {
   test("3 valid reports hide the product; new accounts don't count; admin restores and removes", async () => {
     const t = setup();
@@ -170,7 +202,8 @@ describe("reports and moderation", () => {
     const res = [];
     for (const o of old) res.push((await o.client.post(`/products/${p.id}/report`, { reason: "scam", note: "fake" })).data);
     expect(res.map((r) => r.hidden)).toEqual([false, false, true]);
-    expect((await new Client(t).get(`/products/${p.slug}`)).status).toBe(404);
+    // Hidden products answer 410 (docs/SEO.md).
+    expect((await new Client(t).get(`/products/${p.slug}`)).status).toBe(410);
 
     const admin = await signUp(t, { email: "admin@example.com" });
     expect((await old[0]!.client.get("/admin/review-queue")).status).toBe(403);
@@ -183,11 +216,12 @@ describe("reports and moderation", () => {
     const row = t.sqlite.query("SELECT valid_report_count FROM products WHERE id = ?").get(p.id) as { valid_report_count: number };
     expect(row.valid_report_count).toBe(0);
 
-    const removed = await admin.client.post(`/admin/products/${p.id}/remove`);
+    expect((await admin.client.post(`/admin/products/${p.id}/remove`)).status).toBe(400);
+    const removed = await admin.client.post(`/admin/products/${p.id}/remove`, REMOVE);
     expect(removed.data).toMatchObject({ ok: true, makerBanned: false });
-    expect((await new Client(t).get(`/products/${p.slug}`)).status).toBe(404);
+    expect((await new Client(t).get(`/products/${p.slug}`)).status).toBe(410);
     const makerNotes = await p.maker.client.get("/me/notifications");
-    expect(makerNotes.data.items[0].payload.title).toBe("A product was removed");
+    expect(makerNotes.data.items[0].payload.title).toBe("A decision about your product");
   });
 
   test("makers are banned after 3 removed products; ban ends sessions and hides products", async () => {
@@ -200,9 +234,9 @@ describe("reports and moderation", () => {
       ids.push(r.data.id);
     }
     const admin = await signUp(t, { email: "admin@example.com" });
-    await admin.client.post(`/admin/products/${ids[0]}/remove`);
-    await admin.client.post(`/admin/products/${ids[1]}/remove`);
-    const third = await admin.client.post(`/admin/products/${ids[2]}/remove`);
+    await admin.client.post(`/admin/products/${ids[0]}/remove`, REMOVE);
+    await admin.client.post(`/admin/products/${ids[1]}/remove`, REMOVE);
+    const third = await admin.client.post(`/admin/products/${ids[2]}/remove`, REMOVE);
     expect(third.data.makerBanned).toBe(true);
     expect((await m.client.get("/feed")).status).toBe(401);
     const status = t.sqlite.query("SELECT status FROM products WHERE id = ?").get(ids[3]!) as { status: string };
@@ -233,9 +267,9 @@ describe("digest", () => {
     const other = await signUp(t);
     await other.client.put("/me/interests", { categories: ["games", "design", "finance"] });
     await other.client.patch("/me/settings", { digestFrequency: "daily" });
-    // Pretend both onboarded before the product launched.
+    // Pretend both onboarded before the product launched, and that it meets the quality conditions.
     t.sqlite.run("UPDATE user SET onboarded_at = onboarded_at - 3600");
-    t.sqlite.run("UPDATE products SET published_at = published_at - 60");
+    t.sqlite.run("UPDATE products SET published_at = published_at - 60, quality_ok = 1");
     t.sqlite.run("UPDATE product_categories SET published_at = published_at - 60");
 
     // Run "now" but pretend it's not a Monday: only the two daily users are due (the maker is weekly).
@@ -258,6 +292,7 @@ describe("digest", () => {
     const weekly = await signUp(t);
     await weekly.client.put("/me/interests", { categories: ["ai", "design", "finance"] });
     t.sqlite.run("UPDATE user SET onboarded_at = onboarded_at - 3600");
+    t.sqlite.run("UPDATE products SET published_at = published_at - 60, quality_ok = 1");
     t.sqlite.run("UPDATE product_categories SET published_at = published_at - 60");
     let monday = Date.now();
     while (new Date(monday).getUTCDay() !== 1) monday += 86400_000;

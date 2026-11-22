@@ -1,0 +1,231 @@
+---
+/*
+ * Filters from docs/COPY.md as links that toggle one URL param each, so they work without JS and
+ * on cached pages. Desktop: one row above the tabs. Mobile: a "Filters" button that opens a sheet,
+ * with the active filters next to it so each can be removed in one tap.
+ */
+import type { RankSort } from "@tm/shared/enums";
+import { en } from "@tm/shared/copy";
+import { filterQuery, listQuery } from "../lib/listing";
+import Icon from "./Icon.astro";
+
+interface Props {
+  base: string;
+  /** Kept in the links; omit on pages whose path picks the view (/top, /trending). */
+  sort?: RankSort;
+  filters: URLSearchParams;
+}
+const { base, sort, filters } = Astro.props;
+const f = en.feed.filters;
+const query = (next: URLSearchParams) => (sort ? listQuery(sort, next) : filterQuery(next));
+
+interface Chip {
+  key: string;
+  value: string;
+  label: string;
+}
+const groups: { label: string; chips: Chip[] }[] = [
+  {
+    label: "AI and perks",
+    chips: [
+      { key: "ai", value: "1", label: f.aiPowered },
+      { key: "perk", value: "1", label: f.hasPerk },
+    ],
+  },
+  {
+    label: "Pricing",
+    chips: (["free", "freemium", "paid"] as const).map((v) => ({ key: "pricing", value: v, label: f.pricing[v] })),
+  },
+  {
+    label: "Stage",
+    chips: [
+      { key: "stage", value: "beta", label: f.stage.preLaunch },
+      { key: "stage", value: "launched", label: f.stage.launched },
+    ],
+  },
+  {
+    label: "Platform",
+    chips: (["web", "ios", "android", "extension", "desktop"] as const).map((v) => ({ key: "platform", value: v, label: f.platform[v] })),
+  },
+];
+
+const isOn = (c: Chip) => filters.get(c.key) === c.value;
+/** The same page with this chip toggled; the view (tab) is kept, paging restarts. */
+const toggle = (c: Chip) => {
+  const next = new URLSearchParams(filters);
+  if (isOn(c)) next.delete(c.key);
+  else next.set(c.key, c.value);
+  return `${base}${query(next)}`;
+};
+const active = groups.flatMap((g) => g.chips).filter(isOn);
+const clear = `${base}${query(new URLSearchParams())}`;
+---
+
+<div class="filter-bar">
+  <div class="filter-row hide-sm">
+    {
+      groups.map((g) => (
+        <div class="filter-group" role="group" aria-label={g.label}>
+          {g.chips.map((c) => (
+            <a class="chip filter-chip" href={toggle(c)} aria-current={isOn(c) ? "true" : undefined} rel="nofollow">
+              {c.label}
+            </a>
+          ))}
+        </div>
+      ))
+    }
+    {active.length > 0 && <a class="t-13 link" href={clear} rel="nofollow">Clear filters</a>}
+  </div>
+
+  <div class="filter-row show-sm">
+    <button type="button" class="btn btn-secondary btn-sm" data-filters-open aria-haspopup="dialog">
+      <Icon name="sliders" size={16} />
+      Filters{active.length > 0 && <span class="filter-count">{active.length}</span>}
+    </button>
+    {
+      active.map((c) => (
+        <a class="chip filter-chip" href={toggle(c)} aria-current="true" rel="nofollow" aria-label={`Remove ${c.label}`}>
+          {c.label} <Icon name="x" size={14} />
+        </a>
+      ))
+    }
+  </div>
+
+  <dialog class="filter-sheet" aria-labelledby="filter-sheet-title">
+    <div class="sheet-head">
+      <h2 id="filter-sheet-title" class="t-17">Filters</h2>
+      <button type="button" class="icon-link" data-filters-close aria-label="Close"><Icon name="x" /></button>
+    </div>
+    <div class="sheet-body">
+      {
+        groups.map((g) => (
+          <div class="stack-8">
+            <div class="t-13 muted">{g.label}</div>
+            <div class="filter-group" role="group" aria-label={g.label}>
+              {g.chips.map((c) => (
+                <a class="chip filter-chip" href={toggle(c)} aria-current={isOn(c) ? "true" : undefined} rel="nofollow">
+                  {c.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+    {
+      active.length > 0 && (
+        <div class="sheet-foot">
+          <a class="btn btn-ghost" href={clear} rel="nofollow">
+            Clear filters
+          </a>
+        </div>
+      )
+    }
+  </dialog>
+</div>
+
+<style>
+  .filter-bar {
+    margin-bottom: 16px;
+  }
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 20px;
+  }
+  .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  /* Desktop: dividers between groups, so the row reads as a toolbar rather than a second category strip. */
+  .hide-sm .filter-group + .filter-group {
+    padding-left: 20px;
+    border-left: 1px solid var(--border);
+  }
+  .filter-chip {
+    height: 32px;
+    font-size: var(--fs-13);
+    gap: 4px;
+  }
+  .filter-chip[aria-current="true"] {
+    background: var(--text);
+    border-color: var(--text);
+    color: #fff;
+  }
+  .filter-chip :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+  .filter-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--text);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .show-sm {
+    display: none;
+  }
+  @media (max-width: 720px) {
+    .hide-sm {
+      display: none;
+    }
+    .show-sm {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  /* Bottom sheet on phones */
+  .filter-sheet {
+    margin: auto 0 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 85vh;
+    padding: 0;
+    border: 0;
+    border-radius: 16px 16px 0 0;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .filter-sheet::backdrop {
+    background: rgb(0 0 0 / 0.35);
+  }
+  .sheet-head,
+  .sheet-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+  }
+  .sheet-head {
+    border-bottom: 1px solid var(--border);
+  }
+  .sheet-foot {
+    border-top: 1px solid var(--border);
+  }
+  .sheet-body {
+    display: grid;
+    gap: 20px;
+    padding: 16px;
+  }
+</style>
+
+<script>
+  // Opens the filter sheet; a tap on the backdrop or the close button closes it.
+  document.querySelectorAll<HTMLDialogElement>(".filter-sheet").forEach((sheet) => {
+    const bar = sheet.closest(".filter-bar");
+    bar?.querySelector("[data-filters-open]")?.addEventListener("click", () => sheet.showModal());
+    sheet.querySelector("[data-filters-close]")?.addEventListener("click", () => sheet.close());
+    sheet.addEventListener("click", (e) => {
+      if (e.target === sheet) sheet.close();
+    });
+  });
+</script>

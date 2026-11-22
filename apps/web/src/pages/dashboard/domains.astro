@@ -19,6 +19,8 @@ const fromNew = Astro.url.searchParams.get("from") === "new";
         {fromNew ? "Before publishing, verify the domain your product lives on." : "Verify each domain once. Every product you publish must live on one of your verified domains."}
       </p>
     </div>
-    <Domains client:load initial={res.ok ? res.data.items : []} emailVerified={me.emailVerified} />
+    <div>
+      <Domains client:load initial={res.ok ? res.data.items : []} emailVerified={me.emailVerified} />
+    </div>
   </div>
 </DashboardLayout>

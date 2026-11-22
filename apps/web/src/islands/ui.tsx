@@ -25,6 +25,26 @@ export function useAction<A extends unknown[], R>(fn: (...args: A) => Promise<R>
   return { run, busy, error, setError };
 }
 
+/**
+ * Adopts what was typed or autofilled into server-rendered fields before the island hydrated.
+ * That text is in the DOM but not in React state, so the next render (or a submit) would lose it.
+ * `fields` maps an element id to the setter of its state.
+ */
+export function useAdoptTyped(fields: Record<string, (value: string) => void>) {
+  useEffect(() => {
+    // Recorded by the inline script in Base.astro; React resets a textarea while hydrating, so the
+    // DOM alone is not enough. The DOM check still covers autofill, which fires no input event.
+    const typed = (window as unknown as { __typed?: Record<string, string> }).__typed ?? {};
+    for (const [id, set] of Object.entries(fields)) {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+      if (id in typed) set(typed[id]!);
+      else if (el && el.value !== el.defaultValue) set(el.value);
+      delete typed[id];
+    }
+    // Once, right after hydration.
+  }, []);
+}
+
 export function Spinner() {
   return <span className="spinner" aria-hidden="true" />;
 }

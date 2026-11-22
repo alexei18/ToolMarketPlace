@@ -2,37 +2,45 @@
 import "../styles/global.css";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import { serializeJsonLd, webPageJsonLd, type JsonLdGraph } from "@tm/shared";
+import Seo from "../components/Seo.astro";
 import { siteConfig } from "../lib/config";
-import { inlineJson } from "../lib/safe";
+import { homeSeo, withSite, type SeoText } from "../lib/seo";
 
 interface Props {
+  /** Page name; the title becomes "<title> · <site>". */
   title?: string;
+  /** A full title and description from a docs/SEO.md template (lib/seo.ts); wins over `title`. */
+  seo?: SeoText;
   description?: string;
-  /** Absolute or root-relative canonical path; defaults to the current path without query. */
+  /** Root-relative or absolute canonical; defaults to the requested path (also after a rewrite). Query params are always dropped. */
   canonical?: string;
   image?: string | null;
+  /** Pixel size of `image` (the default OG image is 1200×630). */
+  imageSize?: { width: number; height: number };
   noindex?: boolean;
   query?: string;
-  jsonLd?: Record<string, unknown> | null;
+  /** Built with the JSON-LD helpers in @tm/shared (docs/SEO.md). */
+  jsonLd?: JsonLdGraph | null;
   /** Hide header/footer (auth pages). */
   bare?: boolean;
+  /** false hides only the header (the waitlist homepage, whose catalog links would redirect back). */
+  header?: boolean;
 }
 
-const { siteName, siteUrl, apiUrl, turnstileSiteKey } = siteConfig();
-const {
-  title,
-  description = `Discover new apps and tools the day they launch on ${siteName}. Follow categories, get member perks and help makers shape their roadmap.`,
-  canonical = Astro.url.pathname,
-  image = null,
-  noindex = false,
-  query,
-  jsonLd = null,
-  bare = false,
-} = Astro.props;
+const { siteName, siteUrl, apiUrl, turnstileSiteKey, posthogKey, posthogHost } = siteConfig();
+const { title, seo, description, canonical = Astro.originPathname, image = null, imageSize, noindex = false, query, jsonLd = null, bare = false, header = true } = Astro.props;
 
-const fullTitle = title ? `${title} · ${siteName}` : `${siteName} · New digital products, every day`;
-const canonicalUrl = canonical.startsWith("http") ? canonical : `${siteUrl}${canonical}`;
+const home = homeSeo(siteName);
+const fullTitle = seo?.title ?? (title ? withSite(title, siteName) : home.title);
+const metaDescription = seo?.description ?? description ?? home.description;
+// No query or fragment, and no trailing slash except on the home page (originPathname may add one).
+const canonicalPath = canonical.split(/[?#]/)[0]!.replace(/(.)\/$/, "$1");
+const canonicalUrl = canonicalPath.startsWith("http") ? canonicalPath : `${siteUrl}${canonicalPath}`;
 const ogImage = image ?? `${siteUrl}/og.png`;
+const ogSize = image ? imageSize : { width: 1200, height: 630 };
+// Indexable pages without their own graph still describe themselves (docs/SEO.md: JSON-LD on every public page).
+const graph = jsonLd ?? (noindex ? null : webPageJsonLd({ name: title ?? fullTitle, description: metaDescription, url: canonicalUrl, home: `${siteUrl}/` }));
 ---
 
 <!doctype html>
@@ -40,24 +48,11 @@ const ogImage = image ?? `${siteUrl}/og.png`;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{fullTitle}</title>
-    <meta name="description" content={description} />
-    <link rel="canonical" href={canonicalUrl} />
-    {noindex && <meta name="robots" content="noindex, nofollow" />}
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content={siteName} />
-    <meta property="og:title" content={title ?? siteName} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:image" content={ogImage} />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#ffffff" />
+    <Seo title={fullTitle} description={metaDescription} canonical={canonicalUrl} image={ogImage} imageWidth={ogSize?.width} imageHeight={ogSize?.height} noindex={noindex} siteName={siteName} />
+    <meta name="theme-color" content="#111111" />
     <meta name="api-origin" content={apiUrl} />
     {turnstileSiteKey && <meta name="turnstile-site-key" content={turnstileSiteKey} />}
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="preconnect" href={apiUrl} crossorigin="use-credentials" />
+    {posthogKey && posthogHost && <meta name="posthog" content={posthogKey} data-host={posthogHost} />}
     <script is:inline>
       // Runs before paint: mark signed-in visitors (hint cookie only, no secrets) so cached pages
       // can show the right header without a flash, and send them from the landing page to their feed.
@@ -65,19 +60,41 @@ const ogImage = image ?? `${siteUrl}/og.png`;
         document.documentElement.dataset.auth = "1";
         if (location.pathname === "/" && !location.search.includes("home=1")) location.replace("/feed");
       }
+      // Remembers what is typed into a field before its form's script has loaded (slow connections);
+      // the form adopts it when it starts (useAdoptTyped). Fields React already manages are skipped.
+      window.__typed = {};
+      addEventListener(
+        "input",
+        function (e) {
+          var t = e.target;
+          if (!t || !t.id) return;
+          var managed = Object.keys(t).some(function (k) {
+            return k.indexOf("__reactFiber") === 0;
+          });
+          if (!managed) window.__typed[t.id] = t.value;
+        },
+        true,
+      );
     </script>
-    {jsonLd && <script type="application/ld+json" set:html={inlineJson(jsonLd)} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preconnect" href={apiUrl} crossorigin="use-credentials" />
+    {graph && <script type="application/ld+json" set:html={serializeJsonLd(graph)} />}
     <slot name="head" />
   </head>
   <body>
     <a class="visually-hidden" href="#main">Skip to content</a>
-    {!bare && <Header query={query} />}
+    {!bare && header && <Header query={query} />}
     <main id="main">
       <slot />
     </main>
     {!bare && <Footer />}
     <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
     <script>
+      import "../scripts/analytics";
       import "../scripts/global";
     </script>
   </body>

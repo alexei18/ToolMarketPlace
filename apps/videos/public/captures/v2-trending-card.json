@@ -1,0 +1,29 @@
+{
+  "name": "v2-trending-card",
+  "route": "/trending",
+  "width": 300,
+  "height": 2045,
+  "scale": 3,
+  "states": {
+    "default": "captures/v2-trending-card.png",
+    "saved": "captures/v2-trending-card-saved.png"
+  },
+  "targets": {
+    "row": {
+      "x": 16,
+      "y": 343.46875,
+      "w": 268,
+      "h": 243.0625,
+      "text": {
+        "name": 15,
+        "secondary": 12
+      }
+    },
+    "save": {
+      "x": 142,
+      "y": 537.53125,
+      "w": 37,
+      "h": 32
+    }
+  }
+}

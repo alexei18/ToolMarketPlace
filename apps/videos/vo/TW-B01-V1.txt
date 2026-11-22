@@ -1,0 +1,5 @@
+STYLE (Google AI Studio): Read this like a friendly tech creator on TikTok: upbeat, quick and conversational, natural rhythm, no long pauses between sentences.
+VOICE: Google AI Studio (Gemini TTS), the same voice as TEST-01
+SAVE AS: vo/TW-B01-V1.wav
+---
+Someone built the app you've been looking for. You'll never see it. They worked on it for months, and launched it on a quiet Tuesday. A few friends saved it, and then the feed moved on. The good stuff gets buried under whoever shouts loudest. Tryworthy ranks every new launch by what real people save and try. So the good ones find you first. Be first to find the new apps worth trying. Join the waitlist, link in bio.

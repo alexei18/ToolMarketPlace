@@ -1,0 +1,10 @@
+---
+import SiteList from "../components/SiteList.astro";
+import { loadSiteList } from "../lib/site-lists";
+
+const view = await loadSiteList("top", Astro.url);
+if (view.page) Astro.cache.set({ maxAge: 60, swr: 60, tags: ["products"] });
+else Astro.response.status = 503;
+---
+
+<SiteList {...view} />

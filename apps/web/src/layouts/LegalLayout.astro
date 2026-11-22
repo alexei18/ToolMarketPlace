@@ -1,0 +1,103 @@
+---
+/*
+ * One layout for every legal page (docs/LEGAL.md). The text is Markdown in src/content/legal/<id>.md,
+ * so it can be edited without touching code; the table of contents comes from its "##" headings.
+ */
+import { en } from "@tm/shared/copy";
+import { getEntry, render } from "astro:content";
+import Icon from "../components/Icon.astro";
+import { siteConfig } from "../lib/config";
+import { longDate } from "../lib/format";
+import Base from "./Base.astro";
+
+interface Props {
+  /** File name in src/content/legal, without .md */
+  id: string;
+}
+
+const entry = await getEntry("legal", Astro.props.id);
+if (!entry) throw new Error(`Missing legal page: ${Astro.props.id}`);
+const { Content, headings } = await render(entry);
+const toc = headings.filter((h) => h.depth === 2);
+const { legalDraft } = siteConfig();
+const { title, description, updated } = entry.data;
+---
+
+<Base title={title} description={description}>
+  <div class="container container-narrow page legal">
+    {
+      legalDraft && (
+        <div class="notice notice-warning legal-draft" role="note">
+          <Icon name="alert" />
+          <span>{en.legal.draft}</span>
+        </div>
+      )
+    }
+    <header class="legal-head">
+      <h1 class="t-32">{title}</h1>
+      <p class="t-13 muted">{en.legal.updated(longDate(updated.getTime() / 1000))}</p>
+    </header>
+    {
+      toc.length > 1 && (
+        <nav class="legal-toc" aria-labelledby="legal-toc-h">
+          <h2 id="legal-toc-h" class="t-13 w-600">
+            {en.legal.contents}
+          </h2>
+          <ol>
+            {toc.map((h) => (
+              <li>
+                <a href={`#${h.slug}`}>{h.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+    <article class="prose legal-body">
+      <Content />
+    </article>
+    <slot />
+  </div>
+</Base>
+
+<style>
+  .legal-draft {
+    margin-bottom: 24px;
+  }
+  .legal-head {
+    display: grid;
+    gap: 8px;
+  }
+  .legal-toc {
+    margin-top: 28px;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    max-width: 680px;
+  }
+  .legal-toc ol {
+    margin-top: 8px;
+    padding-left: 22px;
+    display: grid;
+    gap: 4px;
+    font-size: var(--fs-15);
+  }
+  .legal-toc a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .legal-body {
+    margin-top: 32px;
+  }
+  .legal-body :global(h2) {
+    font-size: var(--fs-22);
+    margin-top: 40px;
+    scroll-margin-top: 80px;
+  }
+  .legal-body :global(h3) {
+    scroll-margin-top: 80px;
+  }
+  .legal-body :global(code) {
+    overflow-wrap: anywhere;
+  }
+</style>

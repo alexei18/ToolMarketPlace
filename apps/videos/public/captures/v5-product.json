@@ -1,0 +1,22 @@
+{
+  "name": "v5-product",
+  "route": "/p/formorchard",
+  "width": 390,
+  "height": 1645,
+  "scale": 2,
+  "states": {
+    "default": "captures/v5-product.png"
+  },
+  "targets": {
+    "perks": {
+      "x": 16,
+      "y": 801.140625,
+      "w": 358,
+      "h": 145.984375,
+      "text": {
+        "name": 17,
+        "secondary": 13
+      }
+    }
+  }
+}

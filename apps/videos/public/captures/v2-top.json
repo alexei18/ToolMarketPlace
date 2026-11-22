@@ -1,0 +1,30 @@
+{
+  "name": "v2-top",
+  "route": "/top",
+  "width": 390,
+  "height": 3073,
+  "scale": 2,
+  "states": {
+    "default": "captures/v2-top.png"
+  },
+  "targets": {
+    "trendingTab": {
+      "x": 140.109375,
+      "y": 228.6875,
+      "w": 62.71875,
+      "h": 47.25,
+      "text": {
+        "secondary": 15
+      }
+    },
+    "tabs": {
+      "x": 16,
+      "y": 228.6875,
+      "w": 358,
+      "h": 48.25,
+      "text": {
+        "secondary": 15
+      }
+    }
+  }
+}

@@ -21,8 +21,10 @@ const STATUS: Partial<Record<ErrorCode, ContentfulStatusCode>> = {
   DOMAIN_TAKEN: 409,
   ALREADY_CLAIMED: 409,
   ALREADY_REPORTED: 409,
+  CONTEST_CLOSED: 409,
   USERNAME_TAKEN: 409,
   PERK_UNAVAILABLE: 410,
+  GONE: 410,
   VERIFICATION_FAILED: 422,
   FETCH_FAILED: 422,
   RATE_LIMITED: 429,
@@ -34,7 +36,7 @@ export class ApiError extends Error {
   constructor(
     public code: ErrorCode,
     message: string,
-    public extra: { existing?: string; fields?: Record<string, string[]> } = {},
+    public extra: { existing?: string; fields?: Record<string, string[]>; category?: { slug: string; name: string } } = {},
   ) {
     super(message);
   }
@@ -50,15 +52,47 @@ export class ApiError extends Error {
 
 export const notFound = (what = "Not found") => new ApiError("NOT_FOUND", what);
 
+type Issue = ZodError["issues"][number];
+
+/** A sentence a person can act on, instead of Zod's wording ("Too small: expected string to have >=1 characters"). */
+function issueMessage(issue: Issue): string {
+  const i = issue as Issue & { origin?: string; minimum?: number | bigint; maximum?: number | bigint; format?: string };
+  switch (i.code) {
+    case "too_small":
+      if (i.origin === "string") return Number(i.minimum) <= 1 ? "This can't be empty" : `Use at least ${i.minimum} characters`;
+      if (i.origin === "array" || i.origin === "set") return Number(i.minimum) <= 1 ? "Pick at least one" : `Pick at least ${i.minimum}`;
+      return `Must be at least ${i.minimum}`;
+    case "too_big":
+      if (i.origin === "string") return `Use at most ${i.maximum} characters`;
+      if (i.origin === "array" || i.origin === "set") return `Pick at most ${i.maximum}`;
+      return `Must be at most ${i.maximum}`;
+    case "invalid_format":
+      return i.format === "url" ? "Enter a full link, like https://example.com" : i.format === "email" ? "Enter a valid email address" : "This doesn't look right";
+    case "invalid_type":
+      return /received (undefined|null)$/.test(i.message) ? "This is required" : "This doesn't look right";
+    case "custom":
+      return i.message;
+    default:
+      return "This doesn't look right";
+  }
+}
+
+/** "sharedCode" -> "Shared code", for the one-line summary of the first problem. */
+function fieldLabel(path: Issue["path"]): string {
+  const name = [...path].reverse().find((p): p is string => typeof p === "string");
+  if (!name) return "";
+  const words = name.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ").toLowerCase();
+  return `${words[0]!.toUpperCase()}${words.slice(1)}: `;
+}
+
 export function zodToApiError(err: ZodError): ApiError {
   const fields: Record<string, string[]> = {};
   for (const issue of err.issues) {
     const key = issue.path.join(".") || "_";
-    (fields[key] ??= []).push(issue.message);
+    (fields[key] ??= []).push(issueMessage(issue));
   }
   const first = err.issues[0];
-  const where = first?.path.length ? `${first.path.join(".")}: ` : "";
-  return new ApiError("VALIDATION", `${where}${first?.message ?? "Invalid input"}`, { fields });
+  return new ApiError("VALIDATION", first ? `${fieldLabel(first.path)}${issueMessage(first)}` : "Invalid input", { fields });
 }
 
 export function errorResponse(c: Context, err: unknown) {

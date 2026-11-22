@@ -15,6 +15,48 @@
       "when": 1791357210157,
       "tag": "0001_fts_and_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793116276581,
+      "tag": "0002_ranking_signals",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1793168056725,
+      "tag": "0003_ranking_views",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793380799825,
+      "tag": "0004_terms_acceptance",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1793383000718,
+      "tag": "0005_user_data_rights",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793386091278,
+      "tag": "0006_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1793552428983,
+      "tag": "0007_waitlist",
+      "breakpoints": true
     }
   ]
 }

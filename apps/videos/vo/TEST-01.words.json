@@ -1,0 +1,122 @@
+[
+  {
+    "word": "New",
+    "start": 0.025,
+    "end": 0.15
+  },
+  {
+    "word": "apps",
+    "start": 0.15,
+    "end": 0.365
+  },
+  {
+    "word": "launch",
+    "start": 0.405,
+    "end": 0.65
+  },
+  {
+    "word": "every",
+    "start": 0.65,
+    "end": 0.9
+  },
+  {
+    "word": "day.",
+    "start": 0.9,
+    "end": 1.265
+  },
+  {
+    "word": "Here",
+    "start": 1.265,
+    "end": 1.49
+  },
+  {
+    "word": "are",
+    "start": 1.49,
+    "end": 1.68
+  },
+  {
+    "word": "the",
+    "start": 1.68,
+    "end": 1.87
+  },
+  {
+    "word": "ones",
+    "start": 1.87,
+    "end": 2.13
+  },
+  {
+    "word": "worth",
+    "start": 2.13,
+    "end": 2.43
+  },
+  {
+    "word": "trying,",
+    "start": 2.43,
+    "end": 2.95
+  },
+  {
+    "word": "ranked",
+    "start": 2.95,
+    "end": 3.265
+  },
+  {
+    "word": "by",
+    "start": 3.37,
+    "end": 3.41
+  },
+  {
+    "word": "what",
+    "start": 3.39,
+    "end": 3.64
+  },
+  {
+    "word": "real",
+    "start": 3.64,
+    "end": 4.08
+  },
+  {
+    "word": "people",
+    "start": 4.08,
+    "end": 4.365
+  },
+  {
+    "word": "save",
+    "start": 4.48,
+    "end": 4.87
+  },
+  {
+    "word": "and",
+    "start": 4.87,
+    "end": 5.15
+  },
+  {
+    "word": "try.",
+    "start": 5.15,
+    "end": 5.84
+  },
+  {
+    "word": "Find",
+    "start": 5.84,
+    "end": 5.94
+  },
+  {
+    "word": "them",
+    "start": 5.94,
+    "end": 6.12
+  },
+  {
+    "word": "before",
+    "start": 6.12,
+    "end": 6.39
+  },
+  {
+    "word": "everyone",
+    "start": 6.39,
+    "end": 6.75
+  },
+  {
+    "word": "else.",
+    "start": 6.75,
+    "end": 7.085
+  }
+]

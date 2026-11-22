@@ -1,0 +1,116 @@
+---
+/*
+ * Public list of available perks (docs/SEO.md). Codes stay hidden: claiming happens on the product
+ * page and needs an account. Rendered as a visitor so the cached page is the same for everyone.
+ */
+import type { PublicPerkDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
+import EmptyState from "../../components/EmptyState.astro";
+import ErrorState from "../../components/ErrorState.astro";
+import ProductImage from "../../components/ProductImage.astro";
+import Base from "../../layouts/Base.astro";
+import { apiCall } from "../../lib/api";
+import { siteConfig } from "../../lib/config";
+import { PERK_TYPE_LABEL, expiresLabel } from "../../lib/format";
+import { perksSeo } from "../../lib/seo";
+
+const res = await apiCall<{ items: PublicPerkDTO[] }>("/perks");
+if (res.ok) Astro.cache.set({ maxAge: 60, swr: 60, tags: ["products"] });
+else Astro.response.status = 503;
+const items = res.ok ? res.data.items : [];
+const { siteName } = siteConfig();
+---
+
+<Base seo={perksSeo(siteName)}>
+  <div class="container container-narrow page">
+    <header class="perks-head">
+      <h1 class="t-32">{en.perksPage.h1}</h1>
+      <a class="t-13 link member-only-inline" href="/perks/claimed">Your perks</a>
+    </header>
+    <section class="section-tight">
+      {!res.ok && <ErrorState />}
+      {res.ok && items.length === 0 && <EmptyState title={en.perksPage.empty} />}
+      {
+        items.length > 0 && (
+          <ul class="list-plain">
+            {items.map((p) => {
+              const expires = expiresLabel(p.expiresAt);
+              return (
+                <li class="perk-row">
+                  <a class="thumb" href={`/p/${p.product.slug}`} aria-hidden="true" tabindex="-1">
+                    <ProductImage image={p.product.image} title={p.product.title} sizes="120px" />
+                  </a>
+                  <div>
+                    <a class="w-600 t-17" href={`/p/${p.product.slug}`}>
+                      {p.product.title}
+                    </a>
+                    <div class="t-15">{p.title}</div>
+                    <div class="t-13 muted">
+                      {PERK_TYPE_LABEL[p.type]}
+                      {expires && <> · {expires}</>}
+                    </div>
+                  </div>
+                  <div class="perk-action">
+                    <a class="btn btn-dark btn-sm member-only-inline" href={`/p/${p.product.slug}#perks-title`}>
+                      Claim
+                    </a>
+                    <a class="btn btn-secondary btn-sm visitor-only-inline" href={`/login?next=${encodeURIComponent(`/p/${p.product.slug}`)}`} rel="nofollow">
+                      {en.product.perkSignIn}
+                    </a>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+</Base>
+
+<style>
+  .perks-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .perk-row {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .perk-row .thumb {
+    aspect-ratio: 16 / 10;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .perk-row .thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Members claim on the product page; visitors sign in first. */
+  .member-only-inline {
+    display: none;
+  }
+  :global(html[data-auth="1"]) .member-only-inline {
+    display: inline-flex;
+  }
+  :global(html[data-auth="1"]) .visitor-only-inline {
+    display: none;
+  }
+  @media (max-width: 560px) {
+    .perk-row {
+      grid-template-columns: 88px minmax(0, 1fr);
+      align-items: start;
+    }
+    .perk-action {
+      grid-column: 2;
+    }
+  }
+</style>

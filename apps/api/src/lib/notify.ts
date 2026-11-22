@@ -1,6 +1,7 @@
 import { inArray } from "drizzle-orm";
 import { notifications, pushSubscriptions, type Database } from "@tm/db";
 import { newId, nowSec, type NotificationPayload, type NotificationType } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import type { Env } from "../env";
 import { sendPush, type VapidKeys } from "./webpush";
 
@@ -16,12 +17,12 @@ export function pushMessage(env: Env, payload: NotificationPayload): { title: st
     case "digest": {
       const n = payload.products.length;
       return {
-        title: `${n} new ${n === 1 ? "product" : "products"} in your categories`,
+        title: payload.category ? en.notifications.digestTitle(payload.category.name, n) : `${n} new ${n === 1 ? "product" : "products"} in your categories`,
         body: payload.products
           .slice(0, 3)
           .map((p) => p.title)
           .join(" · "),
-        url: `${web}/feed`,
+        url: payload.category ? `${web}/c/${payload.category.slug}` : `${web}/feed`,
       };
     }
     case "feedback_reply":
@@ -30,6 +31,15 @@ export function pushMessage(env: Env, payload: NotificationPayload): { title: st
       return { title: `Shipped in ${payload.productTitle}`, body: payload.itemTitle, url: `${web}/p/${payload.productSlug}/roadmap` };
     case "system":
       return { title: payload.title, body: payload.body, url: payload.href ? `${web}${payload.href}` : `${web}/notifications` };
+    case "launch":
+      return {
+        title: en.notifications.launchDay,
+        body: payload.products
+          .slice(0, 3)
+          .map((p) => p.title)
+          .join(" · "),
+        url: `${web}/feed`,
+      };
   }
 }
 

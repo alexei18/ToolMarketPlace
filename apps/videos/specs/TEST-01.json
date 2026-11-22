@@ -1,0 +1,116 @@
+{
+  "id": "TEST-01",
+  "concept": "Pipeline test: a word-synced kinetic hook, the real Top this week page in a phone, a cut to the first row as a CardCrop with a tap on Save, then the endscreen.",
+  "script": "New apps launch every day. Here are the ones worth trying, ranked by what real people save and try. Find them before everyone else.",
+  "beats": [
+    {
+      "cue": "new",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "New apps",
+          "launch",
+          "every day."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "every",
+          "day"
+        ],
+        "size": 140
+      }
+    },
+    {
+      "cue": "here",
+      "scene": "PhoneFrame",
+      "props": {
+        "capture": "top-mobile",
+        "scroll": [
+          {
+            "y": 0
+          },
+          {
+            "cue": "worth",
+            "y": 240
+          }
+        ]
+      }
+    },
+    {
+      "cue": "ranked",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "top-card",
+        "target": "row1",
+        "cursor": [
+          {
+            "cue": "save",
+            "target": "save1",
+            "tap": true
+          }
+        ],
+        "state": {
+          "cue": "save",
+          "name": "saved",
+          "delayFrames": 1
+        }
+      }
+    }
+  ],
+  "style": {
+    "theme": "light",
+    "keywords": [
+      "worth",
+      "trying",
+      "real",
+      "people"
+    ]
+  },
+  "endscreen": "light",
+  "cover": {
+    "cue": "day",
+    "offsetFrames": 3
+  },
+  "captures": {
+    "top-mobile": {
+      "route": "/top",
+      "width": 390,
+      "height": 844,
+      "scale": 2,
+      "targets": {
+        "row1": "li.product-row:nth-of-type(1)",
+        "save1": "li.product-row:nth-of-type(1) [data-save]"
+      },
+      "states": {
+        "saved": [
+          {
+            "selector": "li.product-row:nth-of-type(1) [data-save]",
+            "attributes": {
+              "aria-pressed": "true"
+            }
+          }
+        ]
+      }
+    },
+    "top-card": {
+      "route": "/top",
+      "width": 300,
+      "height": 700,
+      "scale": 2,
+      "targets": {
+        "row1": "li.product-row:nth-of-type(1)",
+        "save1": "li.product-row:nth-of-type(1) [data-save]"
+      },
+      "states": {
+        "saved": [
+          {
+            "selector": "li.product-row:nth-of-type(1) [data-save]",
+            "attributes": {
+              "aria-pressed": "true"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

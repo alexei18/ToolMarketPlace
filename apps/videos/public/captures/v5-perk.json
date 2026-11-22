@@ -1,0 +1,30 @@
+{
+  "name": "v5-perk",
+  "route": "/p/formorchard",
+  "width": 390,
+  "height": 1645,
+  "scale": 5,
+  "states": {
+    "default": "captures/v5-perk.png"
+  },
+  "targets": {
+    "badge": {
+      "x": 217.578125,
+      "y": 824.390625,
+      "w": 135.421875,
+      "h": 20.140625,
+      "text": {
+        "secondary": 13
+      }
+    },
+    "claim": {
+      "x": 173.703125,
+      "y": 860.78125,
+      "w": 179.296875,
+      "h": 32,
+      "text": {
+        "secondary": 13
+      }
+    }
+  }
+}

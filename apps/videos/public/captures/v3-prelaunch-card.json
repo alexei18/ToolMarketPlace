@@ -1,0 +1,40 @@
+{
+  "name": "v3-prelaunch-card",
+  "route": "/top?stage=beta",
+  "width": 300,
+  "height": 1718,
+  "scale": 3,
+  "states": {
+    "default": "captures/v3-prelaunch-card.png"
+  },
+  "targets": {
+    "row": {
+      "x": 16,
+      "y": 1115.078125,
+      "w": 268,
+      "h": 237.203125,
+      "text": {
+        "name": 15,
+        "secondary": 12
+      }
+    },
+    "title": {
+      "x": 142,
+      "y": 1131.078125,
+      "w": 142,
+      "h": 19.5,
+      "text": {
+        "name": 15
+      }
+    },
+    "badge": {
+      "x": 142,
+      "y": 1219,
+      "w": 79.984375,
+      "h": 22,
+      "text": {
+        "secondary": 12
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "v4-ranking-card",
+  "route": "/top",
+  "width": 320,
+  "height": 3630,
+  "scale": 3,
+  "states": {
+    "default": "captures/v4-ranking-card.png"
+  },
+  "targets": {
+    "line": {
+      "x": 16,
+      "y": 286.9375,
+      "w": 268,
+      "h": 56.53125,
+      "text": {
+        "secondary": 13
+      }
+    }
+  }
+}

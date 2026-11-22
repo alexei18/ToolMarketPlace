@@ -1,5 +1,6 @@
 /* Small behaviors shared by every page. Kept framework-free so public pages ship almost no JS. */
 import { beacon, del, errorMessage, get, goToLogin, hasSession, put, toast } from "../lib/client";
+import { utmParams, withUtm } from "../lib/utm";
 
 const SAVED_KEY = "tm:saved-ids";
 
@@ -122,8 +123,13 @@ async function loadMore(btn: HTMLButtonElement) {
 
 markSaved();
 
-if ("serviceWorker" in navigator) {
-  const register = () => navigator.serviceWorker.register("/sw.js").catch(() => {});
-  if ("requestIdleCallback" in window) requestIdleCallback(register);
-  else setTimeout(register, 2000);
+// First-touch source: internal links keep the landing link's utm_* params until sign-up (lib/utm.ts).
+const utm = utmParams(location.search);
+if (utm) {
+  const carry = (e: Event) => {
+    const a = (e.target as HTMLElement).closest?.<HTMLAnchorElement>("a[href^='/']:not([href^='//'])");
+    if (a) a.setAttribute("href", withUtm(a.getAttribute("href")!, utm));
+  };
+  document.addEventListener("click", carry, true);
+  document.addEventListener("auxclick", carry, true);
 }

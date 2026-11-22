@@ -5,6 +5,7 @@
  * It goes through the real API (sign-up, uploads, publishing) and only uses direct SQL for what
  * can't be done offline: confirming emails, verifying demo domains and spreading launch dates.
  */
+import { TERMS_VERSION } from "@tm/shared";
 import { mockScreenshot } from "./mock-image";
 
 const API = process.env.API_URL ?? "http://localhost:8787";
@@ -38,10 +39,15 @@ class Session {
   }
 }
 
+let invited = 0;
+
 async function account(email: string, name: string): Promise<{ s: Session; id: string }> {
   const s = new Session();
+  // While the waitlist runs only invited makers can sign up: invite the demo account (removed at the end).
+  invited++;
+  await sql(`INSERT OR IGNORE INTO waitlist (id, email, role, ref_code, confirmed_at, invited_at, created_at) VALUES ('seed-${invited}', '${email}', 'maker', 'seed${invited}', 1, 1, 1)`);
   try {
-    const r = await s.req<{ user: { id: string } }>("POST", "/auth/sign-up/email", { email, password: PASSWORD, name });
+    const r = await s.req<{ user: { id: string } }>("POST", "/auth/sign-up/email", { email, password: PASSWORD, name, acceptedTerms: TERMS_VERSION });
     return { s, id: r.user.id };
   } catch {
     const r = await s.req<{ user: { id: string } }>("POST", "/auth/sign-in/email", { email, password: PASSWORD });
@@ -378,6 +384,8 @@ async function main() {
       }
     }
   }
+
+  await sql(`DELETE FROM waitlist WHERE id LIKE 'seed-%'`);
 
   console.log(`\nDone. Log in at ${WEB}/login with alex@demo.dev / ${PASSWORD} (member), admin@example.com / ${PASSWORD} (admin),`);
   console.log(`or a maker, e.g. mara@ledgerly.app / ${PASSWORD}.`);

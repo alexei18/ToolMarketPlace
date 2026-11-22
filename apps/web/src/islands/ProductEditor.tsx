@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { PERK_TYPES } from "@tm/shared/enums";
-import type { CategoryDTO, FeedbackDTO, MakerProductDetailDTO, Page, PerkMakerDTO, PerkType, RoadmapItemDTO, RoadmapStatus, StatsDTO } from "@tm/shared";
-import { del, get, patch, post, put, toast } from "../lib/client";
+import type { CategoryDTO, FeedbackDTO, MakerProductDetailDTO, Page, PerkMakerDTO, PerkType, QualityChecksDTO, RoadmapItemDTO, RoadmapStatus, StatsDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
+import { ClientError, del, get, patch, post, put, toast } from "../lib/client";
 import { FEEDBACK_TYPE_LABEL, PERK_TYPE_LABEL, ROADMAP_LABEL, timeAgo } from "../lib/format";
-import { ExternalLink, Plus, Trash2 } from "./icons";
+import { Check, ExternalLink, Plus, Trash2, X } from "./icons";
 import ProductForm, { toPayload, type ProductFormValue } from "./ProductForm";
 import { Button, Empty, Field, Notice, Segmented, useAction } from "./ui";
 
@@ -66,6 +67,7 @@ export default function ProductEditor({ product, categories, justPublished, init
           </div>
         </div>
       </div>
+      {product.status === "live" && <QualityChecklist quality={product.quality} />}
       <div className="tabs" role="tablist">
         {TABS.map((t) => (
           <button key={t.id} role="tab" type="button" aria-selected={tab === t.id} onClick={() => go(t.id)}>
@@ -84,6 +86,35 @@ export default function ProductEditor({ product, categories, justPublished, init
   );
 }
 
+/* Quality conditions for Top and Trending (the score itself is never shown) */
+
+function QualityChecklist({ quality }: { quality: QualityChecksDTO }) {
+  const c = en.makers.checklist;
+  const items: [boolean, string][] = [
+    [quality.link, c.link],
+    [quality.image, c.image],
+    [quality.description, c.description],
+    [quality.tagline, c.tagline],
+    [quality.noOpenReview, c.noOpenReview],
+  ];
+  return (
+    <section className="box-surface stack-8" aria-labelledby="quality-title">
+      <h2 id="quality-title" className="t-15 w-600">
+        {c.title}
+      </h2>
+      <ul className="list-plain quality-list">
+        {items.map(([ok, label]) => (
+          <li key={label} data-ok={ok}>
+            {ok ? <Check size={15} aria-hidden="true" /> : <X size={15} aria-hidden="true" />}
+            <span>{label}</span>
+            <span className="visually-hidden">{ok ? "(done)" : "(missing)"}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /* Details */
 
 function Details({ product, categories }: { product: MakerProductDetailDTO; categories: CategoryDTO[] }) {
@@ -97,6 +128,8 @@ function Details({ product, categories }: { product: MakerProductDetailDTO; cate
     feedbackMode: product.feedbackMode,
     roadmapEnabled: product.roadmapEnabled,
     images: product.images,
+    hasAi: product.hasAi,
+    platforms: product.platforms,
   });
   const save = useAction(
     async () => {
@@ -119,7 +152,7 @@ function Details({ product, categories }: { product: MakerProductDetailDTO; cate
       }}
     >
       <Field label="Link">
-        <div className="row">
+        <div className="row row-wrap">
           <span className="mono t-15">{product.url}</span>
           <span className="t-13 muted">(the link can't be changed; delete and republish to move it)</span>
         </div>
@@ -190,6 +223,12 @@ function Perks({ productId, initial }: { productId: string; initial: PerkMakerDT
       { type: "extended_trial", title: "", details: "", sharedCode: "", redeemUrl: "", maxClaims: "", expiresAt: "", active: true, newCodes: "", claimCount: 0, codesLeft: 0, codesTotal: 0 },
     ]);
   const save = useAction(async () => {
+    const untitled = perks.findIndex((p) => !p.title.trim());
+    if (untitled >= 0) throw new ClientError(0, "VALIDATION", `Give perk ${untitled + 1} a title.`);
+    const noCode = perks.find((p) => p.type === "coupon" && !p.sharedCode.trim());
+    if (noCode) throw new ClientError(0, "VALIDATION", `Add the coupon code for “${noCode.title.trim()}”.`);
+    const noCodes = perks.find((p) => p.type === "unique_codes" && !p.id && !p.newCodes.trim());
+    if (noCodes) throw new ClientError(0, "VALIDATION", `Add at least one code for “${noCodes.title.trim()}”.`);
     const body = {
       perks: perks.map((p) => ({
         id: p.id,
@@ -222,11 +261,11 @@ function Perks({ productId, initial }: { productId: string; initial: PerkMakerDT
         </Empty>
       )}
       {perks.map((p, i) => (
-        <fieldset className="box stack-16" key={p.id ?? `new-${i}`} style={{ margin: 0 }}>
+        <fieldset className="box stack-16" key={p.id ?? `new-${i}`} style={{ marginInline: 0, marginBottom: 0, minWidth: 0 }}>
           <div className="spread">
             <legend className="w-600">{p.title || "New perk"}</legend>
             <div className="row">
-              {p.id && <span className="t-13 muted">{p.claimCount} claimed</span>}
+              {p.id && <span className="t-13 muted nowrap">{p.claimCount} claimed</span>}
               <Button type="button" variant="ghost" size="sm" aria-label="Remove perk" onClick={() => setPerks((ps) => ps.filter((_, j) => j !== i))}>
                 <Trash2 size={14} />
               </Button>
@@ -373,7 +412,7 @@ function FeedbackRow({ f, product, onChange }: { f: FeedbackDTO; product: MakerP
     <li className="feedback-item">
       <div className="spread">
         <div className="row">
-          <span className="w-600">{f.author.name}</span>
+          <span className="w-600">{f.author?.name ?? en.deletedUser}</span>
           <span className="t-13 muted">{timeAgo(f.createdAt)}</span>
           {!f.isPublic && <span className="t-13 muted">· Private</span>}
         </div>
@@ -476,7 +515,7 @@ function RoadmapTab({ product }: { product: MakerProductDetailDTO }) {
       {items && items.length === 0 && <Empty title="No roadmap items" text="Add what you're planning, or turn feedback ideas into items." />}
       {items && items.length > 0 && (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table table-stack">
             <thead>
               <tr>
                 <th>Item</th>
@@ -492,7 +531,9 @@ function RoadmapTab({ product }: { product: MakerProductDetailDTO }) {
                     <div className="w-600">{i.title}</div>
                     {i.description && <div className="t-13 muted">{i.description}</div>}
                   </td>
-                  <td className="num">{i.voteCount}</td>
+                  <td className="num" data-label="Votes">
+                    {i.voteCount}
+                  </td>
                   <td>
                     <select className="select" style={{ width: 150 }} value={i.status} onChange={(e) => setStatus.run(i.id, e.target.value as RoadmapStatus)} aria-label="Status">
                       {(["planned", "in_progress", "shipped"] as const).map((s) => (

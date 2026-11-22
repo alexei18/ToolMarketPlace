@@ -27,6 +27,7 @@ export const context: MiddlewareHandler<AppEnv> = async (c, next) => {
   c.set("auth", auth);
   c.set("limits", resolveLimits(c.env));
   c.set("user", null);
+  c.set("suspendedUser", null);
   c.set("sessionId", null);
 
   const cookie = c.req.header("cookie") ?? "";
@@ -39,7 +40,10 @@ export const context: MiddlewareHandler<AppEnv> = async (c, next) => {
         .map((e) => e.trim().toLowerCase())
         .filter(Boolean);
       const role = u.role === "admin" || (u.emailVerified && admins.includes(u.email.toLowerCase())) ? "admin" : "user";
-      c.set("user", { ...u, role, bannedAt: u.bannedAt ?? null, onboardedAt: u.onboardedAt ?? null, username: u.username ?? null, bio: u.bio ?? null, image: u.image ?? null, digestFrequency: u.digestFrequency ?? "weekly" });
+      const full: SessionUser = { ...u, role, bannedAt: u.bannedAt ?? null, onboardedAt: u.onboardedAt ?? null, termsVersion: u.termsVersion ?? null, username: u.username ?? null, bio: u.bio ?? null, image: u.image ?? null, digestFrequency: u.digestFrequency ?? "weekly" };
+      // Suspended accounts can sign in to read and contest the suspension, nothing else: everywhere
+      // else they count as signed out, so they can't act or send ranking signals.
+      c.set(full.bannedAt ? "suspendedUser" : "user", full);
       c.set("sessionId", session.session.id);
     }
   }
@@ -90,8 +94,15 @@ export const originCheck: MiddlewareHandler<AppEnv> = async (c, next) => {
 
 export function requireUser(c: Context<AppEnv>): SessionUser {
   const user = c.get("user");
+  if (c.get("suspendedUser")) throw new ApiError("BANNED", "This account has been suspended.");
   if (!user) throw new ApiError("UNAUTHORIZED", "Sign in to continue.");
-  if (user.bannedAt) throw new ApiError("BANNED", "This account has been suspended.");
+  return user;
+}
+
+/** Any signed-in account, suspended ones included (the suspension page and contests). */
+export function requireAccount(c: Context<AppEnv>): SessionUser {
+  const user = c.get("user") ?? c.get("suspendedUser");
+  if (!user) throw new ApiError("UNAUTHORIZED", "Sign in to continue.");
   return user;
 }
 

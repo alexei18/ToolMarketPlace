@@ -1,0 +1,15 @@
+---
+import ErrorState from "../components/ErrorState.astro";
+import Base from "../layouts/Base.astro";
+
+// Shown (by rewrite) when the API can't be reached, so an outage doesn't look like a missing page or a logout.
+Astro.response.status = 503;
+Astro.response.headers.set("Cache-Control", "private, no-store");
+Astro.response.headers.set("Retry-After", "30");
+---
+
+<Base title="Temporarily unavailable" noindex>
+  <div class="container container-narrow page">
+    <ErrorState />
+  </div>
+</Base>

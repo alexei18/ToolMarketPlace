@@ -1,0 +1,20 @@
+---
+import Base from "../layouts/Base.astro";
+
+// Product pages rewrite here (keeping their URL) when the product is hidden or removed (docs/SEO.md).
+Astro.response.status = 410;
+const category = Astro.locals.goneCategory ?? null;
+---
+
+<Base title="Product no longer listed" noindex>
+  <div class="container container-narrow page">
+    <div class="stack-16" style="padding-top: 48px">
+      <p class="eyebrow">410</p>
+      <h1 class="t-48">This product is no longer listed.</h1>
+      <p class="t-17 muted">It was removed, or it is under review.</p>
+      <p style="margin-top: 24px">
+        {category ? <a class="btn btn-dark" href={`/c/${category.slug}`}>More in {category.name}</a> : <a class="btn btn-dark" href="/">Back to the home page</a>}
+      </p>
+    </div>
+  </div>
+</Base>

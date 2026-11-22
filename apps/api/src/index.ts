@@ -2,6 +2,8 @@ import { createApp } from "./app";
 import type { Env } from "./env";
 import { runDigest } from "./jobs/digest";
 import { checkUsage, cleanup } from "./jobs/maintenance";
+import { runRanking } from "./jobs/ranking";
+import { processWaitlistEmails } from "./lib/waitlist";
 import { services } from "./middleware";
 
 const app = createApp();
@@ -11,14 +13,26 @@ export default {
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     const { db } = services(env);
+    // 03:00 UTC: retention cleanup and usage alerts.
     if (controller.cron === "0 3 * * *") {
       ctx.waitUntil(
         (async () => {
-          await cleanup(db);
+          await cleanup(env, db);
           const alerts = await checkUsage(env, db);
           if (alerts.length) console.warn("[usage] alerts", alerts);
         })(),
       );
+      return;
+    }
+    if (controller.cron === "*/30 * * * *") {
+      ctx.waitUntil(
+        (async () => {
+          const result = await runRanking(db, controller.scheduledTime);
+          console.log("[ranking]", JSON.stringify(result));
+        })(),
+      );
+      // Waitlist emails held back by the email quota, and the invite batches.
+      ctx.waitUntil(processWaitlistEmails(env, db, controller.scheduledTime).then((r) => console.log("[waitlist]", JSON.stringify(r))));
       return;
     }
     // 08:00, 08:20 and 08:40 UTC: digest batches (the later runs continue where the first stopped).

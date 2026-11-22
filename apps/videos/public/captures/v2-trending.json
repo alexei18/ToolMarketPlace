@@ -1,0 +1,11 @@
+{
+  "name": "v2-trending",
+  "route": "/trending",
+  "width": 390,
+  "height": 1809,
+  "scale": 2,
+  "states": {
+    "default": "captures/v2-trending.png"
+  },
+  "targets": {}
+}

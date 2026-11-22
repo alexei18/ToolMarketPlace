@@ -1,0 +1,51 @@
+{
+  "source": "vo\\TW-B01-V4.wav",
+  "output": "public\\vo\\TW-B01-V4.wav",
+  "originalSeconds": 25.96,
+  "trimmedHead": 0.21,
+  "trimmedTail": 0.28,
+  "silenceThresholdDb": -44.9,
+  "pausesShortened": [
+    {
+      "at": 3.38,
+      "was": 0.35,
+      "now": 0.18
+    },
+    {
+      "at": 5.93,
+      "was": 0.47,
+      "now": 0.18
+    },
+    {
+      "at": 9.15,
+      "was": 0.43,
+      "now": 0.18
+    },
+    {
+      "at": 10.72,
+      "was": 0.62,
+      "now": 0.18
+    },
+    {
+      "at": 18.35,
+      "was": 0.4,
+      "now": 0.18
+    },
+    {
+      "at": 22.16,
+      "was": 0.33,
+      "now": 0.18
+    },
+    {
+      "at": 23.77,
+      "was": 0.39,
+      "now": 0.18
+    }
+  ],
+  "wordCount": 80,
+  "wordsPerSecondBefore": 3.37,
+  "finalSeconds": 23.705,
+  "wordsPerSecondAfter": 3.37,
+  "loudnessLufs": -14.2,
+  "truePeakDb": -1.83
+}

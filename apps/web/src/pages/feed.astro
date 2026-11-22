@@ -1,20 +1,27 @@
 ---
 import type { Page, ProductCardDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import EmptyState from "../components/EmptyState.astro";
 import ErrorState from "../components/ErrorState.astro";
 import ProductList from "../components/ProductList.astro";
+import RankTabs from "../components/RankTabs.astro";
 import Base from "../layouts/Base.astro";
 import { apiCall } from "../lib/api";
+import { listParams, listQuery } from "../lib/listing";
 import { requireMe } from "../lib/session";
 
 const me = await requireMe(Astro);
 if (me instanceof Response) return me;
 if (!me.onboarded) return Astro.redirect("/onboarding");
 
-const res = await apiCall<Page<ProductCardDTO>>("/feed", { request: Astro.request });
+const { sort, filters } = listParams(Astro.url);
+const view = listQuery(sort, filters);
+const res = await apiCall<Page<ProductCardDTO>>(`/feed${view}`, { request: Astro.request });
+const fragment = `/fragments/products?${new URLSearchParams({ source: "feed", ...(sort !== "top" ? { sort } : {}), ...Object.fromEntries(filters) })}`;
 const cats = await apiCall<{ items: { slug: string; name: string }[] }>("/categories");
 const names = new Map((cats.ok ? cats.data.items : []).map((c) => [c.slug, c.name]));
 const verified = Astro.url.searchParams.get("verified") === "1";
+const welcome = Astro.url.searchParams.get("welcome") === "1";
 const firstName = me.name.split(" ")[0];
 ---
 
@@ -22,15 +29,18 @@ const firstName = me.name.split(" ")[0];
   <div class="container page">
     <div class="grid-12">
       <div class="span-8">
-        {verified && <div class="notice notice-success" style="margin-bottom: 24px">Your email is confirmed. Perks and publishing are unlocked.</div>}
+        {verified && <div class="notice notice-success" style="margin-bottom: 24px">Your email is confirmed. You can now claim perks and publish products.</div>}
+        {welcome && <div class="notice notice-success" style="margin-bottom: 24px">{me.prelaunch ? en.prelaunch.onboardingDone : en.onboarding.done}</div>}
         <header class="stack-8">
           <h1 class="t-32">New for you, {firstName}</h1>
           <p class="muted">The newest launches in the categories you follow.</p>
         </header>
         <section class="section-tight">
+          <RankTabs base="/feed" sort={sort} filters={filters} />
+          <h2 class="visually-hidden">{en.feed.tabs[sort]}</h2>
           {!res.ok && <ErrorState />}
           {
-            res.ok && res.data.items.length === 0 && (
+            res.ok && res.data.items.length === 0 && sort === "new" && (
               <EmptyState title="Quiet in your categories" text="Nothing new yet. Follow a few more categories or explore everything that launched recently.">
                 <a class="btn btn-secondary" href="/settings#interests">Edit categories</a>
                 <a class="btn btn-dark" href="/search">Explore all</a>
@@ -38,15 +48,13 @@ const firstName = me.name.split(" ")[0];
             )
           }
           {
-            res.ok && res.data.items.length > 0 && (
-              <>
-                <div class="section-head">
-                  <h2>Newest first</h2>
-                </div>
-                <ProductList id="feed-list" products={res.data.items} source="/fragments/products?source=feed" nextCursor={res.data.nextCursor} />
-              </>
+            res.ok && res.data.items.length === 0 && sort !== "new" && (
+              <EmptyState title="Nothing ranked here yet" text="New launches need a few days of saves, perk claims and feedback to show up here.">
+                <a class="btn btn-secondary" href={`/feed${listQuery("new", filters)}`}>{en.feed.tabs.new}</a>
+              </EmptyState>
             )
           }
+          {res.ok && res.data.items.length > 0 && <ProductList id="feed-list" products={res.data.items} source={fragment} nextCursor={res.data.nextCursor} />}
         </section>
       </div>
       <aside class="span-4">

@@ -1,5 +1,6 @@
 ---
 import type { ProductDetailDTO } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import ErrorState from "../../../components/ErrorState.astro";
 import Icon from "../../../components/Icon.astro";
 import ProductLayout from "../../../layouts/ProductLayout.astro";
@@ -9,6 +10,10 @@ import { apiCall } from "../../../lib/api";
 const slug = Astro.params.slug!;
 const res = await apiCall<ProductDetailDTO>(`/products/${encodeURIComponent(slug)}`);
 if (!res.ok && res.status === 404) return Astro.rewrite("/404");
+if (!res.ok && res.status === 410) {
+  Astro.locals.goneCategory = res.error.category;
+  return Astro.rewrite("/gone");
+}
 if (res.ok) Astro.cache.set({ maxAge: 300, swr: 60, tags: ["products", `p:${slug}`] });
 else Astro.response.status = 503;
 const p = res.ok ? res.data : null;
@@ -27,7 +32,7 @@ const p = res.ok ? res.data : null;
             <a class="box box-tight teaser" href={`/p/${p.slug}/feedback`}>
               <Icon name="message" size={18} />
               <span>
-                <span class="w-600">Tell the maker what you think</span>
+                <span class="w-600">{en.product.feedbackPrompt}</span>
                 <span class="t-13 muted">{p.feedbackMode === "public" ? "Bugs, ideas and praise are public." : "Feedback goes privately to the maker."}</span>
               </span>
             </a>
@@ -69,7 +74,7 @@ const p = res.ok ? res.data : null;
     display: grid;
     gap: 2px;
   }
-  .teaser svg {
+  .teaser :global(svg) {
     margin-top: 2px;
   }
 </style>

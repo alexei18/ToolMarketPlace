@@ -1,0 +1,27 @@
+{
+  "kit-feed": {
+    "route": "/top",
+    "width": 390,
+    "height": 1100,
+    "scale": 2,
+    "targets": {
+      "save1": "li.product-row .save-btn",
+      "row1": "li.product-row",
+      "title1": "li.product-row h3.title"
+    },
+    "states": {
+      "saved": [
+        {
+          "selector": "li.product-row .save-btn",
+          "attributes": {
+            "aria-pressed": "true"
+          }
+        }
+      ]
+    },
+    "boxes": {
+      "skeleton": "header .wordmark, header .icon-link, main h1, .filter-bar, .rank-tabs, li.product-row .thumb, li.product-row h3.title, li.product-row p.tagline, li.product-row .meta, li.product-row .save-btn",
+      "rows": "li.product-row"
+    }
+  }
+}

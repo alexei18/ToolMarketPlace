@@ -1,0 +1,223 @@
+{
+  "id": "TW-B01-V5",
+  "batch": "TW-B01",
+  "concept": "Perks only here: curiosity and reveal for explorers. The real product page, the perk card is the hero, springs and a card that flips to reveal the offer.",
+  "meta": {
+    "title": "Perks only here",
+    "audience": "Explorers",
+    "message": "Perks and early access you can't get anywhere else.",
+    "hookType": "Curiosity + reveal",
+    "hookText": "What if new apps gave you a free month just for trying them first?",
+    "visualStyle": "Real Tryworthy product page; the perk card is the hero",
+    "animationStyle": "Springs; a card flips to reveal the offer",
+    "coverText": "A free month for trying",
+    "caption": "What if new apps gave you a free month just for trying them first? Perks only on Tryworthy. Join the waitlist, link in bio.",
+    "hashtags": [
+      "#newapps",
+      "#freeperks",
+      "#techtok"
+    ],
+    "pinnedComment": "Which app would you trade a free month for? Join the waitlist, link in bio.",
+    "musicSearch": "playful bright pop",
+    "changedVariable": ""
+  },
+  "script": "What if new apps gave you a free month just for trying them first? On Tryworthy, makers offer perks you can't get anywhere else. An extended trial, a discount, or a code that only works here. You find them right on the product page, marked Only on Tryworthy. Sign in, claim the perk, and try the app before everyone else. The maker gets a real user, and you get the deal. Join the waitlist, link in bio.",
+  "beats": [
+    {
+      "cue": "what",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "What if new apps",
+          "gave you a free",
+          "month just for",
+          "trying them first?"
+        ],
+        "mode": "slam",
+        "highlight": [
+          "free",
+          "month"
+        ],
+        "size": 100
+      }
+    },
+    {
+      "cue": "on",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "On Tryworthy,",
+          "makers",
+          "offer perks"
+        ],
+        "mode": "slam",
+        "highlight": [
+          "perks"
+        ],
+        "size": 120
+      }
+    },
+    {
+      "cue": "you#2",
+      "scene": "CardReveal",
+      "props": {
+        "front": {
+          "title": "Formorchard",
+          "text": "Forms that fill a simple database for you"
+        },
+        "back": {
+          "badge": "Only on Tryworthy",
+          "title": "Pro plan, first month free",
+          "text": "Perks makers give only here."
+        },
+        "flipCue": "anywhere"
+      }
+    },
+    {
+      "cue": "an",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "An extended",
+          "trial, a discount,",
+          "or a code that",
+          "only works here."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "only"
+        ],
+        "size": 110
+      }
+    },
+    {
+      "cue": "you#3",
+      "scene": "PhoneFrame",
+      "props": {
+        "capture": "v5-product",
+        "scroll": [
+          {
+            "y": 0
+          },
+          {
+            "cue": "right",
+            "y": 130
+          },
+          {
+            "cue": "product",
+            "y": 500
+          }
+        ]
+      }
+    },
+    {
+      "cue": "marked",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "v5-perk",
+        "target": "badge",
+        "sweep": [
+          {
+            "cue": "only#2"
+          },
+          {
+            "cue": "tryworthy#2"
+          }
+        ]
+      }
+    },
+    {
+      "cue": "sign",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "v5-perk",
+        "target": "claim",
+        "cursor": [
+          {
+            "cue": "sign",
+            "target": "claim",
+            "tap": false
+          },
+          {
+            "cue": "claim",
+            "target": "claim",
+            "tap": true
+          }
+        ],
+        "sweep": [
+          {
+            "cue": "perk"
+          }
+        ]
+      }
+    },
+    {
+      "cue": "try",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Try the",
+          "app before",
+          "everyone",
+          "else."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "before"
+        ],
+        "size": 130
+      }
+    },
+    {
+      "cue": "the#4",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "The maker gets",
+          "a real user, you",
+          "get the deal."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "deal"
+        ],
+        "size": 110
+      }
+    }
+  ],
+  "style": {
+    "theme": "light",
+    "keywords": [
+      "free",
+      "perks",
+      "only",
+      "deal"
+    ]
+  },
+  "endscreen": "light",
+  "cover": {
+    "cue": "first",
+    "offsetFrames": 6
+  },
+  "captures": {
+    "v5-product": {
+      "route": "/p/formorchard",
+      "width": 390,
+      "height": 844,
+      "scale": 2,
+      "targets": {
+        "perks": "section.perks"
+      }
+    },
+    "v5-perk": {
+      "route": "/p/formorchard",
+      "width": 390,
+      "height": 844,
+      "scale": 5,
+      "targets": {
+        "badge": "section.perks .perk-badge",
+        "claim": "section.perks [data-claim]"
+      }
+    }
+  }
+}

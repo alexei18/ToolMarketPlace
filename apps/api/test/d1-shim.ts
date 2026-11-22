@@ -112,6 +112,7 @@ interface StoredObject {
   httpMetadata: R2HTTPMetadata;
   customMetadata: Record<string, string>;
   etag: string;
+  uploaded: Date;
 }
 
 export function createR2(): R2Bucket & { objects: Map<string, StoredObject> } {
@@ -123,6 +124,7 @@ export function createR2(): R2Bucket & { objects: Map<string, StoredObject> } {
     httpEtag: `"${o.etag}"`,
     httpMetadata: o.httpMetadata,
     customMetadata: o.customMetadata,
+    uploaded: o.uploaded,
     writeHttpMetadata(h: Headers) {
       if (o.httpMetadata.contentType) h.set("content-type", o.httpMetadata.contentType);
       if (o.httpMetadata.cacheControl) h.set("cache-control", o.httpMetadata.cacheControl);
@@ -132,7 +134,7 @@ export function createR2(): R2Bucket & { objects: Map<string, StoredObject> } {
     objects,
     async put(key: string, value: Uint8Array | ArrayBuffer | string, opts: R2PutOptions = {}) {
       const body = typeof value === "string" ? new TextEncoder().encode(value) : value instanceof Uint8Array ? value : new Uint8Array(value);
-      const o: StoredObject = { body, httpMetadata: (opts.httpMetadata as R2HTTPMetadata) ?? {}, customMetadata: opts.customMetadata ?? {}, etag: crypto.randomUUID() };
+      const o: StoredObject = { body, httpMetadata: (opts.httpMetadata as R2HTTPMetadata) ?? {}, customMetadata: opts.customMetadata ?? {}, etag: crypto.randomUUID(), uploaded: new Date() };
       objects.set(key, o);
       return meta(key, o);
     },
@@ -145,8 +147,16 @@ export function createR2(): R2Bucket & { objects: Map<string, StoredObject> } {
       if (!o) return null;
       return { ...meta(key, o), body: new Response(o.body).body, arrayBuffer: async () => o.body.buffer };
     },
-    async delete(key: string) {
-      objects.delete(key);
+    async delete(keys: string | string[]) {
+      for (const key of Array.isArray(keys) ? keys : [keys]) objects.delete(key);
+    },
+    async list(opts: R2ListOptions = {}) {
+      const keys = [...objects.keys()].filter((k) => k.startsWith(opts.prefix ?? "")).sort();
+      const start = opts.cursor ? Number(opts.cursor) : 0;
+      const limit = opts.limit ?? 1000;
+      const page = keys.slice(start, start + limit);
+      const truncated = start + limit < keys.length;
+      return { objects: page.map((k) => meta(k, objects.get(k)!)), truncated, cursor: truncated ? String(start + limit) : undefined, delimitedPrefixes: [] };
     },
   };
   return bucket as unknown as R2Bucket & { objects: Map<string, StoredObject> };

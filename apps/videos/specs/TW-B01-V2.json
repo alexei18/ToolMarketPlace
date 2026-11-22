@@ -1,0 +1,267 @@
+{
+  "id": "TW-B01-V2",
+  "batch": "TW-B01",
+  "concept": "Before it trends: POV plus demo for creators. The real Trending tab in a phone, fast cuts, zoom on taps, a cursor.",
+  "meta": {
+    "title": "Before it trends",
+    "audience": "Explorers, content creators",
+    "message": "Find apps before they go viral.",
+    "hookType": "POV + demo",
+    "hookText": "Every app that went viral was on someone's screen first. Here's how to be that someone.",
+    "visualStyle": "Real Tryworthy UI (Trending, feed) in a phone",
+    "animationStyle": "Fast cuts, zoom on taps, cursor",
+    "coverText": "Find it before it trends",
+    "caption": "Every app that went viral was on someone's screen first. Want to be that someone? Join the waitlist, link in bio.",
+    "hashtags": [
+      "#newapps",
+      "#techtok",
+      "#contentcreator",
+      "#appdiscovery"
+    ],
+    "pinnedComment": "Which app do you wish you'd found earlier? Join the waitlist, link in bio.",
+    "musicSearch": "upbeat tech electronic",
+    "changedVariable": ""
+  },
+  "script": "Every app that went viral was on someone's screen first. Here's how to be that someone. Open Tryworthy and tap the Trending tab. It shows what's picking up speed this week, before it hits your feed. Spot one you like and save it. Want something nobody has covered yet? Filter for Pre-launch and try it before everyone else. Then be the first to make a video about it. That's how you find it before it trends. Join the waitlist, link in bio.",
+  "beats": [
+    {
+      "cue": "every",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Every app that",
+          "went viral was",
+          "on someone's",
+          "screen first."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "viral"
+        ],
+        "size": 100
+      }
+    },
+    {
+      "cue": "here's",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Here's how",
+          "to be that",
+          "someone."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "someone"
+        ],
+        "size": 120
+      }
+    },
+    {
+      "cue": "open",
+      "scene": "PhoneFrame",
+      "props": {
+        "capture": "v2-top",
+        "zoom": {
+          "cue": "tap",
+          "target": "tabs",
+          "scale": 1.4,
+          "centerX": 150
+        },
+        "cursor": [
+          {
+            "cue": "trending",
+            "target": "trendingTab",
+            "tap": true
+          }
+        ]
+      }
+    },
+    {
+      "cue": "it",
+      "scene": "PhoneFrame",
+      "props": {
+        "capture": "v2-trending",
+        "scroll": [
+          {
+            "y": 0
+          },
+          {
+            "cue": "picking",
+            "y": 200
+          },
+          {
+            "cue": "week",
+            "y": 380
+          },
+          {
+            "cue": "hits",
+            "y": 560
+          }
+        ]
+      }
+    },
+    {
+      "cue": "spot",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "v2-trending-card",
+        "target": "row",
+        "cursor": [
+          {
+            "cue": "like",
+            "target": "save",
+            "tap": false
+          },
+          {
+            "cue": "save",
+            "target": "save",
+            "tap": true
+          }
+        ],
+        "state": {
+          "cue": "save",
+          "name": "saved",
+          "delayFrames": 1
+        }
+      }
+    },
+    {
+      "cue": "want",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Want",
+          "something",
+          "nobody has",
+          "covered yet?"
+        ],
+        "mode": "slam",
+        "highlight": [
+          "nobody"
+        ],
+        "size": 130
+      }
+    },
+    {
+      "cue": "filter",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "v2-prelaunch-card",
+        "target": "row",
+        "highlight": {
+          "cue": "pre-launch",
+          "target": "badge"
+        },
+        "cursor": [
+          {
+            "cue": "try",
+            "target": "title",
+            "tap": false
+          },
+          {
+            "cue": "everyone",
+            "target": "title",
+            "tap": true
+          }
+        ]
+      }
+    },
+    {
+      "cue": "then",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Then be the",
+          "first to make a",
+          "video about it."
+        ],
+        "mode": "typewriter",
+        "highlight": [
+          "first"
+        ],
+        "size": 110
+      }
+    },
+    {
+      "cue": "find",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Find it",
+          "before it",
+          "trends."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "trends"
+        ],
+        "size": 150
+      }
+    }
+  ],
+  "style": {
+    "theme": "light",
+    "keywords": [
+      "trending",
+      "speed",
+      "save",
+      "pre-launch",
+      "first"
+    ]
+  },
+  "endscreen": "light",
+  "cover": {
+    "cue": "first",
+    "offsetFrames": 3
+  },
+  "captures": {
+    "v2-top": {
+      "route": "/top",
+      "width": 390,
+      "height": 844,
+      "scale": 2,
+      "targets": {
+        "trendingTab": ".rank-tabs nav a[href=\"/trending\"]",
+        "tabs": ".rank-tabs nav.tabs"
+      }
+    },
+    "v2-trending": {
+      "route": "/trending",
+      "width": 390,
+      "height": 844,
+      "scale": 2
+    },
+    "v2-trending-card": {
+      "route": "/trending",
+      "width": 300,
+      "height": 700,
+      "scale": 3,
+      "targets": {
+        "row": "li.product-row:has(a.thumb[href=\"/p/clipharbor\"])",
+        "save": "li.product-row:has(a.thumb[href=\"/p/clipharbor\"]) [data-save]"
+      },
+      "states": {
+        "saved": [
+          {
+            "selector": "li.product-row:has(a.thumb[href=\"/p/clipharbor\"]) [data-save]",
+            "attributes": {
+              "aria-pressed": "true"
+            }
+          }
+        ]
+      }
+    },
+    "v2-prelaunch-card": {
+      "route": "/top?stage=beta",
+      "width": 300,
+      "height": 700,
+      "scale": 3,
+      "targets": {
+        "row": "li.product-row:has(a.thumb[href=\"/p/replyfern\"])",
+        "title": "li.product-row:has(a.thumb[href=\"/p/replyfern\"]) h3",
+        "badge": "li.product-row:has(a.thumb[href=\"/p/replyfern\"]) [data-badge=\"preLaunch\"]"
+      }
+    }
+  }
+}

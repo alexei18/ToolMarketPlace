@@ -1,0 +1,227 @@
+{
+  "id": "TW-B01-V1",
+  "batch": "TW-B01",
+  "concept": "Buried: a mini story. A maker launches a good app and nobody sees it; one app card is the character, a single light finds it.",
+  "meta": {
+    "title": "Buried",
+    "audience": "Both (explorers and makers)",
+    "message": "Good apps get lost in the noise.",
+    "hookType": "Mini story",
+    "hookText": "Someone built the app you've been looking for. You'll never see it.",
+    "visualStyle": "Dark, cinematic; one app card is the character",
+    "animationStyle": "Slow moves, a single light crossing the card",
+    "coverText": "The app you'll never see",
+    "caption": "Someone built the app you've been looking for, and you'll never see it. Want the good ones to find you first? Join the waitlist, link in bio.",
+    "hashtags": [
+      "#newapps",
+      "#appdiscovery",
+      "#techtok"
+    ],
+    "pinnedComment": "What's the best app you found by accident? Join the waitlist, link in bio.",
+    "musicSearch": "cinematic ambient slow",
+    "changedVariable": ""
+  },
+  "script": "Someone built the app you've been looking for. You'll never see it. They worked on it for months, and launched it on a quiet Tuesday. A few friends saved it, and then the feed moved on. The good stuff gets buried under whoever shouts loudest. Tryworthy ranks every new launch by what real people save and try. So the good ones find you first. Be first to find the new apps worth trying. Join the waitlist, link in bio.",
+  "beats": [
+    {
+      "cue": "someone",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Someone",
+          "built the app",
+          "you've been",
+          "looking for."
+        ],
+        "mode": "slam",
+        "size": 120
+      }
+    },
+    {
+      "cue": "you'll",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "You'll never",
+          "see it."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "never"
+        ],
+        "size": 150
+      }
+    },
+    {
+      "cue": "they",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "They worked on",
+          "it for months,"
+        ],
+        "mode": "typewriter",
+        "size": 110
+      }
+    },
+    {
+      "cue": "launched",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "v1-card",
+        "target": "row",
+        "highlight": {
+          "cue": "quiet",
+          "target": "title"
+        },
+        "cursor": [
+          {
+            "cue": "friends",
+            "target": "save",
+            "tap": false
+          },
+          {
+            "cue": "saved",
+            "target": "save",
+            "tap": true
+          }
+        ],
+        "state": {
+          "cue": "saved",
+          "name": "saved",
+          "delayFrames": 1
+        }
+      }
+    },
+    {
+      "cue": "then",
+      "scene": "PhoneFrame",
+      "props": {
+        "capture": "v1-new",
+        "scroll": [
+          {
+            "y": 0
+          },
+          {
+            "cue": "moved",
+            "y": 1500
+          }
+        ]
+      }
+    },
+    {
+      "cue": "the#3",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "The good stuff",
+          "gets buried",
+          "under whoever",
+          "shouts loudest."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "buried"
+        ],
+        "size": 110
+      }
+    },
+    {
+      "cue": "tryworthy",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "v1-card",
+        "target": "row",
+        "sweep": {
+          "cue": "new"
+        },
+        "highlight": {
+          "cue": "real",
+          "target": "title"
+        },
+        "state": {
+          "cue": "save",
+          "name": "saved",
+          "delayFrames": 1
+        }
+      }
+    },
+    {
+      "cue": "so",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "So the good",
+          "ones find",
+          "you first."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "first"
+        ],
+        "size": 120
+      }
+    },
+    {
+      "cue": "be",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Be first to find",
+          "the new apps",
+          "worth trying."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "worth",
+          "trying"
+        ],
+        "size": 120
+      }
+    }
+  ],
+  "style": {
+    "theme": "dark",
+    "keywords": [
+      "buried",
+      "real",
+      "people",
+      "worth",
+      "trying"
+    ]
+  },
+  "endscreen": "dark",
+  "cover": {
+    "cue": "it",
+    "offsetFrames": 4
+  },
+  "captures": {
+    "v1-card": {
+      "route": "/top",
+      "width": 300,
+      "height": 700,
+      "scale": 3,
+      "targets": {
+        "row": "li.product-row:has(a.thumb[href=\"/p/burrowlight\"])",
+        "title": "li.product-row:has(a.thumb[href=\"/p/burrowlight\"]) h3",
+        "save": "li.product-row:has(a.thumb[href=\"/p/burrowlight\"]) [data-save]"
+      },
+      "states": {
+        "saved": [
+          {
+            "selector": "li.product-row:has(a.thumb[href=\"/p/burrowlight\"]) [data-save]",
+            "attributes": {
+              "aria-pressed": "true"
+            }
+          }
+        ]
+      }
+    },
+    "v1-new": {
+      "route": "/new",
+      "width": 390,
+      "height": 844,
+      "scale": 2
+    }
+  }
+}

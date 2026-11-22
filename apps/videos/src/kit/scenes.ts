@@ -1,0 +1,87 @@
+/*
+ * The kit's components as data: their props by name and what each one sounds like. Pure TypeScript
+ * with type-only imports, so the node scripts (video-check) read the same cues the compositions play.
+ */
+import type { ChartDrawProps } from "./ChartDraw";
+import type { ChromeMarkProps } from "./ChromeMark";
+import type { ChromeWordmarkProps } from "./ChromeWordmark";
+import type { CounterRollProps } from "./CounterRoll";
+import { shiftCues, type Cue } from "./cues";
+import type { FlashInvertProps } from "./FlashInvert";
+import type { FloatCardProps } from "./FloatCard";
+import type { FocusPullProps } from "./FocusPull";
+import type { GridPopulateProps } from "./GridPopulate";
+import type { HeadlineSlamProps } from "./HeadlineSlam";
+import type { HudFrameProps } from "./HudFrame";
+import type { KaraokeCaptionProps } from "./KaraokeCaption";
+import { counterTicks, typeEvents } from "./lib";
+import type { LightSweepProps } from "./LightSweep";
+import type { ListCascadeProps } from "./ListCascade";
+import type { MatchCutProps } from "./MatchCut";
+import type { StageShotProps } from "./StageShot";
+import type { TypeBackspaceProps } from "./TypeBackspace";
+import type { UiDiveProps } from "./UiDive";
+import type { WireframeCollapseProps } from "./WireframeCollapse";
+
+export interface KitProps {
+  ChartDraw: ChartDrawProps;
+  ChromeMark: ChromeMarkProps;
+  ChromeWordmark: ChromeWordmarkProps;
+  CounterRoll: CounterRollProps;
+  FlashInvert: FlashInvertProps;
+  FloatCard: FloatCardProps;
+  FocusPull: FocusPullProps;
+  GridPopulate: GridPopulateProps;
+  HeadlineSlam: HeadlineSlamProps;
+  HudFrame: HudFrameProps;
+  KaraokeCaption: KaraokeCaptionProps;
+  LightSweep: LightSweepProps;
+  ListCascade: ListCascadeProps;
+  MatchCut: MatchCutProps;
+  Stage: StageShotProps;
+  TypeBackspace: TypeBackspaceProps;
+  UiDive: UiDiveProps;
+  WireframeCollapse: WireframeCollapseProps;
+}
+export type KitScene = keyof KitProps;
+
+/** A component placed somewhere, without its length (the timeline gives that). */
+export type KitBeat = { [S in KitScene]: { scene: S; props: Omit<KitProps[S], "durationInFrames"> } }[KitScene];
+
+/** Each component's sounds, in frames from its start. Transitions add the sounds of the shots they hold. */
+export const KIT_CUES: { [S in KitScene]: (p: KitProps[S]) => Cue[] } = {
+  ChartDraw: () => [{ frame: 0, type: "riserShort" }],
+  ChromeMark: (p) => [{ frame: 0, type: "swell" }, ...(p.sweepAt !== undefined ? [{ frame: p.sweepAt, type: "shimmer" as const }] : [])],
+  ChromeWordmark: (p) => [
+    { frame: 0, type: "impact" },
+    { frame: p.sweepAt ?? 12, type: "shimmer" },
+  ],
+  CounterRoll: (p) => counterTicks(p.settleAt).map((frame) => ({ frame, type: "tick" as const })),
+  FlashInvert: (p) => [...kitCues(p.a, p.at), { frame: p.at, type: "impactHeavy" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
+  FloatCard: () => [{ frame: 0, type: "swoosh" }],
+  FocusPull: (p) => [...kitCues(p.a, p.at + (p.frames ?? 16)), { frame: p.at, type: "whooshSoft" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
+  GridPopulate: (p) => [...p.items.map((_, i) => ({ frame: i * (p.stagger ?? 3), type: "pop" as const })), { frame: p.fadeAt, type: "tone" as const }],
+  HeadlineSlam: (p) => p.wordFrames.map((frame) => ({ frame, type: "clickDry" as const })),
+  HudFrame: (p) => (p.over ? kitCues(p.over, p.durationInFrames) : []),
+  KaraokeCaption: () => [],
+  LightSweep: (p) => [...kitCues(p.over, p.durationInFrames), { frame: p.at, type: "shimmer" }],
+  ListCascade: (p) => p.rowFrames.map((frame) => ({ frame, type: "whooshShort" as const })),
+  MatchCut: (p) => [{ frame: p.at - 14, type: "whooshShort" }, { frame: p.at, type: "impact" }, ...shiftCues(kitCues(p.b, p.durationInFrames - p.at), p.at)],
+  Stage: () => [],
+  TypeBackspace: (p) => typeEvents(p.steps).map((e) => ({ frame: e.frame, type: "key" as const, ...(e.kind === "erase" ? { gainDb: -4 } : {}) })),
+  UiDive: (p) => (p.clicks ?? []).map((c) => ({ frame: c.at, type: "clickUi" as const })),
+  WireframeCollapse: (p) => [
+    { frame: p.breakAt, type: "glitch" },
+    ...[0, 1, 2, 3, 4, 5].map((i) => ({ frame: p.breakAt + 6 + i * 7, type: "clickDry" as const })),
+    { frame: p.collapseAt, type: "whooshShort" },
+    { frame: p.collapseAt + 16, type: "clickUi" },
+  ],
+};
+
+/** Room tone under every shot. */
+export const stageCues = (durationInFrames: number): Cue[] => [{ frame: 0, type: "roomtone", loopFrames: durationInFrames }];
+
+export function kitCues(beat: KitBeat, durationInFrames: number): Cue[] {
+  const fn = KIT_CUES[beat.scene] as (p: unknown) => Cue[];
+  return fn({ ...beat.props, durationInFrames });
+}

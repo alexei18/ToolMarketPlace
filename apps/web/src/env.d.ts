@@ -14,6 +14,11 @@ interface WebBindings {
   PUBLIC_API_URL: string;
   TURNSTILE_SITE_KEY?: string;
   GOOGLE_ENABLED?: string;
+  /** "false" hides the "Draft — pending legal review" banner on the legal pages. */
+  LEGAL_DRAFT?: string;
+  /** PostHog project token (public) and ingestion host; analytics is off while the token is empty. */
+  POSTHOG_KEY?: string;
+  POSTHOG_HOST?: string;
   /** Shared with the API worker: authorizes /internal/purge and marks server-side API calls. */
   INTERNAL_SECRET?: string;
 }
@@ -24,4 +29,11 @@ declare namespace Cloudflare {
 
 declare module "cloudflare:workers" {
   export const env: Cloudflare.Env;
+}
+
+declare namespace App {
+  interface Locals {
+    /** Set before rewriting to /gone: the category a hidden or removed product was listed in. */
+    goneCategory?: { slug: string; name: string } | null;
+  }
 }

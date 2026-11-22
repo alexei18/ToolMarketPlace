@@ -1,0 +1,78 @@
+{
+  "source": "vo\\TEST-KIT.wav",
+  "output": "public\\vo\\TEST-KIT.wav",
+  "originalSeconds": 15.3,
+  "trimmedHead": 0.27,
+  "trimmedTail": 0.45,
+  "silenceThresholdDb": -51.5,
+  "pausesShortened": [
+    {
+      "at": 3.42,
+      "was": 0.45,
+      "now": 0.18
+    },
+    {
+      "at": 4.95,
+      "was": 0.44,
+      "now": 0.18
+    },
+    {
+      "at": 6.8,
+      "was": 0.47,
+      "now": 0.18
+    },
+    {
+      "at": 7.7,
+      "was": 0.39,
+      "now": 0.18
+    },
+    {
+      "at": 10.5,
+      "was": 0.34,
+      "now": 0.18
+    },
+    {
+      "at": 11.98,
+      "was": 0.41,
+      "now": 0.18
+    },
+    {
+      "at": 13.45,
+      "was": 0.35,
+      "now": 0.18
+    }
+  ],
+  "wordCount": 41,
+  "wordsPerSecondBefore": 3.16,
+  "finalSeconds": 15.135,
+  "wordsPerSecondAfter": 3.16,
+  "loudnessLufs": -14.28,
+  "truePeakDb": -1.88,
+  "beatsKept": [
+    {
+      "after": "for.",
+      "seconds": 0.6,
+      "was": 0.18
+    },
+    {
+      "after": "weekend.",
+      "seconds": 0.5,
+      "was": 0.17
+    },
+    {
+      "after": "visitor.",
+      "seconds": 0.4,
+      "was": 0.17
+    },
+    {
+      "after": "Them.",
+      "seconds": 0.8,
+      "was": 0.17
+    },
+    {
+      "after": "quiet.",
+      "seconds": 0.6,
+      "was": 0.03
+    }
+  ]
+}

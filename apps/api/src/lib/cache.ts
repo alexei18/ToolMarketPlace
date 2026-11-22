@@ -1,15 +1,16 @@
 import type { Env } from "../env";
 
-/** Web pages that show a product and must be refreshed after it changes. */
+/** Web pages that show a product and must be refreshed after it changes (the sitemaps list it too). */
 export function productPaths(slug: string, categorySlugs: string[] = []): string[] {
-  return ["/", `/p/${slug}`, `/p/${slug}/feedback`, `/p/${slug}/roadmap`, ...categorySlugs.map((c) => `/c/${c}`)];
+  return ["/", "/sitemap.xml", `/p/${slug}`, `/p/${slug}/feedback`, `/p/${slug}/roadmap`, ...categorySlugs.map((c) => `/c/${c}`)];
 }
 
-/** Cache tags the web pages set (see Astro.cache.set in apps/web): home, p:<slug>, c:<slug>. */
+/** Cache tags the web pages set (see Astro.cache.set in apps/web): home, sitemap, p:<slug>, c:<slug>. */
 export function tagsForPaths(paths: string[]): string[] {
   const tags = new Set<string>();
   for (const p of paths) {
     if (p === "/") tags.add("home");
+    if (p === "/sitemap.xml") tags.add("sitemap");
     const m = p.match(/^\/(p|c|m)\/([^/]+)$/);
     if (m) tags.add(`${m[1]}:${m[2]}`);
   }

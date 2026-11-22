@@ -6,8 +6,24 @@ export const GET: APIRoute = () => {
   const body = [
     "User-agent: *",
     "Allow: /",
-    // Account and tool pages are private and never indexed.
-    ...["/feed", "/saved", "/perks", "/notifications", "/settings", "/onboarding", "/dashboard", "/admin", "/login", "/signup", "/fragments", "/_internal"].map((p) => `Disallow: ${p}`),
+    // docs/SEO.md, plus the other account and tool pages, which are private and never indexed.
+    ...[
+      "/dashboard",
+      "/admin",
+      "/settings",
+      "/saved",
+      "/perks/claimed",
+      "/search",
+      "/api",
+      "/feed",
+      "/notifications",
+      "/onboarding",
+      "/login",
+      "/signup",
+      "/fragments",
+      "/internal",
+      "/_internal",
+    ].map((p) => `Disallow: ${p}`),
     "",
     `Sitemap: ${siteUrl}/sitemap.xml`,
     "",

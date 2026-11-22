@@ -1,0 +1,182 @@
+{
+  "id": "TW-B01-V4",
+  "batch": "TW-B01",
+  "concept": "Votes can't buy this: a hot take on launch leaderboards (no competitor named). High-contrast black and green, huge text dropping on the voice's rhythm, hard cuts.",
+  "meta": {
+    "title": "Votes can't buy this",
+    "audience": "Both (explorers and makers)",
+    "message": "Ranked by real signals; nobody pays to move up.",
+    "hookType": "Hot take",
+    "hookText": "Hot take: launch leaderboards are a popularity contest.",
+    "visualStyle": "High contrast black and green, huge text, clean meme style",
+    "animationStyle": "Hard cuts, text dropping on the voice's rhythm",
+    "coverText": "Votes can't buy this",
+    "caption": "Hot take: launch leaderboards are a popularity contest. Nobody can pay to rank higher on Tryworthy. Agree? Join the waitlist, link in bio.",
+    "hashtags": [
+      "#hottake",
+      "#techtok",
+      "#startups",
+      "#newapps"
+    ],
+    "pinnedComment": "Should leaderboards count votes at all? Join the waitlist, link in bio.",
+    "musicSearch": "bold hip hop instrumental beat",
+    "changedVariable": ""
+  },
+  "script": "Hot take, launch leaderboards are a popularity contest. Whoever brings the most votes on day one wins. That tells you who has the biggest audience, not which app is good. So we built the opposite of that. Tryworthy ranks every new launch by what people did with it this week. Saves, perk claims and feedback from verified accounts. Each person counts once, and makers' own activity doesn't count. Nobody can pay to rank higher. Join the waitlist, link in bio.",
+  "beats": [
+    {
+      "cue": "hot",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Hot take: launch",
+          "leaderboards",
+          "are a popularity",
+          "contest."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "popularity",
+          "contest"
+        ],
+        "size": 110
+      }
+    },
+    {
+      "cue": "whoever",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Whoever",
+          "brings the",
+          "most votes",
+          "on day",
+          "one wins."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "wins"
+        ],
+        "size": 140
+      }
+    },
+    {
+      "cue": "who",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Who has",
+          "the biggest",
+          "audience,",
+          "not which",
+          "app is good."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "good"
+        ],
+        "size": 110
+      }
+    },
+    {
+      "cue": "so",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "So we built",
+          "the opposite",
+          "of that."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "opposite"
+        ],
+        "size": 130
+      }
+    },
+    {
+      "cue": "every",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Every new launch,",
+          "ranked by what",
+          "people did with",
+          "it this week."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "people"
+        ],
+        "size": 100
+      }
+    },
+    {
+      "cue": "saves",
+      "scene": "CardCrop",
+      "props": {
+        "capture": "v4-ranking-card",
+        "target": "line",
+        "sweep": [
+          {
+            "cue": "claims"
+          },
+          {
+            "cue": "verified"
+          }
+        ],
+        "highlight": {
+          "cue": "feedback",
+          "target": "line"
+        }
+      }
+    },
+    {
+      "cue": "each",
+      "scene": "StatOrQuote",
+      "props": {
+        "label": "How ranking works",
+        "text": "Each person counts once, and makers' own activity doesn't count."
+      }
+    },
+    {
+      "cue": "nobody",
+      "scene": "KineticText",
+      "props": {
+        "lines": [
+          "Nobody",
+          "can pay to",
+          "rank higher."
+        ],
+        "mode": "slam",
+        "highlight": [
+          "nobody"
+        ],
+        "size": 140
+      }
+    }
+  ],
+  "style": {
+    "theme": "dark",
+    "keywords": [
+      "verified",
+      "nobody"
+    ]
+  },
+  "endscreen": "dark",
+  "cover": {
+    "cue": "contest",
+    "offsetFrames": 3
+  },
+  "captures": {
+    "v4-ranking-card": {
+      "route": "/top",
+      "width": 300,
+      "height": 700,
+      "scale": 3,
+      "targets": {
+        "line": ".rank-tabs p"
+      }
+    }
+  }
+}

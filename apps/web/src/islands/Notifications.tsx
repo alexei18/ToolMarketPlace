@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { NotificationDTO, Page } from "@tm/shared";
+import { en } from "@tm/shared/copy";
 import { get, post } from "../lib/client";
 import { timeAgo } from "../lib/format";
 import { Button, Empty, useAction } from "./ui";
@@ -14,13 +15,19 @@ function Content({ n }: { n: NotificationDTO }) {
     case "digest":
       return (
         <div className="stack-8">
-          <div className="w-600">
-            {p.products.length} new {p.products.length === 1 ? "product" : "products"} in your categories
-            <span className="muted" style={{ fontWeight: 400 }}>
-              {" "}
-              · {p.frequency} digest
-            </span>
-          </div>
+          {p.category ? (
+            <div className="w-600">
+              <a href={`/c/${p.category.slug}`}>{en.notifications.digestTitle(p.category.name, p.products.length)}</a>
+            </div>
+          ) : (
+            <div className="w-600">
+              {p.products.length} new {p.products.length === 1 ? "product" : "products"} in your categories
+              <span className="muted" style={{ fontWeight: 400 }}>
+                {" "}
+                · {p.frequency} digest
+              </span>
+            </div>
+          )}
           <ul className="list-plain stack-4">
             {p.products.map((x) => (
               <li key={x.slug} className="t-15">
@@ -54,6 +61,22 @@ function Content({ n }: { n: NotificationDTO }) {
           <a className="t-13 link" href={`/p/${p.productSlug}/roadmap`}>
             See the roadmap
           </a>
+        </div>
+      );
+    case "launch":
+      return (
+        <div className="stack-8">
+          <div className="w-600">{en.notifications.launchDay}</div>
+          <ul className="list-plain stack-4">
+            {p.products.map((x) => (
+              <li key={x.slug} className="t-15">
+                <a className="link" href={`/p/${x.slug}`}>
+                  {x.title}
+                </a>
+                <span className="muted"> · {x.tagline}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       );
     case "system":
