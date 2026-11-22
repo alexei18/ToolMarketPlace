@@ -113,7 +113,7 @@ export const en = {
       },
       emails: {
         q: "What will you email me?",
-        a: "One invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click.",
+        a: "A confirmation now, and one invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click.",
       },
       data: { q: "What do you do with my email?", a: "We use it only for these emails and never sell it.", link: "See our Privacy Policy." },
     },
@@ -140,12 +140,9 @@ export const en = {
     emails: {
       footer: (siteName: string) => `You're getting this because you joined the ${siteName} waitlist.`,
       unsubscribe: "Unsubscribe",
-      confirm: {
-        subject: (siteName: string) => `Confirm your spot on the ${siteName} waitlist`,
-        explorer: "Confirm your email to join the waitlist. On launch day you'll get the new apps worth trying in your categories.",
-        maker: "Confirm your email to join the waitlist. Makers get access a week before launch.",
-        expiry: "The link works for 48 hours. If you didn't sign up, ignore this email.",
-        button: "Confirm my email",
+      /** Sent on joining; the body reuses waitlist.confirmed. */
+      welcome: {
+        subject: (siteName: string) => `Thanks for joining the ${siteName} waitlist`,
       },
       makerInvite: {
         subject: (siteName: string) => `Your early access to ${siteName}`,

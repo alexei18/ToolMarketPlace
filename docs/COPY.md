@@ -148,7 +148,7 @@ Adăugat 2026-11-01 pentru pagina de waitlist din `docs/tiktok-campaign.md`; în
 | Is it free? | Yes. Discovering apps on Tryworthy is free, and listing your product is free. | aprobat |
 | Can makers pay to rank higher? | No. Nobody can pay to rank higher, and makers' own activity doesn't count. | COPY (/ranking) |
 | I build apps. What do I get? | Access 7 days before launch to verify your domain and publish your product. It's live on launch day, and the top products in each category are featured in our launch-day email. | aprobat |
-| What will you email me? | One invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click. | Nou (fără „A confirmation link now” din 2026-11-22) |
+| What will you email me? | A confirmation now, and one invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click. | Nou („A confirmation link now” → „A confirmation now” din 2026-11-22) |
 | What do you do with my email? | We use it only for these emails and never sell it. See our Privacy Policy. | Nou |
 
 **Pagina de confirmare** (`/waitlist/confirm`)
@@ -176,8 +176,7 @@ Adăugat 2026-11-01 pentru pagina de waitlist din `docs/tiktok-campaign.md`; în
 
 | Email | Subiect | Text | Buton | Sursa |
 | --- | --- | --- | --- | --- |
-| Confirmare (explorer) | Confirm your spot on the Tryworthy waitlist | Confirm your email to join the waitlist. On launch day you'll get the new apps worth trying in your categories. · The link works for 48 hours. If you didn't sign up, ignore this email. | Confirm my email | Nou |
-| Confirmare (maker) | Confirm your spot on the Tryworthy waitlist | Confirm your email to join the waitlist. Makers get access a week before launch. · The link works for 48 hours. If you didn't sign up, ignore this email. | Confirm my email | Nou / TikTok |
+| Mulțumire la înscriere (din 2026-11-22, înlocuiește emailurile de confirmare) | Thanks for joining the Tryworthy waitlist | You're on the list. · linia pe rol de pe **Pagina de confirmare** (explorer / explorer fără categorii / maker, cu datele) | Share your link → `/?ref=[cod]` | Nou (subiect, de aprobat) / aprobat (corp) |
 | Invitație maker | Your early access to Tryworthy | You're in a week before everyone else. Create your account, verify your domain and publish your product before launch day ([LAUNCH_DATE]). · Products published before launch are live on day one, and the top ones in each category are featured in our launch-day email. · The link works for 30 days. | Create my account | Nou / COPY |
 | Invitație lansare (explorer) | We're live. Here's what's worth trying in your categories. · fără categorii: We're live. Here's what's worth trying this week. | Lista: „[Product] — [tagline]”, până la 5, din categoriile alese (top general dacă n-a ales). Fără produse: doar subiectul și butonul. | Build my feed — free | COPY / aprobat |
 

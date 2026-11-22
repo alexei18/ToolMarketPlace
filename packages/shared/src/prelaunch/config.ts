@@ -8,9 +8,6 @@ export const HOME_TOP_MIN = 6;
 /** Explorers pick up to this many categories; makers name at most one (their product's). */
 export const WAITLIST_INTERESTS_MAX = 5;
 
-/** A confirmation link works this long. */
-export const WAITLIST_CONFIRM_HOURS = 48;
-
 /** A maker's early-access invite link works this long. */
 export const WAITLIST_INVITE_DAYS = 30;
 

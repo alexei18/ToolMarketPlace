@@ -22,16 +22,16 @@ import { ApiError, notFound } from "../lib/errors";
 import { configDate, forgetLaunchState, isPrelaunch } from "../lib/prelaunch";
 import { requireTurnstile } from "../lib/turnstile";
 import { body } from "../lib/validate";
-import { newRefCode, processWaitlistEmails, resendMakerInvite, verifyToken, type WaitlistRow } from "../lib/waitlist";
+import { newRefCode, processWaitlistEmails, resendMakerInvite, sendWelcome, verifyToken, type WaitlistRow } from "../lib/waitlist";
 import { clientIp, isInternalCall, requireAdmin } from "../middleware";
 
 const app = new Hono<AppEnv>();
 
 /**
- * Joins the waitlist (docs/tiktok-campaign.md): single opt-in, the sign-up counts at once and no
- * confirmation email is sent. The answer has the same shape whether the email is new or already on
- * the list, so nobody can tell who is on it. Submitting again never adds a second row; an invited
- * maker gets their invite again.
+ * Joins the waitlist (docs/tiktok-campaign.md): single opt-in, the sign-up counts at once and gets a
+ * welcome email (no link to confirm). The answer has the same shape whether the email is new or
+ * already on the list, so nobody can tell who is on it. Submitting again never adds a second row or
+ * a second welcome email; an invited maker gets their invite again.
  */
 app.post("/waitlist", async (c) => {
   const db = c.get("db");
@@ -73,7 +73,10 @@ app.post("/waitlist", async (c) => {
       .onConflictDoNothing({ target: waitlist.email })
       .returning()
       .get();
-    if (created) return c.json({ ok: true, refCode: created.refCode });
+    if (created) {
+      await sendWelcome(c.env, db, created);
+      return c.json({ ok: true, refCode: created.refCode });
+    }
     // Submitted twice at the same moment: carry on with the row the other request created.
     row = (await db.select().from(waitlist).where(eq(waitlist.email, input.email)).get())!;
   }
@@ -81,6 +84,8 @@ app.post("/waitlist", async (c) => {
   // Sign-ups still pending from the double opt-in era join now, with their latest answers.
   if (!row.confirmedAt) {
     row = (await db.update(waitlist).set({ role: input.role, interests, productUrl, foundVia: input.foundVia ?? row.foundVia, confirmedAt: now, confirmationQueued: false }).where(eq(waitlist.id, row.id)).returning().get())!;
+    await sendWelcome(c.env, db, row);
+    return c.json({ ok: true, refCode: row.refCode });
   }
   const sentRecently = row.confirmationSentAt !== null && now - row.confirmationSentAt < WAITLIST_RESEND_MINUTES * 60;
   if (row.role === "maker" && row.invitedAt && !row.unsubscribedAt && !sentRecently) await resendMakerInvite(c.env, db, row);

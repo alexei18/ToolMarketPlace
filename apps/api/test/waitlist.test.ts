@@ -86,16 +86,25 @@ describe("waitlist mode", () => {
 });
 
 describe("joining the waitlist", () => {
-  test("single opt-in: the sign-up counts at once, with no email; the same email twice keeps one row and the same answer", async () => {
-    const t = setup({ WAITLIST: "true" });
-    const first = await join(t, { email: " Ana@Example.com " });
+  test("single opt-in: the sign-up counts at once and gets one welcome email; the same email twice keeps one row and the same answer", async () => {
+    const t = setup({ WAITLIST: "true", LAUNCH_DATE: "2026-12-08" });
+    const first = await join(t, { email: " Ana@Example.com ", interests: ["c_ai"] });
     const r = row(t, "ana@example.com")!;
     expect(first.data).toEqual({ ok: true, refCode: r.ref_code });
     expect(r.confirmed_at).not.toBeNull();
+    expect(r.confirmation_sent_at).not.toBeNull();
+    const mail = emailsTo(t, "ana@example.com")[0]!;
+    expect(mail).toContain("Thanks for joining the Tryworthy waitlist");
+    expect(mail).toContain("You're on the list.");
+    expect(mail).toContain("On launch day (December 8, 2026) we'll email you the top picks in your categories.");
+    expect(mail).toContain(`/?ref=${r.ref_code}`);
+    expect(mail).toContain("/waitlist/unsubscribe?t=");
+    expect(mail).not.toContain("/waitlist/confirm");
+
     expect((await join(t, { email: "ana@example.com", role: "maker" })).data).toEqual(first.data);
     expect(rows(t)).toHaveLength(1);
     expect(row(t, "ana@example.com")!.role).toBe("explorer");
-    expect(t.emails).toHaveLength(0);
+    expect(t.emails).toHaveLength(1);
   });
 
   test("a sign-up still pending from double opt-in joins with its latest answers when submitted again", async () => {
@@ -104,7 +113,8 @@ describe("joining the waitlist", () => {
     expect((await join(t, { email: "old@example.com", role: "maker" })).status).toBe(200);
     expect(row(t, "old@example.com")).toMatchObject({ role: "maker", confirmation_queued: 0 });
     expect(row(t, "old@example.com")!.confirmed_at).not.toBeNull();
-    expect(t.emails).toHaveLength(0);
+    expect(emailsTo(t, "old@example.com")).toHaveLength(1);
+    expect(emailsTo(t, "old@example.com")[0]).toContain("You get access a week before launch.");
   });
 
   test("an invalid email is refused and stores nothing", async () => {
@@ -248,10 +258,8 @@ describe("the waiting counter", () => {
 });
 
 describe("email quota", () => {
-  test("a quota error holds the maker invites for the cron, which sends them later", async () => {
+  test("a quota error queues the welcome email, the visitor sees the same answer, and the cron sends it later", async () => {
     const t = setup({ WAITLIST: "true", RESEND_API_KEY: "re_test" });
-    await joinAs(t, "a@example.com", { role: "maker" });
-    await joinAs(t, "b@example.com", { role: "maker" });
     let quota = true;
     const sent: string[] = [];
     const restore = mockFetch(async (url, init) => {
@@ -262,6 +270,38 @@ describe("email quota", () => {
       return Response.json({ data: [] });
     });
     try {
+      const res = await join(t, { email: "a@example.com" });
+      expect(res.data).toEqual({ ok: true, refCode: row(t, "a@example.com")!.ref_code });
+      expect(row(t, "a@example.com")).toMatchObject({ confirmation_queued: 1, confirmation_sent_at: null });
+      const db = services(t.env).db;
+      expect(await processWaitlistEmails(t.env, db)).toMatchObject({ confirmations: 0, deferred: true });
+
+      quota = false;
+      expect(await processWaitlistEmails(t.env, db)).toMatchObject({ confirmations: 1, deferred: false });
+      expect(sent).toEqual(["a@example.com"]);
+      expect(row(t, "a@example.com")).toMatchObject({ confirmation_queued: 0 });
+      expect(row(t, "a@example.com")!.confirmation_sent_at).not.toBeNull();
+    } finally {
+      restore();
+    }
+  });
+
+  test("a quota error holds the maker invites for the cron, which sends them later", async () => {
+    const t = setup({ WAITLIST: "true", RESEND_API_KEY: "re_test" });
+    let quota = false;
+    const sent: string[] = [];
+    const restore = mockFetch(async (url, init) => {
+      if (!url.href.startsWith("https://api.resend.com/")) return;
+      if (quota) return new Response(JSON.stringify({ name: "daily_quota_exceeded", message: "quota" }), { status: 429 });
+      const payload = JSON.parse(String(init?.body));
+      for (const m of Array.isArray(payload) ? payload : [payload]) sent.push(m.to[0]);
+      return Response.json({ data: [] });
+    });
+    try {
+      await joinAs(t, "a@example.com", { role: "maker" });
+      await joinAs(t, "b@example.com", { role: "maker" });
+      sent.length = 0;
+      quota = true;
       t.sqlite.run("UPDATE site_state SET makers_invited_at = 1 WHERE id = 1");
       const db = services(t.env).db;
       expect(await processWaitlistEmails(t.env, db)).toMatchObject({ makerInvites: 0, deferred: true });
@@ -274,8 +314,8 @@ describe("email quota", () => {
 
       const admin = await signUp(t, { email: "admin@example.com" });
       const stats = (await admin.client.get("/admin/waitlist/stats")).data;
-      // Sent: the 2 invites and the admin's own verification email.
-      expect(stats.emailUsage[0]).toMatchObject({ sent: 3, failed: 0 });
+      // Sent: the 2 welcome emails, the 2 invites and the admin's own verification email.
+      expect(stats.emailUsage[0]).toMatchObject({ sent: 5, failed: 0 });
       expect(stats.emailUsage[0].deferred).toBeGreaterThan(0);
     } finally {
       restore();
@@ -284,16 +324,15 @@ describe("email quota", () => {
 
   test("a refused address is recorded as failed and shown to the admin", async () => {
     const t = setup({ WAITLIST: "true", RESEND_API_KEY: "re_test" });
-    await joinAs(t, "bad@example.com", { role: "maker" });
     const restore = mockFetch(async (url) => {
       if (url.href.startsWith("https://api.resend.com/")) return new Response(JSON.stringify({ name: "validation_error", message: "Invalid `to` field." }), { status: 422 });
     });
     try {
-      t.sqlite.run("UPDATE site_state SET makers_invited_at = 1 WHERE id = 1");
-      await processWaitlistEmails(t.env, services(t.env).db);
+      expect((await joinAs(t, "bad@example.com")).status).toBe(200);
     } finally {
       restore();
     }
+    expect(row(t, "bad@example.com")!.confirmation_queued).toBe(0);
     const admin = await signUp(t, { email: "admin@example.com" });
     const stats = (await admin.client.get("/admin/waitlist/stats")).data;
     expect(stats.failedEmails).toEqual([expect.objectContaining({ email: "bad@example.com", error: "validation_error: Invalid `to` field." })]);
@@ -341,15 +380,17 @@ describe("invites and launch", () => {
     const invite = emailsTo(t, "maker@example.com").at(-1)!;
     expect(invite).toContain("Your early access to Tryworthy");
     expect(invite).toContain("before launch day (December 8, 2026).");
-    expect(emailsTo(t, "explorer@example.com")).toHaveLength(0);
+    // Explorers have only their welcome email.
+    expect(emailsTo(t, "explorer@example.com")).toHaveLength(1);
     expect(row(t, "maker@example.com")!.invited_at).not.toBeNull();
 
-    // Asking again through the form resends the invite, at most every 10 minutes.
+    // Asking again through the form resends the invite, at most every 10 minutes after the last email.
+    t.sqlite.run("UPDATE waitlist SET confirmation_sent_at = 0");
     await join(t, { email: "maker@example.com", role: "maker" });
-    expect(emailsTo(t, "maker@example.com")).toHaveLength(2);
+    expect(emailsTo(t, "maker@example.com")).toHaveLength(3);
     expect(emailsTo(t, "maker@example.com").at(-1)).toContain("Your early access to Tryworthy");
     await join(t, { email: "maker@example.com", role: "maker" });
-    expect(emailsTo(t, "maker@example.com")).toHaveLength(2);
+    expect(emailsTo(t, "maker@example.com")).toHaveLength(3);
 
     const token = linkIn(invite, "/join")!;
     const res = await new Client(t).post("/waitlist/join", { token });

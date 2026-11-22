@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, exists, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { categories, productCategories, products, siteState, user, userInterests, waitlist, type Database } from "@tm/db";
-import { WAITLIST_CONFIRM_HOURS, WAITLIST_INVITE_DAYS, longDate, nowSec } from "@tm/shared";
+import { WAITLIST_INVITE_DAYS, longDate, nowSec } from "@tm/shared";
 import { en } from "@tm/shared/copy";
 import type { Env } from "../env";
 import { EMAIL_BATCH_SIZE, EmailDeferredError, EmailFailedError, sendEmail, sendEmailBatch, type EmailMessage } from "./email";
@@ -114,14 +114,19 @@ async function unsubscribeLinks(env: Env, row: WaitlistRow): Promise<NonNullable
   };
 }
 
-export async function confirmationEmail(env: Env, row: WaitlistRow, now = nowSec()): Promise<EmailMessage> {
-  const c = en.waitlist.emails.confirm;
-  const t = await signToken(env, "confirm", row.id, now + WAITLIST_CONFIRM_HOURS * 3600);
+/** The thank-you on joining (single opt-in): what happens next and the personal share link. */
+export async function welcomeEmail(env: Env, row: WaitlistRow): Promise<EmailMessage> {
+  const c = en.waitlist.confirmed;
+  const date = (v?: string) => {
+    const d = configDate(v);
+    return d ? longDate(d) : null;
+  };
+  const next = row.role === "maker" ? c.maker(date(env.MAKER_ACCESS_DATE)) : row.interests !== "[]" ? c.explorer(date(env.LAUNCH_DATE)) : c.explorerNoCategories(date(env.LAUNCH_DATE));
   return {
     to: row.email,
-    subject: c.subject(env.SITE_NAME),
-    lines: [row.role === "maker" ? c.maker : c.explorer, c.expiry],
-    action: { label: c.button, url: `${web(env)}/waitlist/confirm?t=${t}` },
+    subject: en.waitlist.emails.welcome.subject(env.SITE_NAME),
+    lines: [c.title, next],
+    action: { label: c.shareTitle, url: `${web(env)}/?ref=${row.refCode}` },
     unsubscribe: await unsubscribeLinks(env, row),
   };
 }
@@ -158,6 +163,19 @@ export async function launchInviteEmail(env: Env, row: WaitlistRow, picks: Pick[
 }
 
 /* Sending. A quota or rate limit keeps the email for the cron; the visitor never sees it. */
+
+/** Sends the welcome email and records the outcome on the row. */
+export async function sendWelcome(env: Env, db: Database, row: WaitlistRow): Promise<void> {
+  const now = nowSec();
+  try {
+    await sendEmail(env, await welcomeEmail(env, row));
+    await db.update(waitlist).set({ confirmationSentAt: now, confirmationQueued: false, emailFailedAt: null, emailError: null }).where(eq(waitlist.id, row.id));
+  } catch (err) {
+    if (err instanceof EmailDeferredError) await db.update(waitlist).set({ confirmationQueued: true }).where(eq(waitlist.id, row.id));
+    else if (err instanceof EmailFailedError) await db.update(waitlist).set({ confirmationQueued: false, emailFailedAt: now, emailError: err.message }).where(eq(waitlist.id, row.id));
+    else throw err;
+  }
+}
 
 /** Sends a confirmed maker their early-access invite again (they asked through the form). */
 export async function resendMakerInvite(env: Env, db: Database, row: WaitlistRow): Promise<void> {
@@ -199,9 +217,10 @@ export async function processWaitlistEmails(env: Env, db: Database, nowMs = Date
 
   const jobs: { key: "confirmations" | "makerInvites" | "launchInvites"; load: () => Promise<WaitlistRow[]>; build: (r: WaitlistRow) => Promise<EmailMessage>; sent: (ids: string[]) => Promise<unknown> }[] = [
     {
+      // The welcome email, still stored in the confirmation_* columns of the double opt-in era.
       key: "confirmations",
       load: () => db.select().from(waitlist).where(eq(waitlist.confirmationQueued, true)).orderBy(asc(waitlist.createdAt)).limit(EMAIL_BATCH_SIZE).all(),
-      build: (r) => confirmationEmail(env, r, now),
+      build: (r) => welcomeEmail(env, r),
       sent: (ids) => db.update(waitlist).set({ confirmationSentAt: now, confirmationQueued: false, emailFailedAt: null, emailError: null }).where(inArray(waitlist.id, ids)),
     },
   ];
