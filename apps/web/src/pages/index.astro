@@ -11,7 +11,7 @@ import { siteConfig } from "../lib/config";
 import { homeSeo } from "../lib/seo";
 
 const { siteName, siteUrl } = siteConfig();
-const [res, site] = await Promise.all([apiCall<HomeDTO>("/home"), apiCall<{ launchDate: string | null }>("/site")]);
+const [res, site] = await Promise.all([apiCall<HomeDTO>("/home"), apiCall<{ makerAccessDate: string | null; launchDate: string | null }>("/site")]);
 // The hero and makers copy depend on the pre-launch flag, which only the API knows: no guessing when it's down.
 if (res.ok) Astro.cache.set({ maxAge: 60, swr: 60, tags: ["home", "products"] });
 else Astro.response.status = 503;
@@ -20,6 +20,7 @@ const home = res.ok ? res.data : null;
 // Pre-launch mode runs as the waitlist: the homepage is the waitlist page (components/Waitlist.astro).
 const prelaunch = home?.prelaunch ?? false;
 const launchDate = site.ok && site.data.launchDate ? longDate(site.data.launchDate) : null;
+const makerAccessDate = site.ok && site.data.makerAccessDate ? longDate(site.data.makerAccessDate) : null;
 const top = home?.top ?? null;
 const categories = home?.categories ?? [];
 const listed = categories.filter((c) => c.listed !== false);
@@ -40,7 +41,7 @@ const jsonLd = homeJsonLd({ name: siteName, url: siteUrl, logo: `${siteUrl}/bran
       </div>
     )
   }
-  {home && prelaunch && <Waitlist categories={categories} waitingCount={home.waitingCount} launchDate={launchDate} siteName={siteName} />}
+  {home && prelaunch && <Waitlist categories={categories} waitingCount={home.waitingCount} launchDate={launchDate} makerAccessDate={makerAccessDate} siteName={siteName} siteUrl={siteUrl} />}
   {
     home && !prelaunch && (
       <>

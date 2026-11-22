@@ -8,25 +8,25 @@ updated: 2026-10-30
 
 Tryworthy is operated by:
 
-[OPERATOR_NAME]\
-[OPERATOR_ADDRESS]
+TryWorthy.co\
+Chisinau/R.Moldova
 
 ## Contact
 
-- General questions: [CONTACT_EMAIL]
-- Privacy and data protection requests: [PRIVACY_EMAIL]
-- Reports of illegal content: [DSA_CONTACT_EMAIL], or see [Report content](/report)
+- General questions: contact@tryworthy.app
+- Privacy and data protection requests: privacy@tryworthy.app
+- Reports of illegal content: legal@tryworthy.app, or see [Report content](/report)
 
 ## Digital Services Act
 
-- **Single point of contact** for authorities, the European Commission and users: [DSA_CONTACT_EMAIL]. We accept messages in English and Romanian.
-- **Legal representative in the EU:** [EU_REPRESENTATIVE]
+- **Single point of contact** for authorities, the European Commission and users: legal@tryworthy.app. We accept messages in English and Romanian.
+- **Legal representative in the EU:** TryWorthy.Inc
 
 ## Data protection
 
 We follow Moldova's Law no. 195/2024 on personal data protection and the EU General Data Protection Regulation (GDPR).
 
-- **Representative in the EU (GDPR Article 27):** [EU_REPRESENTATIVE]
+- **Representative in the EU (GDPR Article 27):** TryWorthy.Inc
 - **Supervisory authority:** National Center for Personal Data Protection of the Republic of Moldova
 
 ## Legal pages

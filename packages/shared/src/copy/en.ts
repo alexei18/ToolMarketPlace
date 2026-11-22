@@ -80,9 +80,6 @@ export const en = {
     /** Only rendered from the WAITLIST_COUNT_MIN limit, with `count` read from the DB. */
     waitingCount: (count: number) => `${count} people are waiting`,
     sent: {
-      title: "Check your inbox",
-      text: (email: string) => `We're sending a confirmation link to ${email}. Open it to join the waitlist.`,
-      spam: "Not there? Check your spam or Promotions folder.",
       restart: "Wrong email? Start again",
     },
     errors: {
@@ -116,7 +113,7 @@ export const en = {
       },
       emails: {
         q: "What will you email me?",
-        a: "A confirmation link now, and one invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click.",
+        a: "One invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click.",
       },
       data: { q: "What do you do with my email?", a: "We use it only for these emails and never sell it.", link: "See our Privacy Policy." },
     },

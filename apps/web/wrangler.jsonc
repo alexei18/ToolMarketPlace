@@ -16,7 +16,10 @@
     "TURNSTILE_SITE_KEY": "",
     "GOOGLE_ENABLED": "false",
     // Legal pages show "Draft — pending legal review" until a lawyer has reviewed them; then "false".
-    "LEGAL_DRAFT": "true"
+    "LEGAL_DRAFT": "true",
+    // PostHog (docs/ANALYTICS.md): the project token is public. Empty token = no analytics.
+    "POSTHOG_KEY": "",
+    "POSTHOG_HOST": "https://eu.i.posthog.com"
   },
   // Server-side calls to the API go through a service binding (no public round trip, no extra request).
   "services": [{ "binding": "API", "service": "toolmarket-api" }],
@@ -33,9 +36,11 @@
         "SITE_URL": "https://tryworthy.app",
         "PUBLIC_API_URL": "https://api.tryworthy.app",
         // Fill in before launch.
-        "TURNSTILE_SITE_KEY": "",
-        "GOOGLE_ENABLED": "false",
-        "LEGAL_DRAFT": "true"
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAGNHM79gttN-OhT6",
+        "GOOGLE_ENABLED": "true",
+        "LEGAL_DRAFT": "true",
+        "POSTHOG_KEY": "",
+        "POSTHOG_HOST": "https://eu.i.posthog.com"
       },
       "services": [{ "binding": "API", "service": "toolmarket-api" }]
     }

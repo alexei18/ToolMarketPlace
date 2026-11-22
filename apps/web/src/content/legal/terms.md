@@ -8,7 +8,7 @@ These terms apply to everyone who uses Tryworthy. By creating an account or usin
 
 ## Who we are
 
-Tryworthy is operated by [OPERATOR_NAME], [OPERATOR_ADDRESS] ("we", "us"). You can reach us at [CONTACT_EMAIL]. Our legal and contact details are on the [Legal](/legal) page.
+Tryworthy is operated by TryWorthy.co, Chisinau/R.Moldova ("we", "us"). You can reach us at contact@tryworthy.app. Our legal and contact details are on the [Legal](/legal) page.
 
 ## What Tryworthy is
 
@@ -16,7 +16,7 @@ Tryworthy is a place to discover new digital products the day they launch. Maker
 
 ## Your account
 
-- You must be at least [MIN_AGE] years old to create an account.
+- You must be at least 6 years old to create an account.
 - Give accurate information and keep your password safe. You are responsible for what happens under your account.
 - One person, one account. Don't create accounts to boost products, get around limits or come back after a ban.
 - You can stop using Tryworthy at any time and delete your account in [Settings](/settings) (see the [Privacy Policy](/privacy#your-rights)).
@@ -34,7 +34,7 @@ Perks (free trials, discounts, coupons and codes) are offered by the makers of t
 - The maker decides the conditions, honours the perk and handles any problem with it.
 - We don't guarantee that a perk is available, works or matches its description.
 - Claiming a perk needs an account with a confirmed email. Codes can be limited in number and may run out.
-- If a maker doesn't honour a perk, tell us at [CONTACT_EMAIL] or report the product. We can remove the perk or the product.
+- If a maker doesn't honour a perk, tell us at contact@tryworthy.app or report the product. We can remove the perk or the product.
 
 ## How ranking works
 
@@ -58,7 +58,7 @@ We review reports and check listings for the problems described in the [Communit
 
 ## Contesting a decision
 
-If we hid or removed your content or suspended your account and you think we got it wrong, you can contest the decision once, within six months. Use "Decisions" in your maker dashboard, or the page you see when you sign in to a suspended account. You can also email [CONTACT_EMAIL] with the link and why you think the decision should change. A person reviews every contest; decisions are never made by automated means alone. We tell you the outcome and the reason. This doesn't affect your right to go to court or to an out-of-court dispute settlement body.
+If we hid or removed your content or suspended your account and you think we got it wrong, you can contest the decision once, within six months. Use "Decisions" in your maker dashboard, or the page you see when you sign in to a suspended account. You can also email contact@tryworthy.app with the link and why you think the decision should change. A person reviews every contest; decisions are never made by automated means alone. We tell you the outcome and the reason. This doesn't affect your right to go to court or to an out-of-court dispute settlement body.
 
 ## Things we are not responsible for
 
@@ -80,8 +80,8 @@ We may change these terms when the service or the law changes. We update the dat
 
 ## Governing law
 
-These terms are governed by the law of [GOVERNING_LAW_COUNTRY]. If you live in the EU, you also keep the protection of the mandatory consumer laws of your country and can bring a claim there.
+These terms are governed by the law of Republic of Moldova. If you live in the EU, you also keep the protection of the mandatory consumer laws of your country and can bring a claim there.
 
 ## Contact
 
-Questions about these terms: [CONTACT_EMAIL].
+Questions about these terms: contact@tryworthy.app.

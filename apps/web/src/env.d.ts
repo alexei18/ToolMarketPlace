@@ -16,6 +16,9 @@ interface WebBindings {
   GOOGLE_ENABLED?: string;
   /** "false" hides the "Draft — pending legal review" banner on the legal pages. */
   LEGAL_DRAFT?: string;
+  /** PostHog project token (public) and ingestion host; analytics is off while the token is empty. */
+  POSTHOG_KEY?: string;
+  POSTHOG_HOST?: string;
   /** Shared with the API worker: authorizes /internal/purge and marks server-side API calls. */
   INTERNAL_SECRET?: string;
 }

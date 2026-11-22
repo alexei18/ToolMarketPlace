@@ -10,12 +10,11 @@ import {
   REPORTER_EMAIL_MONTHS,
   VERIFICATION_MAX_AGE_HOURS,
   WAITLIST_MONTHS_AFTER_LAUNCH,
-  WAITLIST_UNCONFIRMED_DAYS,
 } from "@tm/shared";
 import { DESCRIPTION_MAX } from "./seo";
 
 const DIR = join(import.meta.dir, "../content/legal");
-const PLACEHOLDERS = ["[OPERATOR_NAME]", "[OPERATOR_ADDRESS]", "[CONTACT_EMAIL]", "[PRIVACY_EMAIL]", "[DSA_CONTACT_EMAIL]", "[EU_REPRESENTATIVE]", "[GOVERNING_LAW_COUNTRY]", "[MIN_AGE]"];
+const PLACEHOLDERS = ["TryWorthy.co", "Chisinau/R.Moldova", "contact@tryworthy.app", "privacy@tryworthy.app", "legal@tryworthy.app", "TryWorthy.Inc", "Republic of Moldova", "6"];
 /** CLAUDE.md */
 const BANNED = /\b(revolutionary|game-changer|unlock\w*|supercharge\w*|seamless\w*|ultimate)\b|#1\b/i;
 const ROUTES = new Set(["/terms", "/terms/makers", "/privacy", "/cookies", "/guidelines", "/report", "/legal", "/ranking", "/settings"]);
@@ -71,7 +70,6 @@ describe("legal pages content", () => {
     expect(num(/individual records are deleted after (\d+) days/)).toBe(RAW_SIGNAL_DAYS);
     expect(num(/The download link works for (\d+) hours/)).toBe(EXPORT_LINK_HOURS);
     expect(num(/Your email address is deleted (\d+) months after we decide the report/)).toBe(REPORTER_EMAIL_MONTHS);
-    expect(num(/your sign-up is deleted (\d+) days after we send the confirmation email/)).toBe(WAITLIST_UNCONFIRMED_DAYS);
     expect(num(/All waitlist data is deleted (\d+) months after launch/)).toBe(WAITLIST_MONTHS_AFTER_LAUNCH);
   });
 });

@@ -3,9 +3,9 @@
  * ones appear in the Markdown of apps/web/src/content/legal.
  */
 
-export const OPERATOR_NAME = "[OPERATOR_NAME]";
+export const OPERATOR_NAME = "TryWorthy.co";
 /** Minimum age to create an account. */
-export const MIN_AGE = "[MIN_AGE]";
+export const MIN_AGE = "6";
 
 /**
  * Date of the current Terms of Service. When the Terms change: set it to the new date, add a line under

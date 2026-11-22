@@ -34,6 +34,6 @@ Site-ul are nevoie de 7 pagini legale, de link-uri spre ele în footer pe fiecar
 2. **Ștergere cont:** din `/settings`, cu confirmare; șterge datele personale, anonimizează feedback-ul public.
 3. **Export date:** din `/settings`, un fișier JSON cu profilul, interesele, salvările, feedback-ul și perks-urile revendicate.
 4. **Raportare și motivare:** când un produs e ascuns sau șters, makerul primește motivul și calea de contestare.
-5. **Cookie-uri:** doar cookie-ul de sesiune și preferințe; analytics fără cookie-uri (ex. Cloudflare Web Analytics), ca să nu fie nevoie de banner. Dacă adaugi mai târziu analytics cu cookie-uri, apare bannerul.
+5. **Cookie-uri:** doar cookie-ul de sesiune și preferințe; analytics fără cookie-uri (PostHog în `cookieless_mode`, vezi docs/ANALYTICS.md), ca să nu fie nevoie de banner. Dacă adaugi mai târziu analytics cu cookie-uri, apare bannerul.
 
 **Footer (pe fiecare pagină):** About · Makers · How ranking works · Guidelines · Terms · Privacy · Cookies · Report content · Legal · Contact · © 2026 \[Operator\].

@@ -437,7 +437,7 @@ Add them to the sitemaps; put /top, /trending and /new in the header navigation.
 ```text
 Create the legal pages listed in docs/LEGAL.md: /terms, /privacy, /cookies, /guidelines, /terms/makers, /report, /legal.
 Plain English, short sections, "Last updated" date, table of contents. Base the content on what the app actually does — read the D1 schema, auth, push notifications, R2 uploads, ranking signals, UTM first-touch and the Cloudflare services — and list only data we really collect.
-Use these exact placeholders and list them at the end: [OPERATOR_NAME], [OPERATOR_ADDRESS], [CONTACT_EMAIL], [PRIVACY_EMAIL], [DSA_CONTACT_EMAIL], [EU_REPRESENTATIVE], [GOVERNING_LAW_COUNTRY], [MIN_AGE].
+Use these exact placeholders and list them at the end: TryWorthy.co, Chisinau/R.Moldova, contact@tryworthy.app, privacy@tryworthy.app, legal@tryworthy.app, TryWorthy.Inc, Republic of Moldova, 6.
 Privacy Policy: for each processing activity — data, purpose, legal basis, retention; processors (Cloudflare, Google sign-in, the email provider); international transfers; rights (access, correction, deletion, portability, objection, complaint to the supervisory authority) and how to use them in /settings or by email; reference Moldova's Law no. 195/2024 and the GDPR. Explain that saves, perk claims, clicks, feedback and votes are used, aggregated, to rank products.
 Terms: perks are offered by makers and we are not a party to them; how ranking works in short, with a link to /ranking, and that no one can pay for ranking; moderation, removal and how to contest a removal.
 Store the content as Markdown in apps/web/src/content/legal/*.md rendered by one layout, so a lawyer can edit text without touching code. Show a "Draft — pending legal review" banner controlled by one flag.
@@ -447,8 +447,8 @@ Show me the plan first.
 **Pasul 12 — Footer și consimțământ.**
 
 ```text
-1. Footer from docs/LEGAL.md on every page: About · Makers · How ranking works · Guidelines · Terms · Privacy · Cookies · Report content · Legal · Contact · © 2026 [OPERATOR_NAME].
-2. On /signup (email and Google): "By creating an account you agree to our Terms and Privacy Policy" with links, plus a required checkbox "I am at least [MIN_AGE] years old". Store terms_version and accepted_at on the user.
+1. Footer from docs/LEGAL.md on every page: About · Makers · How ranking works · Guidelines · Terms · Privacy · Cookies · Report content · Legal · Contact · © 2026 TryWorthy.co.
+2. On /signup (email and Google): "By creating an account you agree to our Terms and Privacy Policy" with links, plus a required checkbox "I am at least 6 years old". Store terms_version and accepted_at on the user.
 3. When the Terms version changes, show logged-in users a one-time notice with a link to what changed.
 4. The homepage describes what the app does and links to /privacy and /terms in plain HTML — Google OAuth verification checks this. Confirm both links exist in the rendered homepage.
 ```

@@ -1,7 +1,7 @@
 ---
 title: Privacy Policy
 description: What personal data Tryworthy collects, why, how long we keep it, who processes it for us and how to use your rights.
-updated: 2026-11-01
+updated: 2026-11-22
 ---
 
 This policy explains what personal data Tryworthy collects, why we collect it, how long we keep it and what you can do about it. It is written to meet Moldova's Law no. 195/2024 on personal data protection and the EU General Data Protection Regulation (GDPR).
@@ -9,17 +9,17 @@ This policy explains what personal data Tryworthy collects, why we collect it, h
 ## The short version
 
 - We collect what we need to run your account, show you new products and rank them fairly.
-- No ads, no analytics cookies and no third-party trackers. We don't sell personal data.
+- No ads, no analytics cookies and no advertising trackers. We count visits without cookies (see [Site usage statistics](#site-usage-statistics)). We don't sell personal data.
 - Your saves, perk claims, clicks, feedback and roadmap votes help rank products, but only as totals. Nobody else sees which products you saved or which perks you claimed.
-- You can change most of your details in [Settings](/settings). For anything else, email [PRIVACY_EMAIL].
+- You can change most of your details in [Settings](/settings). For anything else, email privacy@tryworthy.app.
 
 ## Who is responsible
 
-Tryworthy is operated by [OPERATOR_NAME], [OPERATOR_ADDRESS] ("we"). We are the controller of the personal data described here.
+Tryworthy is operated by TryWorthy.co, Chisinau/R.Moldova ("we"). We are the controller of the personal data described here.
 
-- Privacy questions and requests: [PRIVACY_EMAIL]
-- Everything else: [CONTACT_EMAIL]
-- Representative in the EU: [EU_REPRESENTATIVE]
+- Privacy questions and requests: privacy@tryworthy.app
+- Everything else: contact@tryworthy.app
+- Representative in the EU: TryWorthy.Inc
 
 ## What we collect and why
 
@@ -27,10 +27,10 @@ For each activity below you'll find the data, why we need it, the legal basis an
 
 ### The waitlist
 
-- **Data:** your email address; whether you want to discover apps or build them; the categories you pick (up to 5), or your product's link and category; your answer to "Where did you find us?" if you give one; the campaign tags of the link that brought you (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`); your personal share code and, if you came through someone's share link, whose link it was; and when you joined, confirmed, got an invite or unsubscribed. We don't store your IP address. Cloudflare Turnstile checks that you are not a bot and sign-ups are rate-limited by IP address, as described under [Signing in and security](#signing-in-and-security).
-- **Why:** to confirm your email address, send makers their early-access invite and everyone else one invite on launch day with the top picks in their categories, show you how many people joined through your share link, and know which videos and campaigns bring people. The person whose link you used sees only a number, never who joined.
-- **Legal basis:** consent for the emails, which you give by confirming your email address and can withdraw at any time with the unsubscribe link in every email; legitimate interest for the campaign tags, the "Where did you find us?" answer and the share-link counts.
-- **Kept:** if you don't confirm, your sign-up is deleted 7 days after we send the confirmation email. If you unsubscribe, we keep the record that you did, so we don't email you again. All waitlist data is deleted 6 months after launch. If you create an account, your campaign tags and categories are copied to it when you sign up and kept as described below.
+- **Data:** your email address; whether you want to discover apps or build them; the categories you pick (up to 5), or your product's link and category; your answer to "Where did you find us?" if you give one; the campaign tags of the link that brought you (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`); your personal share code and, if you came through someone's share link, whose link it was; and when you joined, got an invite or unsubscribed. We don't store your IP address. Cloudflare Turnstile checks that you are not a bot and sign-ups are rate-limited by IP address, as described under [Signing in and security](#signing-in-and-security).
+- **Why:** to send makers their early-access invite and everyone else one invite on launch day with the top picks in their categories, and to know which videos, campaigns and share links bring people.
+- **Legal basis:** consent for the emails, which you give by joining the waitlist and can withdraw at any time with the unsubscribe link in every email; legitimate interest for the campaign tags, the "Where did you find us?" answer and the share-link counts.
+- **Kept:** if you unsubscribe, we keep the record that you did, so we don't email you again. All waitlist data is deleted 6 months after launch. If you create an account, your campaign tags and categories are copied to it when you sign up and kept as described below.
 
 ### Your account
 
@@ -93,7 +93,7 @@ For each activity below you'll find the data, why we need it, the legal basis an
 - **Data:** the domains you verify (with the verification token and method), the products you publish, the images you upload, the perks and codes you add, and a screenshot we take of your product's website. Uploaded images are stored with your account ID attached.
 - **Why:** to verify that you own the product's website, publish your product page and deliver perks.
 - **Legal basis:** contract.
-- **Kept:** until you remove the product or domain, or delete your account. When you delete your account, your products and their images are deleted too. Image files can stay in storage after you remove a single product; email [PRIVACY_EMAIL] to have them deleted.
+- **Kept:** until you remove the product or domain, or delete your account. When you delete your account, your products and their images are deleted too. Image files can stay in storage after you remove a single product; email privacy@tryworthy.app to have them deleted.
 
 ### Emails
 
@@ -108,6 +108,13 @@ For each activity below you'll find the data, why we need it, the legal basis an
 - **Why:** to fix errors and keep the service secure.
 - **Legal basis:** legitimate interest.
 - **Kept:** a few days, after which Cloudflare deletes them automatically.
+
+### Site usage statistics
+
+- **Data:** the pages you open, the page that sent you, the campaign tags of the link, the buttons and links you click, page loading times, script errors, and your browser, device type and screen size. When you join the waitlist we record whether you want to discover apps or build them, how many categories you picked, your answer to "Where did you find us?" and whether you came through a share link, never your email address or product link. One-time codes in links (from our emails and password resets) are removed before anything is sent. We don't use cookies or browser storage for this: PostHog tells visits apart with a code computed from your IP address, browser type and a value that changes every day, and doesn't store your IP address. So we can't recognize you on another day or link these statistics to your waitlist sign-up or account.
+- **Why:** to know which pages, videos and campaigns bring people, and to find slow or broken pages.
+- **Legal basis:** legitimate interest.
+- **Kept:** 12 months.
 
 ## How your activity ranks products
 
@@ -126,14 +133,15 @@ We use these providers to run the service. They process personal data only on ou
 
 - **Cloudflare, Inc.** (United States): hosting, database, file storage, image processing, bot checks (Turnstile), website screenshots and server logs.
 - **Google LLC** (United States): sign-in with Google, only if you choose it. Profile pictures of people who signed in with Google are loaded from Google's servers, so Google receives the IP address of anyone viewing a page that shows one.
-- **Resend** (United States): sending email, including the waitlist confirmation, invite and launch emails. Resend receives your email address and the content of each message.
+- **PostHog Inc.** (United States, with servers in the European Union): [site usage statistics](#site-usage-statistics), counted without cookies.
+- **Resend** (United States): sending email, including the waitlist invite and launch emails. Resend receives your email address and the content of each message.
 - **Browser push services** (for example Google, Mozilla, Apple or Microsoft, depending on your browser): delivering push notifications, only if you turn them on. Message content is encrypted.
 
 We don't sell personal data or share it for advertising. We may disclose data when the law requires it.
 
 ## International transfers
 
-Our providers process data in the United States and in other countries where Cloudflare operates. When data leaves Moldova or the European Economic Area, we rely on an adequacy decision where one exists (such as the EU–US Data Privacy Framework for certified providers) or on the standard contractual clauses approved by the European Commission, together with the safeguards required by Law no. 195/2024. You can ask us for a copy of these safeguards at [PRIVACY_EMAIL].
+Our providers process data in the United States and in other countries where Cloudflare operates. When data leaves Moldova or the European Economic Area, we rely on an adequacy decision where one exists (such as the EU–US Data Privacy Framework for certified providers) or on the standard contractual clauses approved by the European Commission, together with the safeguards required by Law no. 195/2024. You can ask us for a copy of these safeguards at privacy@tryworthy.app.
 
 ## Your rights
 
@@ -152,13 +160,13 @@ You have the right to:
 
 - In [Settings](/settings) you can change your name, username, bio, the categories you follow, how often you get the digest, push notifications and your password.
 - Under "Your data" in [Settings](/settings) you can download a copy of your data as a JSON file and delete your account. The download link works for 24 hours; the file is then deleted in the daily cleanup.
-- For everything else, including an objection, email [PRIVACY_EMAIL] from the address on your account. We reply within one month and may ask you to confirm your identity.
+- For everything else, including an objection, email privacy@tryworthy.app from the address on your account. We reply within one month and may ask you to confirm your identity.
 
-**Complaints:** you can complain to the National Center for Personal Data Protection of the Republic of Moldova, or to the data protection authority of the EU country where you live, work or think your rights were breached. We'd appreciate the chance to fix the problem first, at [PRIVACY_EMAIL].
+**Complaints:** you can complain to the National Center for Personal Data Protection of the Republic of Moldova, or to the data protection authority of the EU country where you live, work or think your rights were breached. We'd appreciate the chance to fix the problem first, at privacy@tryworthy.app.
 
 ## Minimum age
 
-You must be at least [MIN_AGE] years old to create an account. If we learn that an account belongs to someone younger, we delete it.
+You must be at least 6 years old to create an account. If we learn that an account belongs to someone younger, we delete it.
 
 ## Cookies
 

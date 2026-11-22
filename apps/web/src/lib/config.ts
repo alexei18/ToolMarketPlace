@@ -11,6 +11,8 @@ export function siteConfig() {
     googleEnabled: env.GOOGLE_ENABLED === "true",
     /** Legal pages show the draft banner until this is set to "false" after legal review. */
     legalDraft: env.LEGAL_DRAFT !== "false",
+    posthogKey: env.POSTHOG_KEY || "",
+    posthogHost: env.POSTHOG_HOST || "",
   };
 }
 

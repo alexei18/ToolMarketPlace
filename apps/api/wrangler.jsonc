@@ -3,8 +3,13 @@
   "name": "toolmarket-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-  "observability": { "enabled": true },
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "observability": {
+    "enabled": true
+  },
   // Local dev uses the top-level vars; `bun run deploy` uses env.production below.
   "vars": {
     "SITE_NAME": "Tryworthy",
@@ -23,30 +28,64 @@
     // which records the launch in D1 (site_state), so this var can stay as it is.
     "WAITLIST": "true",
     // Waitlist dates (docs/tiktok-campaign.md), as YYYY-MM-DD. Placeholders until the dates are set.
-    "MAKER_ACCESS_DATE": "YYYY-MM-DD",
-    "LAUNCH_DATE": "YYYY-MM-DD"
+    "MAKER_ACCESS_DATE": "2027-01-18",
+    "LAUNCH_DATE": "2027-01-25"
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "toolmarket",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "0a05e456-a353-40e5-8f50-ea095f76b402",
       "migrations_dir": "../../packages/db/migrations"
     }
   ],
-  "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "toolmarket-images" }],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES_BUCKET",
+      "bucket_name": "toolmarket-images"
+    }
+  ],
   // Cloudflare Images binding: resizes and re-encodes product images to WebP.
-  "images": { "binding": "IMAGES" },
+  "images": {
+    "binding": "IMAGES"
+  },
   "ratelimits": [
-    { "name": "ANON_LIMITER", "namespace_id": "1001", "simple": { "limit": 60, "period": 60 } },
-    { "name": "USER_LIMITER", "namespace_id": "1002", "simple": { "limit": 300, "period": 60 } },
-    { "name": "WAITLIST_LIMITER", "namespace_id": "1003", "simple": { "limit": 5, "period": 60 } }
+    {
+      "name": "ANON_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 60,
+        "period": 60
+      }
+    },
+    {
+      "name": "USER_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 300,
+        "period": 60
+      }
+    },
+    {
+      "name": "WAITLIST_LIMITER",
+      "namespace_id": "1003",
+      "simple": {
+        "limit": 5,
+        "period": 60
+      }
+    }
   ],
   "triggers": {
     // 08:00 UTC digest (daily users every day, weekly users on Mondays), 08:20 and 08:40 continue
     // large batches; 03:00 UTC maintenance (retention cleanup + usage alerts); every 30 minutes the ranking job.
     // That is all 5 Cron Triggers of the free plan.
-    "crons": ["0 8 * * *", "20 8 * * *", "40 8 * * *", "0 3 * * *", "*/30 * * * *"]
+    "crons": [
+      "0 8 * * *",
+      "20 8 * * *",
+      "40 8 * * *",
+      "0 3 * * *",
+      "*/30 * * * *"
+    ]
   },
   // Secrets (wrangler secret put --env production / .dev.vars): BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID,
   // GOOGLE_CLIENT_SECRET, TURNSTILE_SECRET_KEY, RESEND_API_KEY, VAPID_PRIVATE_KEY, INTERNAL_SECRET,
@@ -54,7 +93,12 @@
   "env": {
     "production": {
       "name": "toolmarket-api",
-      "routes": [{ "pattern": "api.tryworthy.app", "custom_domain": true }],
+      "routes": [
+        {
+          "pattern": "api.tryworthy.app",
+          "custom_domain": true
+        }
+      ],
       // Vars and bindings are not inherited from the top level, so they are repeated here.
       "vars": {
         "SITE_NAME": "Tryworthy",
@@ -64,33 +108,65 @@
         // Empty = images are served by this worker under /img/*; set to an img. custom domain on the R2 bucket if you add one.
         "IMAGES_BASE_URL": "",
         "COOKIE_DOMAIN": "tryworthy.app",
-        // Fill in before launch.
-        "ADMIN_EMAILS": "",
+        // ADMIN_EMAILS is a secret in production (wrangler secret put ADMIN_EMAILS --env production): this repo is public.
         "VAPID_SUBJECT": "mailto:hello@tryworthy.app",
-        "VAPID_PUBLIC_KEY": "",
+        "VAPID_PUBLIC_KEY": "BPcZYlHUTiIiLqKcYbaZtAGXkQ761QqkVEQaBW7NKMdI3WroPtiB0PnPqPMMJBtMbzvdYA5n5FsxxI6jR3EA9ys",
         "EMAIL_FROM": "Tryworthy <hello@tryworthy.app>",
         "WAITLIST": "true",
         // Fill in before the first video: the day makers get access and the public launch day (YYYY-MM-DD).
-        "MAKER_ACCESS_DATE": "YYYY-MM-DD",
-        "LAUNCH_DATE": "YYYY-MM-DD"
+        "MAKER_ACCESS_DATE": "2027-01-18",
+        "LAUNCH_DATE": "2027-01-25"
       },
       "d1_databases": [
         {
           "binding": "DB",
           "database_name": "toolmarket",
-          "database_id": "00000000-0000-0000-0000-000000000000",
+          "database_id": "0a05e456-a353-40e5-8f50-ea095f76b402",
           "migrations_dir": "../../packages/db/migrations"
         }
       ],
-      "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "toolmarket-images" }],
-      "images": { "binding": "IMAGES" },
+      "r2_buckets": [
+        {
+          "binding": "IMAGES_BUCKET",
+          "bucket_name": "toolmarket-images"
+        }
+      ],
+      "images": {
+        "binding": "IMAGES"
+      },
       "ratelimits": [
-        { "name": "ANON_LIMITER", "namespace_id": "1001", "simple": { "limit": 60, "period": 60 } },
-        { "name": "USER_LIMITER", "namespace_id": "1002", "simple": { "limit": 300, "period": 60 } },
-        { "name": "WAITLIST_LIMITER", "namespace_id": "1003", "simple": { "limit": 5, "period": 60 } }
+        {
+          "name": "ANON_LIMITER",
+          "namespace_id": "1001",
+          "simple": {
+            "limit": 60,
+            "period": 60
+          }
+        },
+        {
+          "name": "USER_LIMITER",
+          "namespace_id": "1002",
+          "simple": {
+            "limit": 300,
+            "period": 60
+          }
+        },
+        {
+          "name": "WAITLIST_LIMITER",
+          "namespace_id": "1003",
+          "simple": {
+            "limit": 5,
+            "period": 60
+          }
+        }
+      ],
+      // Cache purges reach the site worker through this binding, not the public internet.
+      "services": [
+        {
+          "binding": "WEB",
+          "service": "toolmarket-web"
+        }
       ]
-      // After the site worker exists, add a service binding so cache purges skip the public internet:
-      // "services": [{ "binding": "WEB", "service": "toolmarket-web" }]
     }
   }
 }

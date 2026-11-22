@@ -20,7 +20,7 @@ Anyone can report content on Tryworthy that they believe is illegal or breaks ou
 
 **Without an account:** use the form at the end of this page. Your email is optional; without it we can't tell you what we decided.
 
-**For anything that isn't a product (feedback or a profile):** email [DSA_CONTACT_EMAIL] with:
+**For anything that isn't a product (feedback or a profile):** email legal@tryworthy.app with:
 
 1. the link to the content (product page, feedback or profile);
 2. the reason (illegal content, intellectual property, scam or fraud, malware, or other);
@@ -41,4 +41,4 @@ Reports that are knowingly false or made to hurt a competitor break our [Communi
 
 ## Authorities
 
-Authorities and trusted flaggers can contact us at [DSA_CONTACT_EMAIL], in English or Romanian.
+Authorities and trusted flaggers can contact us at legal@tryworthy.app, in English or Romanian.

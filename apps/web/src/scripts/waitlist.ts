@@ -2,6 +2,7 @@
  * The waitlist form (components/Waitlist.astro). Campaign tags and the share code are read from the
  * page address when the form is sent; nothing is stored in the browser. All text comes from the HTML.
  */
+import { track } from "../lib/analytics";
 import { ClientError, call, turnstileToken } from "../lib/client";
 
 const UTM = ["source", "medium", "campaign", "content"] as const;
@@ -16,7 +17,9 @@ function init(form: HTMLFormElement) {
   const email = $<HTMLInputElement>("#wl-email");
   const error = $<HTMLParagraphElement>("#wl-error");
   const sent = $<HTMLDivElement>("#wl-sent");
-  const sentText = $<HTMLParagraphElement>("#wl-sent-text");
+  const shareLink = $<HTMLInputElement>("#wl-share-link");
+  const copy = $<HTMLButtonElement>("#wl-copy");
+  const copyLabel = copy.textContent;
   const chips = [...form.querySelectorAll<HTMLButtonElement>("[data-category]")];
 
   const role = () => form.querySelector<HTMLInputElement>('input[name="role"]:checked')?.value === "maker" ? "maker" : "explorer";
@@ -84,18 +87,42 @@ function init(form: HTMLFormElement) {
     submit.setAttribute("aria-busy", "true");
     try {
       body.turnstileToken = (await turnstileToken($<HTMLDivElement>("#wl-turnstile"))) ?? null;
-      await call("POST", "/waitlist", body);
-      sentText.textContent = (sentText.dataset.template ?? "").replace("{email}", address);
+      const { refCode } = await call<{ refCode: string }>("POST", "/waitlist", body);
+      // No email or URL: PostHog gets only the shape of the sign-up (docs/ANALYTICS.md).
+      track("waitlist_joined", {
+        role: r,
+        interests_count: body.interests.length,
+        has_product_url: Boolean(body.productUrl),
+        found_via: body.foundVia,
+        referred: Boolean(body.ref),
+      });
+      const variant = r === "maker" ? "maker" : body.interests.length ? "explorer" : "explorerNoCategories";
+      for (const p of sent.querySelectorAll<HTMLElement>("[data-variant]")) p.hidden = p.dataset.variant !== variant;
+      shareLink.value = `${sent.dataset.site}/?ref=${refCode}`;
       form.hidden = true;
       sent.hidden = false;
       sent.focus();
     } catch (err) {
       const code = err instanceof ClientError ? err.code : "";
+      track("waitlist_failed", { role: r, code: code || "NETWORK" });
       if (code === "VALIDATION") email.setAttribute("aria-invalid", "true");
       showError(code === "VALIDATION" ? error.dataset.email : code === "RATE_LIMITED" ? error.dataset.rate : error.dataset.generic);
     } finally {
       submit.removeAttribute("aria-busy");
     }
+  });
+
+  copy.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink.value);
+    } catch {
+      // No clipboard access (some in-app browsers): leave the link selected to copy by hand.
+      shareLink.select();
+      return;
+    }
+    track("waitlist_share_copied", { role: role() });
+    copy.textContent = copy.dataset.copied!;
+    setTimeout(() => (copy.textContent = copyLabel), 2000);
   });
 
   $<HTMLButtonElement>("#wl-restart").addEventListener("click", () => {

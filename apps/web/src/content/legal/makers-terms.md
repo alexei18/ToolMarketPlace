@@ -8,7 +8,7 @@ These terms apply when you publish a product on Tryworthy. They add to the [Term
 
 ## Verifying your domain
 
-Before you publish, you verify that you control the product's website, with a DNS record or a meta tag. You can only publish products hosted on a domain you have verified. If you lose control of the domain, remove the product or tell us at [CONTACT_EMAIL].
+Before you publish, you verify that you control the product's website, with a DNS record or a meta tag. You can only publish products hosted on a domain you have verified. If you lose control of the domain, remove the product or tell us at contact@tryworthy.app.
 
 ## Your product must be yours
 

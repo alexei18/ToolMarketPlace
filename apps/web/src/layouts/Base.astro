@@ -28,7 +28,7 @@ interface Props {
   header?: boolean;
 }
 
-const { siteName, siteUrl, apiUrl, turnstileSiteKey } = siteConfig();
+const { siteName, siteUrl, apiUrl, turnstileSiteKey, posthogKey, posthogHost } = siteConfig();
 const { title, seo, description, canonical = Astro.originPathname, image = null, imageSize, noindex = false, query, jsonLd = null, bare = false, header = true } = Astro.props;
 
 const home = homeSeo(siteName);
@@ -52,6 +52,7 @@ const graph = jsonLd ?? (noindex ? null : webPageJsonLd({ name: title ?? fullTit
     <meta name="theme-color" content="#111111" />
     <meta name="api-origin" content={apiUrl} />
     {turnstileSiteKey && <meta name="turnstile-site-key" content={turnstileSiteKey} />}
+    {posthogKey && posthogHost && <meta name="posthog" content={posthogKey} data-host={posthogHost} />}
     <script is:inline>
       // Runs before paint: mark signed-in visitors (hint cookie only, no secrets) so cached pages
       // can show the right header without a flash, and send them from the landing page to their feed.
@@ -93,6 +94,7 @@ const graph = jsonLd ?? (noindex ? null : webPageJsonLd({ name: title ?? fullTit
     {!bare && <Footer />}
     <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
     <script>
+      import "../scripts/analytics";
       import "../scripts/global";
     </script>
   </body>

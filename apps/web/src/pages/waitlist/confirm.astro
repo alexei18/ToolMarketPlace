@@ -47,6 +47,7 @@ const c = en.waitlist.confirmed;
 </Base>
 
 <script>
+  import { track } from "../../lib/analytics";
   import { call } from "../../lib/client";
 
   interface Confirmed {
@@ -66,6 +67,7 @@ const c = en.waitlist.confirmed;
   else
     call<Confirmed>("POST", "/waitlist/confirm", { token })
       .then((d) => {
+        track("waitlist_confirmed", { role: d.role, referrals: d.referrals });
         const variant = d.role === "maker" ? "maker" : d.hasInterests ? "explorer" : "explorerNoCategories";
         root.querySelector<HTMLElement>(`[data-variant="${variant}"]`)!.hidden = false;
         const input = root.querySelector<HTMLInputElement>("#wl-share-link")!;
@@ -82,6 +84,7 @@ const c = en.waitlist.confirmed;
             input.select();
             return;
           }
+          track("waitlist_share_copied", { role: d.role });
           copy.textContent = copy.dataset.copied!;
           setTimeout(() => (copy.textContent = label), 2000);
         });

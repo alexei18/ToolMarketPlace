@@ -159,19 +159,6 @@ export async function launchInviteEmail(env: Env, row: WaitlistRow, picks: Pick[
 
 /* Sending. A quota or rate limit keeps the email for the cron; the visitor never sees it. */
 
-/** Sends (or resends) the confirmation email and records the outcome on the row. */
-export async function sendConfirmation(env: Env, db: Database, row: WaitlistRow): Promise<void> {
-  const now = nowSec();
-  try {
-    await sendEmail(env, await confirmationEmail(env, row, now));
-    await db.update(waitlist).set({ confirmationSentAt: now, confirmationQueued: false, emailFailedAt: null, emailError: null }).where(eq(waitlist.id, row.id));
-  } catch (err) {
-    if (err instanceof EmailDeferredError) await db.update(waitlist).set({ confirmationQueued: true }).where(eq(waitlist.id, row.id));
-    else if (err instanceof EmailFailedError) await db.update(waitlist).set({ confirmationQueued: false, emailFailedAt: now, emailError: err.message }).where(eq(waitlist.id, row.id));
-    else throw err;
-  }
-}
-
 /** Sends a confirmed maker their early-access invite again (they asked through the form). */
 export async function resendMakerInvite(env: Env, db: Database, row: WaitlistRow): Promise<void> {
   const now = nowSec();

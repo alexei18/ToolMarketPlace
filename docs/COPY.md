@@ -121,13 +121,11 @@ Adăugat 2026-11-01 pentru pagina de waitlist din `docs/tiktok-campaign.md`; în
 | Sub buton | We'll only email you about the waitlist and launch. · link: Privacy Policy | aprobat |
 | Contor (doar peste prag, N din DB) | [N] people are waiting | Prompt |
 
-**După trimitere** (același ecran pentru toți, inclusiv când emailul e în coadă)
+**După trimitere** (același ecran pentru toți, și când emailul era deja în listă). Din 2026-11-22 înscrierea e single opt-in: ecranul refolosește textele paginii de confirmare de mai jos (titlu, linia pe rol, Share — titlu, text și buton), fără contorul de share.
 
 | Element | Text | Sursa |
 | --- | --- | --- |
-| Titlu | Check your inbox | Prompt |
-| Text | We're sending a confirmation link to [email]. Open it to join the waitlist. | Nou |
-| A doua linie | Not there? Check your spam or Promotions folder. | aprobat |
+| Titlu, linia pe rol, share | vezi **Pagina de confirmare** | aprobat |
 | Link | Wrong email? Start again | Nou |
 | Email invalid | Enter a valid email address. | Nou |
 | Prea multe încercări | Too many attempts. Wait a minute and try again. | existent în formularul de login |
@@ -150,7 +148,7 @@ Adăugat 2026-11-01 pentru pagina de waitlist din `docs/tiktok-campaign.md`; în
 | Is it free? | Yes. Discovering apps on Tryworthy is free, and listing your product is free. | aprobat |
 | Can makers pay to rank higher? | No. Nobody can pay to rank higher, and makers' own activity doesn't count. | COPY (/ranking) |
 | I build apps. What do I get? | Access 7 days before launch to verify your domain and publish your product. It's live on launch day, and the top products in each category are featured in our launch-day email. | aprobat |
-| What will you email me? | A confirmation link now, and one invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click. | Nou |
+| What will you email me? | One invite on launch day with the top picks in your categories. Makers also get their early-access invite. You can unsubscribe from any email with one click. | Nou (fără „A confirmation link now” din 2026-11-22) |
 | What do you do with my email? | We use it only for these emails and never sell it. See our Privacy Policy. | Nou |
 
 **Pagina de confirmare** (`/waitlist/confirm`)

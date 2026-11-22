@@ -15,6 +15,7 @@ worker-configuration.d.ts
 
 # Videos (apps/videos): whisper.cpp and its model, renders and checks, the cleaned voices (made by video:prepare)
 apps/videos/.whisper/
+apps/videos/.cache/
 apps/videos/out/
 apps/videos/public/vo/
 # Reference videos: study only, never in a render. Music: licenses restrict redistribution (analysis JSON and license proof stay tracked).
@@ -24,3 +25,13 @@ apps/videos/public/music/*.wav
 apps/videos/public/music/*.flac
 apps/videos/public/music/*.m4a
 apps/videos/public/fixtures/
+
+# Video and marketing work stays local only (the repo is public; none of it is part of the site)
+apps/videos/
+marketing/
+ops/
+remotion-studio-kit/
+remotion-studio-kit.zip
+docs/video/
+docs/video-*.md
+docs/tiktok-campaign.md

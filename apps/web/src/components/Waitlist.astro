@@ -13,10 +13,14 @@ interface Props {
   waitingCount: number | null;
   /** Formatted, or null while LAUNCH_DATE is not set. */
   launchDate: string | null;
+  /** Formatted, or null while MAKER_ACCESS_DATE is not set. */
+  makerAccessDate: string | null;
   siteName: string;
+  siteUrl: string;
 }
-const { categories, waitingCount, launchDate, siteName } = Astro.props;
+const { categories, waitingCount, launchDate, makerAccessDate, siteName, siteUrl } = Astro.props;
 const w = en.waitlist;
+const c = w.confirmed;
 const faq = [
   { q: w.faq.what.q(siteName), a: w.faq.what.a },
   { q: w.faq.when.q, a: w.faq.when.a(launchDate) },
@@ -81,10 +85,18 @@ const faq = [
       {waitingCount !== null && <p class="t-13 wl-count">{w.waitingCount(waitingCount)}</p>}
     </form>
 
-    <div id="wl-sent" class="wl-sent" hidden tabindex="-1">
-      <h2 class="t-22">{w.sent.title}</h2>
-      <p id="wl-sent-text" data-template={w.sent.text("{email}")}></p>
-      <p class="t-13 muted">{w.sent.spam}</p>
+    <div id="wl-sent" class="wl-sent" hidden tabindex="-1" data-site={siteUrl}>
+      <h2 class="t-22">{c.title}</h2>
+      <p data-variant="explorer" hidden>{c.explorer(launchDate)}</p>
+      <p data-variant="explorerNoCategories" hidden>{c.explorerNoCategories(launchDate)}</p>
+      <p data-variant="maker" hidden>{c.maker(makerAccessDate)}</p>
+      <h3 class="t-17 w-600">{c.shareTitle}</h3>
+      <p class="t-13 muted">{c.shareText}</p>
+      <div class="wl-share-row">
+        <label class="visually-hidden" for="wl-share-link">{c.shareTitle}</label>
+        <input id="wl-share-link" class="input" readonly />
+        <button type="button" id="wl-copy" class="btn btn-dark" data-copied={c.copied}>{c.copy}</button>
+      </div>
       <button type="button" id="wl-restart" class="btn-text">{w.sent.restart}</button>
     </div>
   </div>
@@ -288,6 +300,17 @@ const faq = [
   }
   .wl-sent .btn-text {
     justify-self: start;
+  }
+  .wl-share-row {
+    display: flex;
+    gap: 8px;
+  }
+  .wl-share-row .input {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .wl-share-row .btn {
+    flex: none;
   }
 
   .wl-blocks {

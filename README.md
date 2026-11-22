@@ -125,14 +125,14 @@ The legal pages in `apps/web/src/content/legal/*.md` are drafts and show a "Draf
 
 | Placeholder | Where | Fill in |
 | --- | --- | --- |
-| `[OPERATOR_NAME]` | legal, privacy, terms; footer (`OPERATOR_NAME` in `packages/shared/src/legal.ts`) | Legal name of the operator |
-| `[OPERATOR_ADDRESS]` | legal, privacy, terms | Registered address |
-| `[CONTACT_EMAIL]` | legal, privacy, terms, maker terms | General contact and contests |
-| `[PRIVACY_EMAIL]` | legal, privacy | Data protection requests |
-| `[DSA_CONTACT_EMAIL]` | legal, report | DSA point of contact and reports |
-| `[EU_REPRESENTATIVE]` | legal, privacy | EU representative (DSA Art. 13, GDPR Art. 27), if needed |
-| `[GOVERNING_LAW_COUNTRY]` | terms | Governing law and courts |
-| `[MIN_AGE]` | terms, privacy; sign-up checkbox (`MIN_AGE` in `packages/shared/src/legal.ts`) | Minimum age, to confirm with the lawyer |
+| `TryWorthy.co` | legal, privacy, terms; footer (`OPERATOR_NAME` in `packages/shared/src/legal.ts`) | Legal name of the operator |
+| `Chisinau/R.Moldova` | legal, privacy, terms | Registered address |
+| `contact@tryworthy.app` | legal, privacy, terms, maker terms | General contact and contests |
+| `privacy@tryworthy.app` | legal, privacy | Data protection requests |
+| `legal@tryworthy.app` | legal, report | DSA point of contact and reports |
+| `TryWorthy.Inc` | legal, privacy | EU representative (DSA Art. 13, GDPR Art. 27), if needed |
+| `Republic of Moldova` | terms | Governing law and courts |
+| `6` | terms, privacy; sign-up checkbox (`MIN_AGE` in `packages/shared/src/legal.ts`) | Minimum age, to confirm with the lawyer |
 
 The API bundle is about 510 KB gzipped and the site worker stays well under the free plan's 3 MB limit. Move to the $5/month Workers plan when traffic needs it. The daily usage check warns at 70%.
 
